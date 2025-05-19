@@ -1,189 +1,289 @@
 // server.js
 
 // Importowanie potrzebnych modułów
-const express = require('express'); // Framework do tworzenia aplikacji webowych
-const bodyParser = require('body-parser'); // Do parsowania danych z formularzy HTML
-const path = require('path'); // Do pracy ze ścieżkami plików
-const session = require('express-session'); // Do zarządzania sesjami użytkowników
-const bcrypt = require('bcryptjs'); // Do hashowania haseł
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
+const { Pool } = require('pg'); // Klient PostgreSQL
+const pgSession = require('connect-pg-simple')(session); // Do przechowywania sesji w PostgreSQL
 
 // Inicjalizacja aplikacji Express
 const app = express();
-const PORT = process.env.PORT || 3000; // Port, na którym serwer będzie nasłuchiwał (ważne dla Render)
+const PORT = process.env.PORT || 3000;
 
-// --- Konfiguracja aplikacji ---
+// --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
+if (!process.env.DATABASE_URL) {
+    console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
+    // W środowisku produkcyjnym można rozważyć zakończenie procesu, jeśli baza jest krytyczna
+    // process.exit(1); 
+}
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
-// Użyj body-parsera do odczytywania danych z formularzy (application/x-www-form-urlencoded)
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
+    }
+    if (client) {
+        client.query('SELECT NOW()', (err, result) => {
+            release();
+            if (err) {
+                return console.error('Błąd podczas wykonywania zapytania testowego do bazy', err.stack);
+            }
+            console.log('Pomyślnie połączono z PostgreSQL. Serwer czasu bazy danych:', result.rows[0].now);
+        });
+    } else {
+        console.error('Nie udało się uzyskać klienta z puli połączeń PostgreSQL.');
+    }
+});
+
+async function initializeDatabase() {
+    const createUserTableQuery = `
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+    // Tabela dla sesji (connect-pg-simple sam ją utworzy, jeśli nie istnieje,
+    // ale dobrze wiedzieć, jak wygląda)
+    // CREATE TABLE IF NOT EXISTS "session" (
+    //   "sid" varchar NOT NULL COLLATE "default",
+    //   "sess" json NOT NULL,
+    //   "expire" timestamp(6) NOT NULL
+    // ) WITH (OIDS=FALSE);
+    // ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+    // CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+
+    try {
+        await pool.query(createUserTableQuery);
+        console.log('Tabela "users" sprawdzona/utworzona pomyślnie.');
+        // connect-pg-simple powinien sam zadbać o tabelę sesji
+        console.log('Magazyn sesji connect-pg-simple powinien sam utworzyć tabelę "session", jeśli nie istnieje.');
+    } catch (err) {
+        console.error('Błąd podczas tworzenia/sprawdzania tabeli "users":', err);
+    }
+}
+initializeDatabase();
+
+// --- Konfiguracja aplikacji Express ---
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Skonfiguruj sesje
-// WAŻNE: W produkcji 'secret' powinien być długim, losowym ciągiem znaków i przechowywanym bezpiecznie (np. w zmiennych środowiskowych)
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+    console.error('FATAL ERROR: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona! Sesje nie będą działać poprawnie.');
+} else if (sessionSecret === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!' && process.env.NODE_ENV === 'production') {
+    console.warn('UWAGA: Używasz domyślnego sekretu sesji w środowisku produkcyjnym! ZMIEŃ TO NATYCHMIAST na długi, losowy ciąg znaków w zmiennych środowiskowych Render!');
+}
+
+// Konfiguracja magazynu sesji w PostgreSQL
+const sessionStore = new pgSession({
+    pool: pool,                // Pula połączeń PostgreSQL
+    tableName: 'session',      // Nazwa tabeli sesji (domyślna)
+    // Można dodać inne opcje, np. pruneSessionInterval
+});
+
 app.use(session({
-    secret: 'bardzo-tajny-sekret-do-zmiany-w-produkcji!', // ZMIEŃ TO!
-    resave: false, // Nie zapisuj sesji, jeśli nie była modyfikowana
-    saveUninitialized: false, // Nie twórz sesji, dopóki coś nie zostanie w niej zapisane
+    store: sessionStore, // Używamy naszego magazynu sesji w PostgreSQL
+    secret: sessionSecret || 'domyslny-sekret-na-wszelki-wypadek',
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Używaj bezpiecznych ciasteczek (HTTPS) w produkcji
-        maxAge: 1000 * 60 * 60 * 24 // Czas życia ciasteczka sesji (np. 1 dzień)
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+        httpOnly: true,
+        sameSite: 'lax' // Dobre ustawienie dla większości przypadków
     }
 }));
 
-// Serwowanie plików statycznych (HTML, CSS, JS z frontendu) z folderu 'public'
-// __dirname to bieżący katalog, w którym znajduje się server.js
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- "Baza danych" w pamięci (TYLKO DO CELÓW DEMONSTRACYJNYCH!) ---
-// W prawdziwej aplikacji tutaj byłoby połączenie z bazą danych (np. PostgreSQL, MongoDB)
-let users = []; // Tablica do przechowywania zarejestrowanych użytkowników
-let userIdCounter = 1; // Prosty licznik ID użytkowników
+app.use((req, res, next) => {
+    console.log(`Przychodzące żądanie: ${req.method} ${req.url}`);
+    console.log('Aktualna sesja (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+    next();
+});
 
 // --- Definicje ścieżek (Routes) ---
 
-// Strona główna - przekierowuje do index.html z folderu public
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Ścieżka do strony rejestracji (GET) - serwuje plik register.html
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
-// Obsługa formularza rejestracji (POST)
 app.post('/register', async (req, res) => {
+    console.log('POST /register, dane z formularza:', req.body);
     const { username, email, password, 'confirm-password': confirmPassword } = req.body;
 
-    // Prosta walidacja (w realnej aplikacji byłaby bardziej rozbudowana)
     if (!username || !email || !password || !confirmPassword) {
+        console.log('Błąd walidacji rejestracji: brakujące pola');
         return res.status(400).send('Wszystkie pola są wymagane!');
     }
     if (password !== confirmPassword) {
+        console.log('Błąd walidacji rejestracji: hasła niezgodne');
         return res.status(400).send('Hasła nie są zgodne!');
-    }
-    if (users.find(user => user.email === email)) {
-        return res.status(400).send('Użytkownik o takim adresie email już istnieje!');
-    }
-    if (users.find(user => user.username === username)) {
-        return res.status(400).send('Użytkownik o takiej nazwie już istnieje!');
     }
 
     try {
-        // Hashowanie hasła przed zapisem
+        const existingUser = await pool.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
+        if (existingUser.rows.length > 0) {
+            if (existingUser.rows[0].email === email) {
+                console.log(`Próba rejestracji na istniejący email: ${email}`);
+                return res.status(400).send('Użytkownik o takim adresie email już istnieje!');
+            }
+            if (existingUser.rows[0].username === username) {
+                console.log(`Próba rejestracji na istniejącą nazwę użytkownika: ${username}`);
+                return res.status(400).send('Użytkownik o takiej nazwie już istnieje!');
+            }
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        console.log(`Haszowanie hasła dla użytkownika: ${username} zakończone.`);
 
-        const newUser = {
-            id: userIdCounter++,
-            username,
-            email,
-            password: hashedPassword // Zapisujemy zahashowane hasło
-        };
-        users.push(newUser);
-        console.log('Nowy użytkownik zarejestrowany:', newUser); // Logowanie na serwerze
-        console.log('Wszyscy użytkownicy:', users);
+        const insertUserQuery = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username';
+        const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword]);
+        const newUser = newUserResult.rows[0];
 
-        // Po udanej rejestracji, automatycznie zaloguj użytkownika i przekieruj do panelu
+        console.log('Nowy użytkownik zarejestrowany i zapisany do bazy:', newUser);
+
         req.session.userId = newUser.id;
         req.session.username = newUser.username;
-        res.redirect('/dashboard');
+        console.log('Sesja ustawiona po rejestracji (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+        
+        req.session.save(err => {
+            if (err) {
+                console.error('Błąd podczas zapisywania sesji po rejestracji:', err);
+                return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
+            }
+            console.log('Sesja zapisana, przekierowanie do /dashboard');
+            res.redirect('/dashboard');
+        });
 
     } catch (error) {
-        console.error("Błąd podczas hashowania hasła:", error);
+        console.error("Krytyczny błąd podczas rejestracji:", error);
         res.status(500).send('Wystąpił błąd serwera podczas rejestracji.');
     }
 });
 
-// Ścieżka do strony logowania (GET) - serwuje plik login.html
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Obsługa formularza logowania (POST)
 app.post('/login', async (req, res) => {
+    console.log('POST /login, dane z formularza:', req.body);
     const { email, password } = req.body;
 
     if (!email || !password) {
+        console.log('Błąd walidacji logowania: brakujące email lub hasło');
         return res.status(400).send('Email i hasło są wymagane!');
     }
 
-    const user = users.find(u => u.email === email);
-    if (!user) {
-        return res.status(400).send('Nieprawidłowy email lub hasło.'); // Ogólny komunikat dla bezpieczeństwa
-    }
-
     try {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        if (!user) {
+            console.log(`Nie znaleziono użytkownika dla email: ${email}`);
             return res.status(400).send('Nieprawidłowy email lub hasło.');
         }
+        console.log(`Znaleziono użytkownika: ${user.username}, ID: ${user.id}`);
 
-        // Ustawienie sesji po pomyślnym logowaniu
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            console.log(`Błędne hasło dla użytkownika: ${user.username}`);
+            return res.status(400).send('Nieprawidłowy email lub hasło.');
+        }
+        console.log(`Hasło poprawne dla użytkownika: ${user.username}`);
+
         req.session.userId = user.id;
         req.session.username = user.username;
-        console.log(`Użytkownik ${user.username} zalogowany.`);
+        console.log('Sesja ustawiona po logowaniu (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
 
-        res.redirect('/dashboard'); // Przekierowanie do panelu użytkownika
+        req.session.save(err => {
+            if (err) {
+                console.error('Błąd podczas zapisywania sesji po logowaniu:', err);
+                return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
+            }
+            console.log('Sesja zapisana, przekierowanie do /dashboard');
+            res.redirect('/dashboard');
+        });
 
     } catch (error) {
-        console.error("Błąd podczas porównywania hasła:", error);
+        console.error("Krytyczny błąd podczas logowania:", error);
         res.status(500).send('Wystąpił błąd serwera podczas logowania.');
     }
 });
 
-// Middleware sprawdzający, czy użytkownik jest zalogowany
 function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
-        return next(); // Użytkownik jest zalogowany, kontynuuj
+    console.log('Middleware isAuthenticated - sprawdzanie sesji (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+    if (req.session && req.session.userId) {
+        console.log(`Użytkownik ${req.session.username} (ID: ${req.session.userId}, SesjaID: ${req.sessionID}) jest uwierzytelniony. Dostęp do ${req.originalUrl}`);
+        return next();
     }
-    res.redirect('/login'); // Użytkownik nie jest zalogowany, przekieruj do logowania
+    console.log(`Użytkownik NIE jest uwierzytelniony (brak userId w sesji, SesjaID: ${req.sessionID}). Przekierowanie do /login z ${req.originalUrl}`);
+    res.redirect('/login');
 }
 
-// Ścieżka do panelu użytkownika (GET) - wymaga zalogowania
-// Używamy middleware `isAuthenticated`
 app.get('/dashboard', isAuthenticated, (req, res) => {
-    // Tutaj moglibyśmy przekazać dane użytkownika do szablonu,
-    // ale ponieważ serwujemy statyczny HTML, musielibyśmy go modyfikować po stronie klienta
-    // lub użyć systemu szablonów (np. EJS, Handlebars)
-    // Na razie po prostu serwujemy plik dashboard.html
-    // Nazwę użytkownika można by wstrzyknąć przez JavaScript na froncie, pobierając ją np. z API
+    console.log(`Serwowanie /dashboard dla użytkownika: ${req.session.username} (SesjaID: ${req.sessionID})`);
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Ścieżka do pobrania danych zalogowanego użytkownika (API endpoint)
 app.get('/api/user', isAuthenticated, (req, res) => {
-    // Zwracamy tylko bezpieczne dane, nigdy hasła!
-    res.json({
-        userId: req.session.userId,
-        username: req.session.username
-    });
+    console.log(`Zapytanie do /api/user od użytkownika: ${req.session.username} (SesjaID: ${req.sessionID})`);
+    if (req.session.username && req.session.userId) {
+        res.json({
+            username: req.session.username,
+            userId: req.session.userId
+        });
+    } else {
+        console.warn(`/api/user - brak danych użytkownika w sesji (SesjaID: ${req.sessionID}), mimo przejścia isAuthenticated.`);
+        res.status(404).json({ error: 'User data not found in session' });
+    }
 });
 
-
-// Obsługa wylogowania (GET lub POST)
 app.get('/logout', (req, res) => {
+    const username = req.session.username;
+    const sessionID = req.sessionID;
+    console.log(`Próba wylogowania użytkownika: ${username || 'niezidentyfikowany'} (SesjaID: ${sessionID})`);
+    
     req.session.destroy(err => {
         if (err) {
-            console.error('Błąd podczas niszczenia sesji:', err);
+            console.error(`Błąd podczas niszczenia sesji (ID: ${sessionID}) przy wylogowywaniu:`, err);
             return res.status(500).send('Nie udało się wylogować.');
         }
-        console.log('Użytkownik wylogowany.');
-        res.clearCookie('connect.sid'); // Nazwa ciasteczka sesji może zależeć od konfiguracji
-        res.redirect('/'); // Przekierowanie na stronę główną
+        res.clearCookie('connect.sid'); 
+        console.log(`Użytkownik ${username || ''} wylogowany pomyślnie (SesjaID: ${sessionID}). Przekierowanie na /`);
+        res.redirect('/');
     });
 });
-
 
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
-    console.log(`Przejdź do http://localhost:${PORT} w przeglądarce.`);
+    console.log(`Dostępny pod adresem: http://localhost:${PORT} (jeśli lokalnie)`);
+    if (!process.env.DATABASE_URL) {
+        console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona. Aplikacja może nie działać poprawnie z bazą danych.');
+    }
+    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!') {
+        console.warn('OSTRZEŻENIE: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona lub używa wartości domyślnej. ZMIEŃ TO W PRODUKCJI!');
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        console.warn('OSTRZEŻENIE: Aplikacja działa w trybie deweloperskim (NODE_ENV nie jest ustawione na "production").');
+    } else {
+        console.log('Aplikacja działa w trybie produkcyjnym.');
+    }
     console.log('---');
-    console.log('Pamiętaj, że to jest BARDZO UPROSZCZONY backend.');
-    console.log('W prawdziwej aplikacji potrzebujesz:');
-    console.log('  - Prawdziwej bazy danych (np. PostgreSQL na Render).');
-    console.log('  - Bezpieczniejszego zarządzania sekretami sesji.');
-    console.log('  - Rozbudowanej walidacji danych wejściowych.');
-    console.log('  - Lepszej obsługi błędów.');
-    console.log('  - Być może systemu szablonów (np. EJS) jeśli chcesz dynamicznie generować HTML na serwerze.');
+    console.log('Magazyn sesji skonfigurowany do używania PostgreSQL (connect-pg-simple).');
     console.log('---');
 });
