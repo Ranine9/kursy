@@ -43,16 +43,20 @@ async function initializeDatabase() {
             username VARCHAR(255) UNIQUE NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) DEFAULT 'user' NOT NULL, -- Dodano pole roli, domyślnie 'user'
+            role VARCHAR(50) DEFAULT 'user' NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Dodaj przykładowego admina, jeśli tabela jest pusta i go nie ma (tylko dla ułatwienia startu)
-    // W produkcji role admina nadawaj w bezpieczniejszy sposób!
+    // Zapytanie do dodania kolumny 'role', jeśli nie istnieje
+    const alterUserTableQuery = `
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
+    `;
+
     const addAdminUserIfNeeded = async () => {
         try {
             const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-            const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword'; // Ustaw silne hasło w zmiennych środowiskowych!
+            const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
             
             const res = await pool.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
             if (res.rows.length === 0) {
@@ -62,20 +66,17 @@ async function initializeDatabase() {
                     'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
                     ['admin', adminEmail, hashedPassword, 'admin']
                 );
-                console.log(`Dodano domyślnego użytkownika admina: ${adminEmail} (hasło: ${adminPassword} - ZMIEŃ JE!). Rola: admin.`);
-                console.log("Pamiętaj, aby ustawić ADMIN_EMAIL i ADMIN_PASSWORD w zmiennych środowiskowych dla bezpieczeństwa.");
+                console.log(`Dodano domyślnego użytkownika admina: ${adminEmail}. Rola: admin.`);
             } else {
-                // Upewnij się, że istniejący użytkownik ma rolę admina, jeśli to ten sam email
                 if (res.rows[0].role !== 'admin' && res.rows[0].email === adminEmail) {
                     await pool.query('UPDATE users SET role = $1 WHERE email = $2', ['admin', adminEmail]);
                     console.log(`Użytkownik ${adminEmail} już istniał, nadano rolę "admin".`);
                 }
             }
         } catch (dbError) {
-            console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError);
+            console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message); // Logujemy tylko wiadomość błędu
         }
     };
-
 
     const createSessionTableQuery = `
         CREATE TABLE IF NOT EXISTS "session" (
@@ -87,21 +88,28 @@ async function initializeDatabase() {
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `;
     try {
-        await pool.query(createUserTableQuery);
-        console.log('Tabela "users" sprawdzona/utworzona pomyślnie (z polem role).');
-        await addAdminUserIfNeeded(); // Sprawdź i dodaj admina
+        // Najpierw upewnij się, że tabela users istnieje (nawet jeśli bez 'role' na początku)
+        await pool.query(createUserTableQuery.replace(",\n            role VARCHAR(50) DEFAULT 'user' NOT NULL", "")); // Wersja bez 'role' dla pierwszego sprawdzenia
+        console.log('Tabela "users" (wstępne sprawdzenie) istnieje lub została utworzona.');
+
+        // Następnie spróbuj dodać kolumnę 'role', jeśli jej nie ma
+        await pool.query(alterUserTableQuery);
+        console.log('Kolumna "role" w tabeli "users" sprawdzona/dodana pomyślnie.');
+
+        // Teraz, gdy kolumna 'role' na pewno istnieje, możemy dodać/zaktualizować admina
+        await addAdminUserIfNeeded();
         
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
 
     } catch (err) {
-        console.error('Błąd podczas inicjalizacji bazy danych (tworzenia tabel):', err);
+        console.error('Błąd podczas inicjalizacji bazy danych:', err);
     }
 }
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
-// ... (bez zmian)
+// ... (reszta kodu bez zmian, aż do końca pliku)
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -187,7 +195,6 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
-// ... (bodyParser, sessionStore, app.use(session(...)), static, middleware logujący żądania - bez zmian)
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionSecret = process.env.SESSION_SECRET;
@@ -230,9 +237,7 @@ app.use((req, res, next) => {
 
 // --- Middleware autoryzacyjne ---
 function isAuthenticated(req, res, next) {
-    // console.log('Middleware isAuthenticated - sprawdzanie sesji (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
     if (req.session && req.session.userId) {
-        // console.log(`  Użytkownik ${req.session.username} (ID: ${req.session.userId}, SesjaID: ${req.sessionID}) jest uwierzytelniony. Dostęp do ${req.originalUrl}`);
         return next();
     }
     console.log(`  Użytkownik NIE jest uwierzytelniony (brak userId w sesji, SesjaID: ${req.sessionID}). Przekierowanie do /login z ${req.originalUrl}`);
@@ -240,7 +245,6 @@ function isAuthenticated(req, res, next) {
 }
 
 async function isAdmin(req, res, next) {
-    // console.log('Middleware isAdmin - sprawdzanie roli użytkownika (ID: ' + req.session.userId + ')');
     if (!req.session.userId) {
         console.log('isAdmin: Brak userId w sesji. Użytkownik nie jest zalogowany.');
         return res.status(401).send('Brak autoryzacji - musisz być zalogowany.');
@@ -248,7 +252,6 @@ async function isAdmin(req, res, next) {
     try {
         const result = await pool.query('SELECT role FROM users WHERE id = $1', [req.session.userId]);
         if (result.rows.length > 0 && result.rows[0].role === 'admin') {
-            // console.log(`  Użytkownik ${req.session.username} (ID: ${req.session.userId}) ma rolę "admin". Dostęp do ${req.originalUrl}`);
             return next();
         } else {
             console.log(`  Użytkownik ${req.session.username} (ID: ${req.session.userId}) NIE ma roli "admin" (rola: ${result.rows.length > 0 ? result.rows[0].role : 'brak'}). Odmowa dostępu do ${req.originalUrl}`);
@@ -260,9 +263,7 @@ async function isAdmin(req, res, next) {
     }
 }
 
-
 // --- Definicje ścieżek (Routes) ---
-// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - bez zmian)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -272,7 +273,6 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    // console.log('POST /register, dane z formularza:', req.body);
     const { username, email, password, 'confirm-password': confirmPassword } = req.body;
 
     if (!username || !email || !password || !confirmPassword) {
@@ -286,11 +286,9 @@ app.post('/register', async (req, res) => {
         const existingUser = await pool.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
         if (existingUser.rows.length > 0) {
             if (existingUser.rows[0].email === email) {
-                // console.log(`Próba rejestracji na istniejący email: ${email}`);
                 return res.status(400).send('Użytkownik o takim adresie email już istnieje!');
             }
             if (existingUser.rows[0].username === username) {
-                // console.log(`Próba rejestracji na istniejącą nazwę użytkownika: ${username}`);
                 return res.status(400).send('Użytkownik o takiej nazwie już istnieje!');
             }
         }
@@ -298,28 +296,22 @@ app.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         
-        // Domyślnie rola to 'user', chyba że to pierwszy użytkownik - wtedy można by dać 'admin'
-        // Ale na razie zostawiamy domyślną 'user' przy standardowej rejestracji.
-        // Rola admina będzie nadawana ręcznie lub przez specjalny proces.
-        const insertUserQuery = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email';
-        const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword]);
+        const insertUserQuery = 'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email';
+        // Nowi użytkownicy domyślnie dostają rolę 'user'
+        const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword, 'user']);
         const newUser = newUserResult.rows[0];
         console.log('Nowy użytkownik zarejestrowany i zapisany do bazy:', newUser);
 
         req.session.userId = newUser.id;
         req.session.username = newUser.username;
-        // console.log('Sesja ustawiona po rejestracji (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+        req.session.role = 'user'; // Ustawiamy rolę w sesji
         
         req.session.save(async err => { 
             if (err) {
                 console.error('Błąd podczas zapisywania sesji po rejestracji:', err);
                 return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
             }
-            // console.log('Sesja (ID: ' + req.sessionID + ') zapisana po rejestracji.');
-            
             await sendRegistrationEmail(newUser.email, newUser.username); 
-            
-            // console.log('Przekierowanie do /dashboard po rejestracji i (próbie) wysłania emaila.');
             res.redirect('/dashboard');
         });
 
@@ -334,7 +326,6 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    // console.log('POST /login, dane z formularza:', req.body);
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -342,7 +333,7 @@ app.post('/login', async (req, res) => {
     }
 
     try {
-        const result = await pool.query('SELECT id, username, email, password_hash, role FROM users WHERE email = $1', [email]); // Pobieramy też rolę
+        const result = await pool.query('SELECT id, username, email, password_hash, role FROM users WHERE email = $1', [email]);
         const user = result.rows[0];
 
         if (!user) {
@@ -353,23 +344,20 @@ app.post('/login', async (req, res) => {
         if (!isMatch) {
             return res.status(400).send('Nieprawidłowy email lub hasło.');
         }
-        // console.log(`Hasło poprawne dla użytkownika: ${user.username}`);
 
         req.session.userId = user.id;
         req.session.username = user.username;
-        req.session.role = user.role; // Zapisujemy rolę w sesji!
-        // console.log('Sesja ustawiona po logowaniu (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+        req.session.role = user.role; 
 
         req.session.save(err => {
             if (err) {
                 console.error('Błąd podczas zapisywania sesji po logowaniu:', err);
                 return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
             }
-            // console.log('Sesja (ID: ' + req.sessionID + ') zapisana po logowaniu.');
             if (user.role === 'admin') {
-                res.redirect('/admin/dashboard'); // Przekieruj admina od razu do panelu admina
+                res.redirect('/admin/dashboard'); 
             } else {
-                res.redirect('/dashboard'); // Zwykłego użytkownika do jego panelu
+                res.redirect('/dashboard'); 
             }
         });
 
@@ -380,20 +368,17 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/dashboard', isAuthenticated, (req, res) => {
-    // console.log(`Serwowanie /dashboard dla użytkownika: ${req.session.username} (SesjaID: ${req.sessionID})`);
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 app.get('/api/user', isAuthenticated, (req, res) => {
-    // console.log(`Zapytanie do /api/user od użytkownika: ${req.session.username} (SesjaID: ${req.sessionID})`);
     if (req.session.username && req.session.userId) {
         res.json({
             username: req.session.username,
             userId: req.session.userId,
-            role: req.session.role // Dodajemy rolę do odpowiedzi API
+            role: req.session.role 
         });
     } else {
-        // console.warn(`/api/user - brak danych użytkownika w sesji (SesjaID: ${req.sessionID}), mimo przejścia isAuthenticated.`);
         res.status(404).json({ error: 'User data not found in session' });
     }
 });
@@ -401,7 +386,6 @@ app.get('/api/user', isAuthenticated, (req, res) => {
 app.get('/logout', (req, res) => {
     const username = req.session.username;
     const sessionID = req.sessionID;
-    // console.log(`Próba wylogowania użytkownika: ${username || 'niezidentyfikowany'} (SesjaID: ${sessionID})`);
     
     req.session.destroy(err => {
         if (err) {
@@ -409,7 +393,6 @@ app.get('/logout', (req, res) => {
             return res.status(500).send('Nie udało się wylogować.');
         }
         res.clearCookie('connect.sid'); 
-        // console.log(`Użytkownik ${username || ''} wylogowany pomyślnie (SesjaID: ${sessionID}). Przekierowanie na /`);
         res.redirect('/');
     });
 });
@@ -420,10 +403,8 @@ app.get('/admin/dashboard', isAuthenticated, isAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
-// API endpoint do pobierania listy użytkowników (tylko dla admina)
 app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     try {
-        // Wykluczamy hasła z wyniku
         const result = await pool.query('SELECT id, username, email, role, created_at FROM users ORDER BY id ASC');
         res.json(result.rows);
     } catch (error) {
@@ -434,7 +415,6 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
 
 
 // --- Uruchomienie serwera ---
-// ... (logi startowe bez zmian)
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
     if (!process.env.DATABASE_URL) {
@@ -458,6 +438,6 @@ app.listen(PORT, () => {
     console.log('Ustawiono "trust proxy" na 1.');
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL.');
     console.log('Tabela "session" powinna być tworzona przy starcie serwera.');
-    console.log('Pole "role" dodane do tabeli "users".');
+    console.log('Pole "role" w tabeli "users" jest teraz dodawane/sprawdzane przy starcie.');
     console.log('---');
 });
