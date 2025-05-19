@@ -51,23 +51,28 @@ async function initializeDatabase() {
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Tabela dla sesji (connect-pg-simple sam ją utworzy, jeśli nie istnieje,
-    // ale dobrze wiedzieć, jak wygląda)
-    // CREATE TABLE IF NOT EXISTS "session" (
-    //   "sid" varchar NOT NULL COLLATE "default",
-    //   "sess" json NOT NULL,
-    //   "expire" timestamp(6) NOT NULL
-    // ) WITH (OIDS=FALSE);
-    // ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
-    // CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+    // Zapytanie SQL do utworzenia tabeli sesji, jeśli nie istnieje
+    // Struktura tabeli jest zgodna z oczekiwaniami connect-pg-simple
+    const createSessionTableQuery = `
+        CREATE TABLE IF NOT EXISTS "session" (
+            "sid" varchar NOT NULL COLLATE "default",
+            "sess" json NOT NULL,
+            "expire" timestamp(6) NOT NULL
+        )
+        WITH (OIDS=FALSE);
+        ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    `;
 
     try {
         await pool.query(createUserTableQuery);
         console.log('Tabela "users" sprawdzona/utworzona pomyślnie.');
-        // connect-pg-simple powinien sam zadbać o tabelę sesji
-        console.log('Magazyn sesji connect-pg-simple powinien sam utworzyć tabelę "session", jeśli nie istnieje.');
+        
+        await pool.query(createSessionTableQuery);
+        console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
+
     } catch (err) {
-        console.error('Błąd podczas tworzenia/sprawdzania tabeli "users":', err);
+        console.error('Błąd podczas inicjalizacji bazy danych (tworzenia tabel):', err);
     }
 }
 initializeDatabase();
@@ -86,7 +91,7 @@ if (!sessionSecret) {
 const sessionStore = new pgSession({
     pool: pool,                // Pula połączeń PostgreSQL
     tableName: 'session',      // Nazwa tabeli sesji (domyślna)
-    // Można dodać inne opcje, np. pruneSessionInterval
+    // pruneSessionInterval: 60 // Opcjonalnie: jak często (w sekundach) usuwać wygasłe sesje
 });
 
 app.use(session({
@@ -212,6 +217,7 @@ app.post('/login', async (req, res) => {
         req.session.save(err => {
             if (err) {
                 console.error('Błąd podczas zapisywania sesji po logowaniu:', err);
+                // Tutaj był błąd "relation "session" does not exist"
                 return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
             }
             console.log('Sesja zapisana, przekierowanie do /dashboard');
@@ -285,5 +291,6 @@ app.listen(PORT, () => {
     }
     console.log('---');
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL (connect-pg-simple).');
+    console.log('Tabela "session" powinna być teraz tworzona przy starcie serwera, jeśli nie istnieje.');
     console.log('---');
 });
