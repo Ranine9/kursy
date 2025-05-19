@@ -11,7 +11,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .sidebar-link-active { @apply bg-blue-700 text-white; } /* To może nadal działać, ale warto obserwować */
+        .sidebar-link-active { @apply bg-blue-700 text-white; }
         .sidebar-link { @apply transition-colors duration-200 ease-in-out; }
         .table-responsive-wrapper { @apply overflow-x-auto; }
         .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
@@ -22,7 +22,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(75, 85, 99, 0.5); /* Tailwind's bg-gray-600 bg-opacity-50 */
+            background-color: rgba(75, 85, 99, 0.5); 
             overflow-y: auto;
             height: 100%;
             width: 100%;
@@ -34,10 +34,9 @@
         .modal-visible {
             display: flex !important;
         }
-        /* Usunięto @apply z .modal-content, style będą bezpośrednio w HTML */
         .modal-content {
-            /* @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto; */
-            position: relative; /* Dla pozycjonowania przycisku zamknięcia */
+            /* Tailwind classes are now directly in the HTML for .modal-content div */
+            position: relative; 
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -203,8 +202,8 @@
     </div>
 
     <script>
-        // Cały kod JavaScript pozostaje bez zmian
         document.addEventListener('DOMContentLoaded', function () {
+            // ... (reszta kodu JS z poprzedniej wersji - definicje zmiennych, formatDate, fetchAndDisplayUsers, renderUserTable, openEditModal, closeEditModal, obsługa formularza edycji, showSection, obsługa linków nawigacyjnych)
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
             const navLinks = document.querySelectorAll('aside nav a');
@@ -283,13 +282,13 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button title="Edytuj" class="edit-user-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
-                                <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}"><i class="fas fa-trash-alt"></i></button>
+                                <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>
-                    `;
+                    `; // Dodano data-username do przycisku usuwania
                     userTableBody.insertAdjacentHTML('beforeend', rowHTML);
                 });
-                addEventListenersToEditButtons(); 
+                addEventListenersToActionButtons(); // Zmieniono nazwę funkcji i będzie dodawać listenery do obu typów przycisków
             }
 
             function openEditModal(userId) {
@@ -325,17 +324,56 @@
                 }
             }
 
-            function addEventListenersToEditButtons() {
+            async function handleDeleteUser(userId, username) {
+                console.log(`Admin Dashboard JS: handleDeleteUser() called for userId: ${userId}, username: ${username}`);
+                if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            method: 'DELETE',
+                        });
+                        
+                        const responseData = await response.json(); // Spróbuj odczytać odpowiedź, nawet jeśli jest to błąd
+                        console.log("Admin Dashboard JS: Odpowiedź serwera na DELETE:", response.status, responseData);
+
+                        if (!response.ok) {
+                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        }
+                        alert(`Użytkownik "${username}" usunięty pomyślnie.`);
+                        fetchAndDisplayUsers(); // Odśwież listę
+                    } catch (error) {
+                        console.error(`Admin Dashboard JS: Błąd podczas usuwania użytkownika ID ${userId}:`, error);
+                        alert(`Nie udało się usunąć użytkownika: ${error.message}`);
+                    }
+                } else {
+                    console.log("Admin Dashboard JS: Anulowano usuwanie użytkownika ID:", userId);
+                }
+            }
+
+            function addEventListenersToActionButtons() { // Zmieniono nazwę
                 const editButtons = document.querySelectorAll('.edit-user-btn');
-                console.log("Admin Dashboard JS: addEventListenersToEditButtons() - znaleziono przycisków edycji:", editButtons.length);
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons() - znaleziono przycisków edycji:", editButtons.length);
                 editButtons.forEach(button => {
-                    if (!button.hasAttribute('data-listener-attached')) {
+                    if (!button.hasAttribute('data-listener-attached-edit')) { // Zmieniono atrybut
                         button.addEventListener('click', function() {
                             const userId = this.dataset.userid;
                             console.log("Admin Dashboard JS: Przycisk Edytuj kliknięty dla userId:", userId);
                             openEditModal(userId);
                         });
-                        button.setAttribute('data-listener-attached', 'true');
+                        button.setAttribute('data-listener-attached-edit', 'true');
+                    }
+                });
+
+                const deleteButtons = document.querySelectorAll('.delete-user-btn');
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons() - znaleziono przycisków usuwania:", deleteButtons.length);
+                deleteButtons.forEach(button => {
+                    if (!button.hasAttribute('data-listener-attached-delete')) { // Zmieniono atrybut
+                        button.addEventListener('click', function() {
+                            const userId = this.dataset.userid;
+                            const username = this.dataset.username; // Pobierz username dla potwierdzenia
+                            console.log("Admin Dashboard JS: Przycisk Usuń kliknięty dla userId:", userId);
+                            handleDeleteUser(userId, username);
+                        });
+                        button.setAttribute('data-listener-attached-delete', 'true');
                     }
                 });
             }

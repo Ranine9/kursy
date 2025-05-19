@@ -187,11 +187,10 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
-app.use(bodyParser.json()); // WAŻNE: Do parsowania JSON z ciała żądania PUT
+app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionSecret = process.env.SESSION_SECRET;
-// ... (reszta konfiguracji sesji bez zmian)
 if (!sessionSecret) {
     console.error('FATAL ERROR: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona! Sesje nie będą działać poprawnie.');
 } else if (sessionSecret === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!' && process.env.NODE_ENV === 'production') {
@@ -231,7 +230,6 @@ app.use((req, res, next) => {
 
 
 // --- Middleware autoryzacyjne ---
-// ... (isAuthenticated i isAdmin bez zmian)
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.userId) {
         return next();
@@ -260,7 +258,6 @@ async function isAdmin(req, res, next) {
 }
 
 // --- Definicje ścieżek (Routes) ---
-// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - bez zmian)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -409,10 +406,10 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// NOWY Endpoint: Aktualizacja danych użytkownika przez admina
 app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
-    const userId = parseInt(req.params.id); // ID użytkownika z parametru ścieżki
-    const { username, email, role, password } = req.body; // Dane do aktualizacji z ciała żądania
+    // ... (kod aktualizacji użytkownika bez zmian) ...
+    const userId = parseInt(req.params.id); 
+    const { username, email, role, password } = req.body; 
 
     console.log(`Admin próbuje zaktualizować użytkownika ID: ${userId} z danymi:`, req.body);
 
@@ -424,7 +421,6 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
     }
 
     try {
-        // Sprawdź, czy nowy email lub username nie koliduje z innymi użytkownikami (oprócz edytowanego)
         const conflictCheck = await pool.query(
             'SELECT id FROM users WHERE (email = $1 OR username = $2) AND id != $3',
             [email, username, userId]
@@ -434,8 +430,8 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
         }
 
         let hashedPassword = null;
-        if (password && password.trim() !== '') { // Jeśli podano nowe hasło
-            if (password.length < 6) { // Prosta walidacja długości hasła
+        if (password && password.trim() !== '') { 
+            if (password.length < 6) { 
                  return res.status(400).json({ message: 'Nowe hasło musi mieć co najmniej 6 znaków.' });
             }
             const salt = await bcrypt.genSalt(10);
@@ -443,7 +439,6 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
             console.log(`Aktualizacja hasła dla użytkownika ID: ${userId}`);
         }
 
-        // Budowanie zapytania SQL dynamicznie
         const updateFields = [];
         const values = [];
         let queryParamIndex = 1;
@@ -462,12 +457,12 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
             values.push(hashedPassword);
         }
 
-        values.push(userId); // Ostatni parametr dla WHERE id = $...
+        values.push(userId); 
 
         const updateUserQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${queryParamIndex} RETURNING id, username, email, role`;
         
         console.log("Wykonywane zapytanie SQL:", updateUserQuery);
-        console.log("Wartości dla zapytania:", values.slice(0, -1)); // Nie logujemy ID z WHERE dla przejrzystości
+        console.log("Wartości dla zapytania:", values.slice(0, -1)); 
 
         const result = await pool.query(updateUserQuery, values);
 
@@ -480,11 +475,40 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
 
     } catch (error) {
         console.error(`Błąd podczas aktualizacji użytkownika ID: ${userId}:`, error);
-        // Specyficzna obsługa błędu unikalności (np. unique constraint violation)
-        if (error.code === '23505') { // Kod błędu PostgreSQL dla naruszenia unikalności
+        if (error.code === '23505') { 
             return res.status(409).json({ message: 'Email lub nazwa użytkownika są już zajęte.' });
         }
         res.status(500).json({ message: 'Błąd serwera podczas aktualizacji użytkownika.' });
+    }
+});
+
+// NOWY Endpoint: Usuwanie użytkownika przez admina
+app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const userIdToDelete = parseInt(req.params.id);
+    const adminUserId = req.session.userId; // ID zalogowanego admina
+
+    console.log(`Admin (ID: ${adminUserId}) próbuje usunąć użytkownika ID: ${userIdToDelete}`);
+
+    if (userIdToDelete === adminUserId) {
+        console.log("Odmowa: Admin nie może usunąć samego siebie.");
+        return res.status(403).json({ message: 'Administrator nie może usunąć własnego konta.' });
+    }
+
+    try {
+        // Można dodać sprawdzenie, czy to nie jest ostatni admin, ale to bardziej złożone
+        const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, username', [userIdToDelete]);
+
+        if (result.rowCount === 0) {
+            console.log(`Nie znaleziono użytkownika ID: ${userIdToDelete} do usunięcia.`);
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
+        }
+
+        console.log('Użytkownik usunięty pomyślnie:', result.rows[0]);
+        res.json({ message: `Użytkownik "${result.rows[0].username}" (ID: ${result.rows[0].id}) został usunięty.` });
+
+    } catch (error) {
+        console.error(`Błąd podczas usuwania użytkownika ID: ${userIdToDelete}:`, error);
+        res.status(500).json({ message: 'Błąd serwera podczas usuwania użytkownika.' });
     }
 });
 
