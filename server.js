@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
-// ... (bez zmian)
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
 }
@@ -38,7 +37,6 @@ pool.connect((err, client, release) => {
 });
 
 async function initializeDatabase() {
-    // ... (bez zmian - tworzenie tabel users i session)
     const createUserTableQuery = `
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -72,14 +70,16 @@ initializeDatabase();
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
-const emailUser = process.env.EMAIL_USER;
-const emailPass = process.env.EMAIL_PASS; // Hasło/Klucz API
+const emailUser = process.env.EMAIL_USER; // Login SMTP
+const emailPass = process.env.EMAIL_PASS; // Hasło/Klucz API SMTP
+const emailSenderAddress = process.env.EMAIL_SENDER_ADDRESS; // Adres "Od", który jest zweryfikowany w Brevo
 
 console.log("Odczytane zmienne środowiskowe dla Nodemailer:");
-console.log("  EMAIL_HOST:", emailHost ? emailHost.substring(0, 10) + "..." : "NIEUSTAWIONY"); // Logujemy tylko część dla bezpieczeństwa
+console.log("  EMAIL_HOST:", emailHost ? emailHost.substring(0, 10) + "..." : "NIEUSTAWIONY");
 console.log("  EMAIL_PORT:", emailPort);
-console.log("  EMAIL_USER:", emailUser ? emailUser.substring(0, 5) + "***" : "NIEUSTAWIONY");
-console.log("  EMAIL_PASS:", emailPass ? "USTAWIONE (długość: " + emailPass.length + ")" : "NIEUSTAWIONE");
+console.log("  EMAIL_USER (Login SMTP):", emailUser ? emailUser.substring(0, 5) + "***" : "NIEUSTAWIONY");
+console.log("  EMAIL_PASS (Klucz API SMTP):", emailPass ? "USTAWIONE (długość: " + emailPass.length + ")" : "NIEUSTAWIONE");
+console.log("  EMAIL_SENDER_ADDRESS (Adres 'Od'):", emailSenderAddress || "NIEUSTAWIONY (użyje EMAIL_USER lub domyślnego)");
 
 
 if (emailHost && emailUser && emailPass) {
@@ -87,27 +87,26 @@ if (emailHost && emailUser && emailPass) {
         host: emailHost,
         port: emailPort,
         auth: {
-            user: emailUser,
-            pass: emailPass,
+            user: emailUser, // Login do serwera SMTP
+            pass: emailPass, // Hasło/klucz API do serwera SMTP
         },
-        logger: true, // Włączamy bardziej szczegółowe logowanie z nodemailer
-        debug: true   // Włączamy debugowanie z nodemailer
+        logger: true, 
+        debug: true   
     };
 
     if (emailPort === 587) {
-        transportOptions.secure = false; // Dla STARTTLS, secure jest false
-        transportOptions.requireTLS = true; // Wymuś STARTTLS
+        transportOptions.secure = false; 
+        transportOptions.requireTLS = true; 
         console.log("Konfiguracja Nodemailer dla portu 587 (STARTTLS): secure=false, requireTLS=true");
     } else if (emailPort === 465) {
-        transportOptions.secure = true; // Dla SSL, secure jest true
+        transportOptions.secure = true; 
         console.log("Konfiguracja Nodemailer dla portu 465 (SSL): secure=true");
     } else {
         console.log("Konfiguracja Nodemailer dla portu", emailPort, "(domyślne ustawienia secure)");
-         transportOptions.secure = (emailPort === 465); // Domyślne zachowanie
+         transportOptions.secure = (emailPort === 465); 
     }
     
-    console.log("Nodemailer auth object:", JSON.stringify(transportOptions.auth, (key, value) => key === 'pass' ? '********' : value));
-
+    console.log("Nodemailer auth object (login do SMTP):", JSON.stringify(transportOptions.auth, (key, value) => key === 'pass' ? '********' : value));
 
     transporter = nodemailer.createTransport(transportOptions);
 
@@ -119,10 +118,11 @@ if (emailHost && emailUser && emailPass) {
         }
     });
 } else {
-    console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email. Wysyłka maili będzie symulowana.");
+    console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili będzie symulowana.");
     transporter = {
         sendMail: async (mailOptions) => {
-            console.log("Symulacja wysyłki e-maila (konfiguracja Nodemailer niekompletna):");
+            console.log("Symulacja wysyłki e-maila (konfiguracja SMTP niekompletna):");
+            console.log("  OD:", mailOptions.from)
             console.log("  DO:", mailOptions.to);
             console.log("  TEMAT:", mailOptions.subject);
             return { messageId: "symulacja-" + Date.now() };
@@ -131,9 +131,13 @@ if (emailHost && emailUser && emailPass) {
 }
 
 async function sendRegistrationEmail(userEmail, username) {
-    // ... (treść mailOptions bez zmian)
+    // Użyj EMAIL_SENDER_ADDRESS jako adresu "Od", jeśli jest zdefiniowany.
+    // W przeciwnym razie, użyj EMAIL_USER (loginu SMTP), co może być problematyczne, jeśli nie jest to zweryfikowany adres nadawcy.
+    // Najlepiej zawsze mieć ustawiony i zweryfikowany EMAIL_SENDER_ADDRESS.
+    const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com';
+
     const mailOptions = {
-        from: `"Platforma KursyOnline" <${process.env.EMAIL_USER || 'noreply@example.com'}>`,
+        from: `"Platforma KursyOnline" <${fromAddress}>`, // Używamy zweryfikowanego adresu nadawcy
         to: userEmail,
         subject: 'Witaj w KursyOnline! Potwierdzenie rejestracji',
         text: `Witaj ${username},\n\nDziękujemy za rejestrację na platformie KursyOnline!\n\nPozdrawiamy,\nZespół KursyOnline`,
@@ -141,12 +145,11 @@ async function sendRegistrationEmail(userEmail, username) {
     };
 
     try {
-        console.log(`Próba wysłania e-maila rejestracyjnego do: ${userEmail} z użyciem użytkownika SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'}`);
+        console.log(`Próba wysłania e-maila rejestracyjnego DO: ${userEmail} OD: ${fromAddress} (login SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'})`);
         let info = await transporter.sendMail(mailOptions);
         console.log('Informacja o wysłaniu emaila z potwierdzeniem rejestracji: %s do %s', info.messageId, userEmail);
     } catch (error) {
         console.error('Błąd podczas wysyłania emaila z potwierdzeniem rejestracji:', error);
-        // Dodatkowe logowanie błędu, jeśli jest dostępny obiekt error.response
         if (error.response) {
             console.error('Odpowiedź serwera SMTP:', error.response);
         }
@@ -154,7 +157,6 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
-// ... (bodyParser, sessionStore, app.use(session(...)), static, middleware logujący żądania - bez zmian)
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionSecret = process.env.SESSION_SECRET;
@@ -197,8 +199,6 @@ app.use((req, res, next) => {
 
 
 // --- Definicje ścieżek (Routes) ---
-// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - logika wysyłania emaila jest w POST /register)
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -355,7 +355,6 @@ app.get('/logout', (req, res) => {
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
-    // ... (reszta logów startowych bez zmian)
     if (!process.env.DATABASE_URL) {
         console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona.');
     }
@@ -367,8 +366,11 @@ app.listen(PORT, () => {
     } else {
         console.log('Aplikacja działa w trybie produkcyjnym.');
     }
-    if (!emailHost || !emailUser || !emailPass) { // Sprawdzamy odczytane zmienne
-        console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email. Wysyłka maili będzie symulowana.");
+    if (!emailHost || !emailUser || !emailPass) { 
+        console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili będzie symulowana.");
+    }
+    if (!emailSenderAddress && (emailHost && emailUser && emailPass)) {
+        console.warn("OSTRZEŻENIE: Zmienna EMAIL_SENDER_ADDRESS nie jest ustawiona. Jako adres 'Od' zostanie użyty login SMTP (EMAIL_USER), co może powodować problemy z dostarczalnością lub błędy, jeśli nie jest to zweryfikowany nadawca w Brevo.");
     }
     console.log('---');
     console.log('Ustawiono "trust proxy" na 1.');
