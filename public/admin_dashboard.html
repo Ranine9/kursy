@@ -19,6 +19,14 @@
         .sidebar-link {
             @apply transition-colors duration-200 ease-in-out;
         }
+        /* Dodatkowe style dla responsywności tabeli */
+        .table-responsive-wrapper {
+            @apply overflow-x-auto;
+        }
+        /* Lepsze ostylowanie przycisków akcji w tabeli */
+        .action-btn {
+            @apply p-1 rounded hover:bg-gray-200 transition-colors;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -67,53 +75,37 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-600 mb-2">Zarejestrowani Użytkownicy</h3>
-                            <p class="text-3xl font-bold text-blue-600">125</p> </div>
+                            <p id="stats-total-users" class="text-3xl font-bold text-blue-600">Ładowanie...</p>
+                        </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Kursów</h3>
-                            <p class="text-3xl font-bold text-green-600">15</p> </div>
+                            <p id="stats-total-courses" class="text-3xl font-bold text-green-600">0</p> </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywne Subskrypcje</h3>
-                            <p class="text-3xl font-bold text-yellow-500">78</p> </div>
+                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywni Admini</h3>
+                            <p id="stats-total-admins" class="text-3xl font-bold text-purple-600">Ładowanie...</p>
+                        </div>
                     </div>
                 </section>
 
                 <section id="user-management" class="admin-section hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
-                        </div>
-                    <div class="bg-white shadow-lg rounded-lg overflow-x-auto">
+                    </div>
+                    <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nazwa Użytkownika</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rola</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Rejestracji</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">1</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">AdminKursowy</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">admin@example.com</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-05-20</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
-                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">JanKowalski</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">jan@example.com</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-05-21</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
-                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
-                                    </td>
-                                </tr>
-                                </tbody>
+                            <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -138,20 +130,8 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">KURS001</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Wprowadzenie do JavaScript</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Programowanie</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">25</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Opublikowany</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
-                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
-                                    </td>
-                                </tr>
-                                </tbody>
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Brak kursów do wyświetlenia.</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -171,37 +151,108 @@
             const navLinks = document.querySelectorAll('aside nav a');
             const sections = document.querySelectorAll('.admin-section');
             const pageTitle = document.getElementById('page-title');
+            const userTableBody = document.getElementById('user-table-body');
+            const statsTotalUsers = document.getElementById('stats-total-users');
+            const statsTotalAdmins = document.getElementById('stats-total-admins');
+
+
+            // Funkcja do formatowania daty
+            function formatDate(dateString) {
+                if (!dateString) return 'Brak danych';
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                return new Date(dateString).toLocaleDateString('pl-PL', options);
+            }
+
+            // Funkcja do pobierania i wyświetlania użytkowników
+            async function fetchAndDisplayUsers() {
+                try {
+                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
+                    const response = await fetch('/api/admin/users'); // Zapytanie do API
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                             userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
+                             // Można rozważyć przekierowanie na stronę logowania admina, jeśli taka istnieje
+                        } else {
+                            throw new Error(`Błąd HTTP! status: ${response.status}`);
+                        }
+                        return;
+                    }
+                    const users = await response.json();
+
+                    if (users.length === 0) {
+                        userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
+                        statsTotalUsers.textContent = '0';
+                        statsTotalAdmins.textContent = '0';
+                        return;
+                    }
+
+                    userTableBody.innerHTML = ''; // Wyczyść placeholder "Ładowanie..."
+                    let adminCount = 0;
+                    users.forEach(user => {
+                        if (user.role === 'admin') {
+                            adminCount++;
+                        }
+                        const row = `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.role}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button title="Edytuj" class="text-blue-600 hover:text-blue-800 mr-2 action-btn"><i class="fas fa-edit"></i></button>
+                                    <button title="Usuń" class="text-red-600 hover:text-red-800 action-btn"><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                        userTableBody.insertAdjacentHTML('beforeend', row);
+                    });
+                    statsTotalUsers.textContent = users.length;
+                    statsTotalAdmins.textContent = adminCount;
+
+                } catch (error) {
+                    console.error('Błąd podczas pobierania użytkowników:', error);
+                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych.</td></tr>';
+                    statsTotalUsers.textContent = 'Błąd';
+                    statsTotalAdmins.textContent = 'Błąd';
+                }
+            }
 
             // Funkcja do pokazywania sekcji i aktualizowania aktywnego linku
             function showSection(targetId) {
                 sections.forEach(section => {
-                    if (section.id === targetId) {
-                        section.classList.remove('hidden');
-                    } else {
-                        section.classList.add('hidden');
-                    }
+                    section.classList.toggle('hidden', section.id !== targetId);
                 });
 
                 navLinks.forEach(link => {
-                    if (link.getAttribute('href') === '#' + targetId) {
-                        link.classList.add('sidebar-link-active');
-                        pageTitle.textContent = link.textContent.trim(); // Ustawia tytuł strony
-                    } else {
-                        link.classList.remove('sidebar-link-active');
-                    }
+                    link.classList.toggle('sidebar-link-active', link.getAttribute('href') === '#' + targetId);
                 });
+                
+                const activeLink = document.querySelector(`a[href="#${targetId}"]`);
+                if (activeLink) {
+                     pageTitle.textContent = activeLink.textContent.trim();
+                }
+
+
+                // Jeśli przechodzimy do sekcji zarządzania użytkownikami, załaduj dane
+                if (targetId === 'user-management') {
+                    fetchAndDisplayUsers();
+                }
+                // Jeśli przechodzimy do panelu głównego, też załaduj statystyki użytkowników
+                if (targetId === 'dashboard-main') {
+                    fetchAndDisplayUsers(); // Ta funkcja aktualizuje też statystyki
+                }
             }
 
-            // Obsługa kliknięć w linki nawigacyjne
             navLinks.forEach(link => {
                 link.addEventListener('click', function (event) {
-                    event.preventDefault(); // Zapobiegamy domyślnemu przewijaniu
-                    const targetId = this.getAttribute('href').substring(1); // Pobieramy ID sekcji z href
+                    event.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
                     showSection(targetId);
                 });
             });
 
-            // Pokaż domyślną sekcję (Panel Główny) przy załadowaniu
+            // Pokaż domyślną sekcję i załaduj dane przy starcie
             showSection('dashboard-main');
         });
     </script>
