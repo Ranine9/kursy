@@ -32,8 +32,8 @@
                 <a href="index.html" class="text-3xl font-bold text-blue-600">Kursy<span class="text-gray-700">Online</span></a>
                 <nav class="flex items-center space-x-4">
                     <a href="index.html#courses" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Kursy</a>
-                    <a href="#" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Moje Konto</a>
-                    <a href="index.html" id="logout-button" class="btn btn-danger text-sm">Wyloguj się</a>
+                    <a href="#account-settings" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Moje Konto</a>
+                    <a href="/logout" id="logout-button" class="btn btn-danger text-sm">Wyloguj się</a>
                 </nav>
             </div>
         </div>
@@ -41,7 +41,7 @@
 
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="mb-10">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span class="text-blue-600">[NazwaUżytkownika]</span>!</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span id="username-placeholder" class="text-blue-600">Gościu</span>!</h1>
             <p class="mt-2 text-lg text-gray-600">Zarządzaj swoimi kursami i ustawieniami konta.</p>
         </div>
 
@@ -71,14 +71,14 @@
                         <a href="#" class="btn btn-primary w-full text-sm">Kontynuuj naukę</a>
                     </div>
                 </div>
-                
-                </div>
+            </div>
         </section>
 
         <section id="account-settings" class="mb-12">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <p class="text-gray-600">Tutaj znajdą się opcje zmiany hasła, adresu email, preferencji powiadomień itp.</p>
+                <p class="mt-2 text-gray-600">ID Użytkownika: <span id="user-id-placeholder" class="font-mono">ładowanie...</span></p>
                 <button class="mt-4 btn btn-secondary text-sm">Edytuj profil</button>
             </div>
         </section>
@@ -93,16 +93,59 @@
 
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
-        // Prosty przykład obsługi wylogowania - docelowo to będzie żądanie do backendu
-        const logoutButton = document.getElementById('logout-button');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                // Tutaj logika wylogowania np. usunięcie tokena sesji, przekierowanie
-                alert('Zostałeś wylogowany (symulacja).'); 
-                window.location.href = 'index.html';
-            });
+
+        // Pobieranie i wyświetlanie danych użytkownika
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/api/user'); // Zapytanie do naszego API endpoint
+                if (!response.ok) {
+                    // Jeśli użytkownik nie jest zalogowany (np. sesja wygasła), serwer przekieruje
+                    // lub zwróci błąd. Jeśli jest to błąd 401/403, można przekierować na /login
+                    if (response.status === 401 || response.status === 403) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const userData = await response.json();
+                
+                const usernamePlaceholder = document.getElementById('username-placeholder');
+                const userIdPlaceholder = document.getElementById('user-id-placeholder');
+
+                if (userData.username && usernamePlaceholder) {
+                    usernamePlaceholder.textContent = userData.username;
+                }
+                if (userData.userId && userIdPlaceholder) {
+                    userIdPlaceholder.textContent = userData.userId;
+                }
+
+            } catch (error) {
+                console.error('Nie udało się pobrać danych użytkownika:', error);
+                const usernamePlaceholder = document.getElementById('username-placeholder');
+                if (usernamePlaceholder) {
+                     usernamePlaceholder.textContent = 'Błąd';
+                }
+                 const userIdPlaceholder = document.getElementById('user-id-placeholder');
+                if (userIdPlaceholder) {
+                    userIdPlaceholder.textContent = 'Błąd';
+                }
+                // Można rozważyć przekierowanie na stronę logowania, jeśli błąd sugeruje brak autoryzacji
+                // window.location.href = '/login';
+            }
         }
+
+        // Wywołaj funkcję po załadowaniu strony
+        document.addEventListener('DOMContentLoaded', fetchUserData);
+
+        // Przycisk wylogowania - teraz link kieruje bezpośrednio na /logout na serwerze
+        // const logoutButton = document.getElementById('logout-button');
+        // if (logoutButton) {
+        //     logoutButton.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         // Logika wylogowania jest teraz po stronie serwera na ścieżce /logout
+        //         window.location.href = '/logout';
+        //     });
+        // }
     </script>
 
 </body>
