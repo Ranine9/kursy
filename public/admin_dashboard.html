@@ -18,7 +18,6 @@
 
         /* Style dla modala */
         .modal {
-            /* display: flex; -- Tailwind dodaje to przez klasę flex */
             @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50;
         }
         .modal-content {
@@ -33,9 +32,9 @@
         .form-label {
             @apply block text-sm font-medium text-gray-700;
         }
-        /* Dodajemy klasę do jawnego pokazywania, jeśli 'hidden' sprawia problemy */
-        .modal-visible {
-            display: flex !important;
+        /* Klasa do ukrywania, jeśli chcemy nią sterować przez JS inaczej niż przez 'hidden' */
+        .modal-hidden-custom {
+             display: none !important;
         }
     </style>
 </head>
@@ -150,7 +149,8 @@
         </main>
     </div>
 
-    <div id="editUserModal" class="modal hidden"> <div class="modal-content relative">
+    <div id="editUserModal" class="modal"> 
+        <div class="modal-content relative">
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -276,7 +276,6 @@
                     `;
                     userTableBody.insertAdjacentHTML('beforeend', rowHTML);
                 });
-                // Przenieś dodawanie listenerów tutaj, aby upewnić się, że są dodawane do nowo utworzonych przycisków
                 addEventListenersToEditButtons(); 
             }
 
@@ -295,23 +294,17 @@
                 editUserRoleInput.value = user.role;
                 editUserPasswordInput.value = ''; 
                 
-                // Zamiast classList.remove('hidden'), spróbujmy jawnie ustawić styl
-                editUserModal.classList.remove('hidden'); // Najpierw usuń 'hidden'
-                // editUserModal.style.display = 'flex'; // Potem jawnie ustaw display
-                // LUB użyj nowej klasy
-                // editUserModal.classList.add('modal-visible');
-                // editUserModal.classList.remove('hidden');
-
+                // Zmieniamy sposób pokazywania modala
+                editUserModal.classList.remove('hidden'); // Upewnij się, że 'hidden' jest usunięte
+                // Możesz też spróbować: editUserModal.style.display = 'flex';
 
                 console.log("Admin Dashboard JS: Modal edycji powinien być teraz widoczny. Sprawdzany styl:", window.getComputedStyle(editUserModal).display);
             }
 
             function closeEditModal() {
                 console.log("Admin Dashboard JS: closeEditModal() called");
-                // editUserModal.style.display = 'none'; // Ukryj przez styl
-                // LUB
-                editUserModal.classList.add('hidden');
-                // editUserModal.classList.remove('modal-visible');
+                editUserModal.classList.add('hidden'); // Dodaj 'hidden' z powrotem
+                // Możesz też spróbować: editUserModal.style.display = 'none';
                 editUserForm.reset();
             }
 
@@ -319,8 +312,6 @@
                 const editButtons = document.querySelectorAll('.edit-user-btn');
                 console.log("Admin Dashboard JS: addEventListenersToEditButtons() - znaleziono przycisków edycji:", editButtons.length);
                 editButtons.forEach(button => {
-                    // Sprawdzamy, czy listener już nie istnieje, żeby uniknąć duplikatów
-                    // To jest uproszczenie; w bardziej złożonych scenariuszach można by zarządzać listenerami inaczej.
                     if (!button.hasAttribute('data-listener-attached')) {
                         button.addEventListener('click', function() {
                             const userId = this.dataset.userid;
