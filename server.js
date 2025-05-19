@@ -47,7 +47,9 @@ async function initializeDatabase() {
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Zapytanie do dodania kolumny 'role', jeśli nie istnieje
+    // Zapytanie do dodania kolumny 'role', jeśli nie istnieje.
+    // To jest zabezpieczenie, gdyby tabela users została utworzona przez starszą wersję kodu
+    // bez kolumny 'role' w definicji CREATE TABLE.
     const alterUserTableQuery = `
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
@@ -74,7 +76,7 @@ async function initializeDatabase() {
                 }
             }
         } catch (dbError) {
-            console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message); // Logujemy tylko wiadomość błędu
+            console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message);
         }
     };
 
@@ -88,17 +90,22 @@ async function initializeDatabase() {
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `;
     try {
-        // Najpierw upewnij się, że tabela users istnieje (nawet jeśli bez 'role' na początku)
-        await pool.query(createUserTableQuery.replace(",\n            role VARCHAR(50) DEFAULT 'user' NOT NULL", "")); // Wersja bez 'role' dla pierwszego sprawdzenia
-        console.log('Tabela "users" (wstępne sprawdzenie) istnieje lub została utworzona.');
+        // 1. Uruchom CREATE TABLE IF NOT EXISTS z pełną definicją (w tym 'role').
+        //    Jeśli tabela nie istnieje, zostanie utworzona poprawnie.
+        //    Jeśli istnieje, ta komenda nic nie zrobi.
+        await pool.query(createUserTableQuery);
+        console.log('Tabela "users" (z polem role) sprawdzona/utworzona pomyślnie przez CREATE TABLE.');
 
-        // Następnie spróbuj dodać kolumnę 'role', jeśli jej nie ma
+        // 2. Jako dodatkowe zabezpieczenie, jawnie spróbuj dodać kolumnę 'role',
+        //    jeśli mogła zostać pominięta (np. tabela utworzona przez bardzo starą wersję kodu).
+        //    ADD COLUMN IF NOT EXISTS jest bezpieczne.
         await pool.query(alterUserTableQuery);
-        console.log('Kolumna "role" w tabeli "users" sprawdzona/dodana pomyślnie.');
+        console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
 
-        // Teraz, gdy kolumna 'role' na pewno istnieje, możemy dodać/zaktualizować admina
+        // 3. Teraz, gdy kolumna 'role' na pewno istnieje, możemy dodać/zaktualizować admina.
         await addAdminUserIfNeeded();
         
+        // 4. Utwórz tabelę sesji.
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
 
