@@ -13,10 +13,13 @@ const pgSession = require('connect-pg-simple')(session); // Do przechowywania se
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// WAŻNE: Poinformuj Express, że działa za reverse proxy (np. na Render)
+// To pozwala na poprawne działanie `secure: true` dla ciasteczek sesji.
+app.set('trust proxy', 1); // Ufa pierwszemu proxy
+
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
-    // W środowisku produkcyjnym można rozważyć zakończenie procesu, jeśli baza jest krytyczna
     // process.exit(1); 
 }
 const pool = new Pool({
@@ -51,16 +54,13 @@ async function initializeDatabase() {
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Zapytanie SQL do utworzenia tabeli sesji, jeśli nie istnieje
-    // Struktura tabeli jest zgodna z oczekiwaniami connect-pg-simple
     const createSessionTableQuery = `
         CREATE TABLE IF NOT EXISTS "session" (
             "sid" varchar NOT NULL COLLATE "default",
             "sess" json NOT NULL,
-            "expire" timestamp(6) NOT NULL
-        )
-        WITH (OIDS=FALSE);
-        ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+            "expire" timestamp(6) NOT NULL,
+            CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+        );
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `;
 
@@ -89,31 +89,38 @@ if (!sessionSecret) {
 
 // Konfiguracja magazynu sesji w PostgreSQL
 const sessionStore = new pgSession({
-    pool: pool,                // Pula połączeń PostgreSQL
-    tableName: 'session',      // Nazwa tabeli sesji (domyślna)
-    // pruneSessionInterval: 60 // Opcjonalnie: jak często (w sekundach) usuwać wygasłe sesje
+    pool: pool,
+    tableName: 'session',
+    // pruneSessionInterval: 60 // Co 60 sekund usuwaj wygasłe sesje z bazy
 });
+console.log('Magazyn sesji (pgSession) skonfigurowany.');
 
 app.use(session({
-    store: sessionStore, // Używamy naszego magazynu sesji w PostgreSQL
-    secret: sessionSecret || 'domyslny-sekret-na-wszelki-wypadek',
+    store: sessionStore,
+    secret: sessionSecret || 'domyslny-sekret-na-wszelki-wypadek-dev-only', // Zapewnij fallback dla dev
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production', // Ciasteczko wysyłane tylko przez HTTPS w produkcji
         maxAge: 1000 * 60 * 60 * 24, // 1 dzień
-        httpOnly: true,
-        sameSite: 'lax' // Dobre ustawienie dla większości przypadków
+        httpOnly: true, // Zapobiega dostępowi do ciasteczka przez JavaScript po stronie klienta
+        sameSite: 'lax' // Ochrona przed atakami CSRF
     }
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware do logowania każdego żądania i stanu sesji
 app.use((req, res, next) => {
+    console.log(`-----------------------------------------------------`);
     console.log(`Przychodzące żądanie: ${req.method} ${req.url}`);
-    console.log('Aktualna sesja (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
+    console.log(`  ID Sesji z żądania (req.sessionID): ${req.sessionID}`);
+    console.log(`  Zawartość sesji (req.session):`, JSON.stringify(req.session, null, 2));
+    console.log(`  Ciasteczka (req.headers.cookie): ${req.headers.cookie}`);
+    console.log(`-----------------------------------------------------`);
     next();
 });
+
 
 // --- Definicje ścieżek (Routes) ---
 
@@ -130,17 +137,16 @@ app.post('/register', async (req, res) => {
     const { username, email, password, 'confirm-password': confirmPassword } = req.body;
 
     if (!username || !email || !password || !confirmPassword) {
-        console.log('Błąd walidacji rejestracji: brakujące pola');
         return res.status(400).send('Wszystkie pola są wymagane!');
     }
     if (password !== confirmPassword) {
-        console.log('Błąd walidacji rejestracji: hasła niezgodne');
         return res.status(400).send('Hasła nie są zgodne!');
     }
 
     try {
         const existingUser = await pool.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
         if (existingUser.rows.length > 0) {
+            // ... (obsługa istniejącego użytkownika bez zmian)
             if (existingUser.rows[0].email === email) {
                 console.log(`Próba rejestracji na istniejący email: ${email}`);
                 return res.status(400).send('Użytkownik o takim adresie email już istnieje!');
@@ -153,12 +159,10 @@ app.post('/register', async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        console.log(`Haszowanie hasła dla użytkownika: ${username} zakończone.`);
-
+        
         const insertUserQuery = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username';
         const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword]);
         const newUser = newUserResult.rows[0];
-
         console.log('Nowy użytkownik zarejestrowany i zapisany do bazy:', newUser);
 
         req.session.userId = newUser.id;
@@ -170,7 +174,7 @@ app.post('/register', async (req, res) => {
                 console.error('Błąd podczas zapisywania sesji po rejestracji:', err);
                 return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
             }
-            console.log('Sesja zapisana, przekierowanie do /dashboard');
+            console.log('Sesja (ID: ' + req.sessionID + ') zapisana po rejestracji, przekierowanie do /dashboard');
             res.redirect('/dashboard');
         });
 
@@ -189,7 +193,6 @@ app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        console.log('Błąd walidacji logowania: brakujące email lub hasło');
         return res.status(400).send('Email i hasło są wymagane!');
     }
 
@@ -198,14 +201,11 @@ app.post('/login', async (req, res) => {
         const user = result.rows[0];
 
         if (!user) {
-            console.log(`Nie znaleziono użytkownika dla email: ${email}`);
             return res.status(400).send('Nieprawidłowy email lub hasło.');
         }
-        console.log(`Znaleziono użytkownika: ${user.username}, ID: ${user.id}`);
-
+        
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            console.log(`Błędne hasło dla użytkownika: ${user.username}`);
             return res.status(400).send('Nieprawidłowy email lub hasło.');
         }
         console.log(`Hasło poprawne dla użytkownika: ${user.username}`);
@@ -217,10 +217,9 @@ app.post('/login', async (req, res) => {
         req.session.save(err => {
             if (err) {
                 console.error('Błąd podczas zapisywania sesji po logowaniu:', err);
-                // Tutaj był błąd "relation "session" does not exist"
                 return res.status(500).send('Wystąpił błąd serwera podczas próby zapisania sesji.');
             }
-            console.log('Sesja zapisana, przekierowanie do /dashboard');
+            console.log('Sesja (ID: ' + req.sessionID + ') zapisana po logowaniu, przekierowanie do /dashboard');
             res.redirect('/dashboard');
         });
 
@@ -233,10 +232,10 @@ app.post('/login', async (req, res) => {
 function isAuthenticated(req, res, next) {
     console.log('Middleware isAuthenticated - sprawdzanie sesji (ID: ' + req.sessionID + '):', JSON.stringify(req.session, null, 2));
     if (req.session && req.session.userId) {
-        console.log(`Użytkownik ${req.session.username} (ID: ${req.session.userId}, SesjaID: ${req.sessionID}) jest uwierzytelniony. Dostęp do ${req.originalUrl}`);
+        console.log(`  Użytkownik ${req.session.username} (ID: ${req.session.userId}, SesjaID: ${req.sessionID}) jest uwierzytelniony. Dostęp do ${req.originalUrl}`);
         return next();
     }
-    console.log(`Użytkownik NIE jest uwierzytelniony (brak userId w sesji, SesjaID: ${req.sessionID}). Przekierowanie do /login z ${req.originalUrl}`);
+    console.log(`  Użytkownik NIE jest uwierzytelniony (brak userId w sesji, SesjaID: ${req.sessionID}). Przekierowanie do /login z ${req.originalUrl}`);
     res.redirect('/login');
 }
 
@@ -277,7 +276,7 @@ app.get('/logout', (req, res) => {
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
-    console.log(`Dostępny pod adresem: http://localhost:${PORT} (jeśli lokalnie)`);
+    // ... (reszta logów startowych bez zmian)
     if (!process.env.DATABASE_URL) {
         console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona. Aplikacja może nie działać poprawnie z bazą danych.');
     }
@@ -290,6 +289,7 @@ app.listen(PORT, () => {
         console.log('Aplikacja działa w trybie produkcyjnym.');
     }
     console.log('---');
+    console.log('Ustawiono "trust proxy" na 1.');
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL (connect-pg-simple).');
     console.log('Tabela "session" powinna być teraz tworzona przy starcie serwera, jeśli nie istnieje.');
     console.log('---');
