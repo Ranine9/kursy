@@ -11,21 +11,26 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Style dla aktywnego linku w sidebarze */
-        .sidebar-link-active {
-            @apply bg-blue-700 text-white;
+        .sidebar-link-active { @apply bg-blue-700 text-white; }
+        .sidebar-link { @apply transition-colors duration-200 ease-in-out; }
+        .table-responsive-wrapper { @apply overflow-x-auto; }
+        .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
+
+        /* Style dla modala */
+        .modal {
+            @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50;
         }
-        /* Płynne przejścia dla hover */
-        .sidebar-link {
-            @apply transition-colors duration-200 ease-in-out;
+        .modal-content {
+            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto;
         }
-        /* Dodatkowe style dla responsywności tabeli */
-        .table-responsive-wrapper {
-            @apply overflow-x-auto;
+        .modal-close-btn {
+            @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
         }
-        /* Lepsze ostylowanie przycisków akcji w tabeli */
-        .action-btn {
-            @apply p-1 rounded hover:bg-gray-200 transition-colors;
+        .form-input {
+            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700;
         }
     </style>
 </head>
@@ -37,26 +42,21 @@
             </div>
             <nav class="flex-1 px-4 py-4 space-y-2">
                 <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 sidebar-link-active">
-                    <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i>
-                    Panel Główny
+                    <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i> Panel Główny
                 </a>
                 <a href="#user-management" id="nav-users" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-users w-6 text-center mr-3"></i>
-                    Użytkownicy
+                    <i class="fas fa-users w-6 text-center mr-3"></i> Użytkownicy
                 </a>
                 <a href="#course-management" id="nav-courses" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-book-open w-6 text-center mr-3"></i>
-                    Kursy
+                    <i class="fas fa-book-open w-6 text-center mr-3"></i> Kursy
                 </a>
                 <a href="#settings" id="nav-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-cog w-6 text-center mr-3"></i>
-                    Ustawienia
+                    <i class="fas fa-cog w-6 text-center mr-3"></i> Ustawienia
                 </a>
             </nav>
             <div class="px-6 py-4 border-t border-gray-700">
                 <a href="/logout" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-sign-out-alt w-6 text-center mr-3"></i>
-                    Wyloguj się
+                    <i class="fas fa-sign-out-alt w-6 text-center mr-3"></i> Wyloguj się
                 </a>
             </div>
         </aside>
@@ -69,7 +69,6 @@
             </header>
 
             <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                
                 <section id="dashboard-main" class="admin-section">
                     <h2 class="text-xl font-semibold mb-4 text-gray-700">Witaj w Panelu Administracyjnym!</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -146,6 +145,47 @@
         </main>
     </div>
 
+    <div id="editUserModal" class="modal hidden">
+        <div class="modal-content relative">
+            <button id="closeEditUserModal" class="modal-close-btn">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+            <h3 class="text-xl font-semibold mb-6 text-gray-800">Edytuj Użytkownika</h3>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editUsername" class="form-label">Nazwa użytkownika</label>
+                        <input type="text" id="editUsername" name="username" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="editUserEmail" class="form-label">Email</label>
+                        <input type="email" id="editUserEmail" name="email" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="editUserRole" class="form-label">Rola</label>
+                        <select id="editUserRole" name="role" class="form-input">
+                            <option value="user">user</option>
+                            <option value="admin">admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="editUserPassword" class="form-label">Nowe hasło (pozostaw puste, jeśli bez zmian)</label>
+                        <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" id="cancelEditUser" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                        Anuluj
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                        Zapisz zmiany
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const navLinks = document.querySelectorAll('aside nav a');
@@ -155,59 +195,50 @@
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
 
+            // Modal edycji użytkownika
+            const editUserModal = document.getElementById('editUserModal');
+            const closeEditUserModalBtn = document.getElementById('closeEditUserModal');
+            const cancelEditUserBtn = document.getElementById('cancelEditUser');
+            const editUserForm = document.getElementById('editUserForm');
+            const editUserIdInput = document.getElementById('editUserId');
+            const editUsernameInput = document.getElementById('editUsername');
+            const editUserEmailInput = document.getElementById('editUserEmail');
+            const editUserRoleInput = document.getElementById('editUserRole');
+            const editUserPasswordInput = document.getElementById('editUserPassword');
 
-            // Funkcja do formatowania daty
+            let allUsersData = []; // Przechowujemy pobranych użytkowników
+
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
                 const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
                 return new Date(dateString).toLocaleDateString('pl-PL', options);
             }
 
-            // Funkcja do pobierania i wyświetlania użytkowników
             async function fetchAndDisplayUsers() {
                 try {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
-                    const response = await fetch('/api/admin/users'); // Zapytanie do API
+                    const response = await fetch('/api/admin/users');
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
                              userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
-                             // Można rozważyć przekierowanie na stronę logowania admina, jeśli taka istnieje
                         } else {
                             throw new Error(`Błąd HTTP! status: ${response.status}`);
                         }
                         return;
                     }
-                    const users = await response.json();
+                    allUsersData = await response.json(); // Zapisz dane globalnie
 
-                    if (users.length === 0) {
+                    if (allUsersData.length === 0) {
                         userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
                         statsTotalUsers.textContent = '0';
                         statsTotalAdmins.textContent = '0';
                         return;
                     }
 
-                    userTableBody.innerHTML = ''; // Wyczyść placeholder "Ładowanie..."
-                    let adminCount = 0;
-                    users.forEach(user => {
-                        if (user.role === 'admin') {
-                            adminCount++;
-                        }
-                        const row = `
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.role}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button title="Edytuj" class="text-blue-600 hover:text-blue-800 mr-2 action-btn"><i class="fas fa-edit"></i></button>
-                                    <button title="Usuń" class="text-red-600 hover:text-red-800 action-btn"><i class="fas fa-trash-alt"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                        userTableBody.insertAdjacentHTML('beforeend', row);
-                    });
-                    statsTotalUsers.textContent = users.length;
+                    renderUserTable(allUsersData); // Wywołaj funkcję renderującą tabelę
+                    
+                    const adminCount = allUsersData.filter(user => user.role === 'admin').length;
+                    statsTotalUsers.textContent = allUsersData.length;
                     statsTotalAdmins.textContent = adminCount;
 
                 } catch (error) {
@@ -218,8 +249,99 @@
                 }
             }
 
-            // Funkcja do pokazywania sekcji i aktualizowania aktywnego linku
+            function renderUserTable(users) {
+                userTableBody.innerHTML = ''; 
+                users.forEach(user => {
+                    const row = `
+                        <tr data-userid="${user.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.role}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button title="Edytuj" class="edit-user-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
+                                <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    userTableBody.insertAdjacentHTML('beforeend', row);
+                });
+                addEventListenersToEditButtons();
+            }
+
+            function openEditModal(userId) {
+                const user = allUsersData.find(u => u.id === parseInt(userId));
+                if (!user) {
+                    console.error('Nie znaleziono użytkownika o ID:', userId);
+                    alert('Nie znaleziono użytkownika.');
+                    return;
+                }
+                editUserIdInput.value = user.id;
+                editUsernameInput.value = user.username;
+                editUserEmailInput.value = user.email;
+                editUserRoleInput.value = user.role;
+                editUserPasswordInput.value = ''; // Wyczyść pole hasła
+                editUserModal.classList.remove('hidden');
+            }
+
+            function closeEditModal() {
+                editUserModal.classList.add('hidden');
+                editUserForm.reset(); // Zresetuj formularz
+            }
+
+            function addEventListenersToEditButtons() {
+                const editButtons = document.querySelectorAll('.edit-user-btn');
+                editButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const userId = this.dataset.userid;
+                        openEditModal(userId);
+                    });
+                });
+            }
+            
+            closeEditUserModalBtn.addEventListener('click', closeEditModal);
+            cancelEditUserBtn.addEventListener('click', closeEditModal);
+
+            editUserForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const userId = editUserIdInput.value;
+                const updatedUserData = {
+                    username: editUsernameInput.value,
+                    email: editUserEmailInput.value,
+                    role: editUserRoleInput.value,
+                };
+                if (editUserPasswordInput.value) { // Jeśli podano nowe hasło
+                    updatedUserData.password = editUserPasswordInput.value;
+                }
+
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedUserData),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `Błąd HTTP! status: ${response.status}`);
+                    }
+                    
+                    alert('Dane użytkownika zaktualizowane pomyślnie!');
+                    closeEditModal();
+                    fetchAndDisplayUsers(); // Odśwież listę użytkowników
+
+                } catch (error) {
+                    console.error('Błąd podczas aktualizacji użytkownika:', error);
+                    alert(`Nie udało się zaktualizować danych użytkownika: ${error.message}`);
+                }
+            });
+
+
             function showSection(targetId) {
+                // ... (logika showSection bez zmian) ...
                 sections.forEach(section => {
                     section.classList.toggle('hidden', section.id !== targetId);
                 });
@@ -233,14 +355,8 @@
                      pageTitle.textContent = activeLink.textContent.trim();
                 }
 
-
-                // Jeśli przechodzimy do sekcji zarządzania użytkownikami, załaduj dane
-                if (targetId === 'user-management') {
+                if (targetId === 'user-management' || targetId === 'dashboard-main') {
                     fetchAndDisplayUsers();
-                }
-                // Jeśli przechodzimy do panelu głównego, też załaduj statystyki użytkowników
-                if (targetId === 'dashboard-main') {
-                    fetchAndDisplayUsers(); // Ta funkcja aktualizuje też statystyki
                 }
             }
 
@@ -252,7 +368,6 @@
                 });
             });
 
-            // Pokaż domyślną sekcję i załaduj dane przy starcie
             showSection('dashboard-main');
         });
     </script>

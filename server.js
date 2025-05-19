@@ -47,9 +47,6 @@ async function initializeDatabase() {
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Zapytanie do dodania kolumny 'role', jeśli nie istnieje.
-    // To jest zabezpieczenie, gdyby tabela users została utworzona przez starszą wersję kodu
-    // bez kolumny 'role' w definicji CREATE TABLE.
     const alterUserTableQuery = `
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
@@ -90,25 +87,13 @@ async function initializeDatabase() {
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `;
     try {
-        // 1. Uruchom CREATE TABLE IF NOT EXISTS z pełną definicją (w tym 'role').
-        //    Jeśli tabela nie istnieje, zostanie utworzona poprawnie.
-        //    Jeśli istnieje, ta komenda nic nie zrobi.
         await pool.query(createUserTableQuery);
         console.log('Tabela "users" (z polem role) sprawdzona/utworzona pomyślnie przez CREATE TABLE.');
-
-        // 2. Jako dodatkowe zabezpieczenie, jawnie spróbuj dodać kolumnę 'role',
-        //    jeśli mogła zostać pominięta (np. tabela utworzona przez bardzo starą wersję kodu).
-        //    ADD COLUMN IF NOT EXISTS jest bezpieczne.
         await pool.query(alterUserTableQuery);
         console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
-
-        // 3. Teraz, gdy kolumna 'role' na pewno istnieje, możemy dodać/zaktualizować admina.
         await addAdminUserIfNeeded();
-        
-        // 4. Utwórz tabelę sesji.
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
-
     } catch (err) {
         console.error('Błąd podczas inicjalizacji bazy danych:', err);
     }
@@ -116,7 +101,7 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
-// ... (reszta kodu bez zmian, aż do końca pliku)
+// ... (bez zmian)
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -202,9 +187,11 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
+app.use(bodyParser.json()); // WAŻNE: Do parsowania JSON z ciała żądania PUT
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionSecret = process.env.SESSION_SECRET;
+// ... (reszta konfiguracji sesji bez zmian)
 if (!sessionSecret) {
     console.error('FATAL ERROR: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona! Sesje nie będą działać poprawnie.');
 } else if (sessionSecret === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!' && process.env.NODE_ENV === 'production') {
@@ -242,7 +229,9 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // --- Middleware autoryzacyjne ---
+// ... (isAuthenticated i isAdmin bez zmian)
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.userId) {
         return next();
@@ -271,6 +260,7 @@ async function isAdmin(req, res, next) {
 }
 
 // --- Definicje ścieżek (Routes) ---
+// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - bez zmian)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -304,14 +294,13 @@ app.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
         
         const insertUserQuery = 'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email';
-        // Nowi użytkownicy domyślnie dostają rolę 'user'
         const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword, 'user']);
         const newUser = newUserResult.rows[0];
         console.log('Nowy użytkownik zarejestrowany i zapisany do bazy:', newUser);
 
         req.session.userId = newUser.id;
         req.session.username = newUser.username;
-        req.session.role = 'user'; // Ustawiamy rolę w sesji
+        req.session.role = 'user'; 
         
         req.session.save(async err => { 
             if (err) {
@@ -420,8 +409,88 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// NOWY Endpoint: Aktualizacja danych użytkownika przez admina
+app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id); // ID użytkownika z parametru ścieżki
+    const { username, email, role, password } = req.body; // Dane do aktualizacji z ciała żądania
+
+    console.log(`Admin próbuje zaktualizować użytkownika ID: ${userId} z danymi:`, req.body);
+
+    if (!username || !email || !role) {
+        return res.status(400).json({ message: 'Nazwa użytkownika, email i rola są wymagane.' });
+    }
+    if (role !== 'user' && role !== 'admin') {
+        return res.status(400).json({ message: 'Nieprawidłowa rola. Dozwolone wartości: "user", "admin".' });
+    }
+
+    try {
+        // Sprawdź, czy nowy email lub username nie koliduje z innymi użytkownikami (oprócz edytowanego)
+        const conflictCheck = await pool.query(
+            'SELECT id FROM users WHERE (email = $1 OR username = $2) AND id != $3',
+            [email, username, userId]
+        );
+        if (conflictCheck.rows.length > 0) {
+            return res.status(409).json({ message: 'Email lub nazwa użytkownika są już zajęte przez innego użytkownika.' });
+        }
+
+        let hashedPassword = null;
+        if (password && password.trim() !== '') { // Jeśli podano nowe hasło
+            if (password.length < 6) { // Prosta walidacja długości hasła
+                 return res.status(400).json({ message: 'Nowe hasło musi mieć co najmniej 6 znaków.' });
+            }
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(password, salt);
+            console.log(`Aktualizacja hasła dla użytkownika ID: ${userId}`);
+        }
+
+        // Budowanie zapytania SQL dynamicznie
+        const updateFields = [];
+        const values = [];
+        let queryParamIndex = 1;
+
+        updateFields.push(`username = $${queryParamIndex++}`);
+        values.push(username);
+
+        updateFields.push(`email = $${queryParamIndex++}`);
+        values.push(email);
+
+        updateFields.push(`role = $${queryParamIndex++}`);
+        values.push(role);
+
+        if (hashedPassword) {
+            updateFields.push(`password_hash = $${queryParamIndex++}`);
+            values.push(hashedPassword);
+        }
+
+        values.push(userId); // Ostatni parametr dla WHERE id = $...
+
+        const updateUserQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${queryParamIndex} RETURNING id, username, email, role`;
+        
+        console.log("Wykonywane zapytanie SQL:", updateUserQuery);
+        console.log("Wartości dla zapytania:", values.slice(0, -1)); // Nie logujemy ID z WHERE dla przejrzystości
+
+        const result = await pool.query(updateUserQuery, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
+        }
+
+        console.log('Użytkownik zaktualizowany pomyślnie:', result.rows[0]);
+        res.json({ message: 'Dane użytkownika zaktualizowane pomyślnie.', user: result.rows[0] });
+
+    } catch (error) {
+        console.error(`Błąd podczas aktualizacji użytkownika ID: ${userId}:`, error);
+        // Specyficzna obsługa błędu unikalności (np. unique constraint violation)
+        if (error.code === '23505') { // Kod błędu PostgreSQL dla naruszenia unikalności
+            return res.status(409).json({ message: 'Email lub nazwa użytkownika są już zajęte.' });
+        }
+        res.status(500).json({ message: 'Błąd serwera podczas aktualizacji użytkownika.' });
+    }
+});
+
 
 // --- Uruchomienie serwera ---
+// ... (logi startowe bez zmian)
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
     if (!process.env.DATABASE_URL) {
