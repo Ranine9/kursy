@@ -52,7 +52,41 @@ async function initializeDatabase() {
         ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
     `;
 
+    // NOWA TABELA: courses
+    const createCoursesTableQuery = `
+        CREATE TABLE IF NOT EXISTS courses (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            category VARCHAR(100),
+            price NUMERIC(10, 2) DEFAULT 0.00, -- Cena z dwoma miejscami po przecinku
+            author_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Opcjonalnie: powiązanie z autorem (użytkownikiem)
+            status VARCHAR(50) DEFAULT 'draft' NOT NULL, -- np. draft, published, archived
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+    // Trigger do automatycznej aktualizacji updated_at (PostgreSQL)
+    const createUpdatedAtTriggerFunction = `
+        CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          NEW.updated_at = NOW();
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+    `;
+    const applyUpdatedAtTriggerToCourses = `
+        DROP TRIGGER IF EXISTS set_timestamp_courses ON courses; -- Usuń stary trigger, jeśli istnieje
+        CREATE TRIGGER set_timestamp_courses
+        BEFORE UPDATE ON courses
+        FOR EACH ROW
+        EXECUTE PROCEDURE trigger_set_timestamp();
+    `;
+
+
     const addAdminUserIfNeeded = async () => {
+        // ... (bez zmian)
         try {
             const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
             const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
@@ -92,8 +126,18 @@ async function initializeDatabase() {
         await pool.query(alterUserTableQuery);
         console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
         await addAdminUserIfNeeded();
+        
+        await pool.query(createCoursesTableQuery); // Tworzenie tabeli kursów
+        console.log('Tabela "courses" sprawdzona/utworzona pomyślnie.');
+        
+        // Utwórz funkcję triggera i trigger dla tabeli courses
+        await pool.query(createUpdatedAtTriggerFunction);
+        await pool.query(applyUpdatedAtTriggerToCourses);
+        console.log('Trigger "updated_at" dla tabeli "courses" sprawdzony/utworzony pomyślnie.');
+
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
+
     } catch (err) {
         console.error('Błąd podczas inicjalizacji bazy danych:', err);
     }
@@ -187,6 +231,7 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
+// ... (bodyParser, sessionStore, app.use(session(...)), static, middleware logujący żądania - bez zmian)
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -228,8 +273,8 @@ app.use((req, res, next) => {
     next();
 });
 
-
 // --- Middleware autoryzacyjne ---
+// ... (isAuthenticated i isAdmin bez zmian)
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.userId) {
         return next();
@@ -258,6 +303,7 @@ async function isAdmin(req, res, next) {
 }
 
 // --- Definicje ścieżek (Routes) ---
+// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - bez zmian)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -407,7 +453,6 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
-    // ... (kod aktualizacji użytkownika bez zmian) ...
     const userId = parseInt(req.params.id); 
     const { username, email, role, password } = req.body; 
 
@@ -482,10 +527,9 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// NOWY Endpoint: Usuwanie użytkownika przez admina
 app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
     const userIdToDelete = parseInt(req.params.id);
-    const adminUserId = req.session.userId; // ID zalogowanego admina
+    const adminUserId = req.session.userId; 
 
     console.log(`Admin (ID: ${adminUserId}) próbuje usunąć użytkownika ID: ${userIdToDelete}`);
 
@@ -495,7 +539,6 @@ app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) =>
     }
 
     try {
-        // Można dodać sprawdzenie, czy to nie jest ostatni admin, ale to bardziej złożone
         const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, username', [userIdToDelete]);
 
         if (result.rowCount === 0) {
@@ -512,9 +555,51 @@ app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) =>
     }
 });
 
+// NOWE: API Endpoints dla kursów
+// Pobieranie wszystkich kursów
+app.get('/api/admin/courses', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM courses ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Błąd podczas pobierania listy kursów dla admina:", error);
+        res.status(500).json({ error: 'Błąd serwera podczas pobierania kursów.' });
+    }
+});
+
+// Tworzenie nowego kursu
+app.post('/api/admin/courses', isAuthenticated, isAdmin, async (req, res) => {
+    const { title, description, category, price, status } = req.body;
+    const author_id = req.session.userId; // Admin tworzący kurs jest jego autorem
+
+    if (!title) {
+        return res.status(400).json({ message: 'Tytuł kursu jest wymagany.' });
+    }
+
+    try {
+        const insertCourseQuery = `
+            INSERT INTO courses (title, description, category, price, author_id, status) 
+            VALUES ($1, $2, $3, $4, $5, $6) 
+            RETURNING *`;
+        const values = [
+            title, 
+            description || null, 
+            category || null, 
+            price || 0.00, 
+            author_id, 
+            status || 'draft'
+        ];
+        const result = await pool.query(insertCourseQuery, values);
+        console.log('Nowy kurs dodany do bazy:', result.rows[0]);
+        res.status(201).json({ message: 'Kurs dodany pomyślnie.', course: result.rows[0] });
+    } catch (error) {
+        console.error("Błąd podczas tworzenia nowego kursu:", error);
+        res.status(500).json({ message: 'Błąd serwera podczas tworzenia kursu.' });
+    }
+});
+
 
 // --- Uruchomienie serwera ---
-// ... (logi startowe bez zmian)
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
     if (!process.env.DATABASE_URL) {
@@ -539,5 +624,6 @@ app.listen(PORT, () => {
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL.');
     console.log('Tabela "session" powinna być tworzona przy starcie serwera.');
     console.log('Pole "role" w tabeli "users" jest teraz dodawane/sprawdzane przy starcie.');
+    console.log('Tabela "courses" jest teraz tworzona przy starcie serwera.');
     console.log('---');
 });

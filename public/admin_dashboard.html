@@ -35,7 +35,6 @@
             display: flex !important;
         }
         .modal-content {
-            /* Tailwind classes are now directly in the HTML for .modal-content div */
             position: relative; 
         }
         .modal-close-btn {
@@ -46,6 +45,11 @@
         }
         .form-label {
             @apply block text-sm font-medium text-gray-700;
+        }
+        /* Dodatkowe style dla textarea */
+        .form-textarea {
+            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+            min-height: 80px; /* Minimalna wysokość dla pola opisu */
         }
     </style>
 </head>
@@ -93,7 +97,8 @@
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Kursów</h3>
-                            <p id="stats-total-courses" class="text-3xl font-bold text-green-600">0</p> </div>
+                            <p id="stats-total-courses" class="text-3xl font-bold text-green-600">Ładowanie...</p> 
+                        </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywni Admini</h3>
                             <p id="stats-total-admins" class="text-3xl font-bold text-purple-600">Ładowanie...</p>
@@ -127,24 +132,25 @@
                 <section id="course-management" class="admin-section hidden">
                      <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Kursami</h2>
-                        <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                        <button id="addCourseBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
                             <i class="fas fa-plus mr-2"></i>Dodaj Nowy Kurs
                         </button>
                     </div>
-                     <div class="bg-white shadow-lg rounded-lg overflow-x-auto">
+                     <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Kursu</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tytuł Kursu</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tytuł</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoria</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Liczba Lekcji</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cena</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utworzono</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Brak kursów do wyświetlenia.</td></tr>
+                            <tbody id="course-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="7" class="text-center py-4 text-gray-500">Ładowanie danych kursów...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -201,9 +207,55 @@
         </div>
     </div>
 
+    <div id="courseModal" class="modal-base">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto relative">
+            <button id="closeCourseModal" class="modal-close-btn">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+            <h3 id="courseModalTitle" class="text-xl font-semibold mb-6 text-gray-800">Dodaj Nowy Kurs</h3>
+            <form id="courseForm">
+                <input type="hidden" id="courseId"> <div class="space-y-4">
+                    <div>
+                        <label for="courseTitle" class="form-label">Tytuł kursu</label>
+                        <input type="text" id="courseTitle" name="title" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="courseDescription" class="form-label">Opis</label>
+                        <textarea id="courseDescription" name="description" class="form-textarea"></textarea>
+                    </div>
+                    <div>
+                        <label for="courseCategory" class="form-label">Kategoria</label>
+                        <input type="text" id="courseCategory" name="category" class="form-input">
+                    </div>
+                    <div>
+                        <label for="coursePrice" class="form-label">Cena (PLN)</label>
+                        <input type="number" id="coursePrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label for="courseStatus" class="form-label">Status</label>
+                        <select id="courseStatus" name="status" class="form-input">
+                            <option value="draft">Szkic (Draft)</option>
+                            <option value="published">Opublikowany (Published)</option>
+                            <option value="archived">Zarchiwizowany (Archived)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" id="cancelCourseModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                        Anuluj
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg">
+                        Zapisz Kurs
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // ... (reszta kodu JS z poprzedniej wersji - definicje zmiennych, formatDate, fetchAndDisplayUsers, renderUserTable, openEditModal, closeEditModal, obsługa formularza edycji, showSection, obsługa linków nawigacyjnych)
+            // ... (zmienne dla użytkowników i nawigacji bez zmian) ...
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
             const navLinks = document.querySelectorAll('aside nav a');
@@ -223,7 +275,25 @@
             const editUserRoleInput = document.getElementById('editUserRole');
             const editUserPasswordInput = document.getElementById('editUserPassword');
 
+            // NOWE: Zmienne dla kursów
+            const courseTableBody = document.getElementById('course-table-body');
+            const statsTotalCourses = document.getElementById('stats-total-courses');
+            const addCourseBtn = document.getElementById('addCourseBtn');
+            const courseModal = document.getElementById('courseModal');
+            const closeCourseModalBtn = document.getElementById('closeCourseModal');
+            const cancelCourseModalBtn = document.getElementById('cancelCourseModal');
+            const courseForm = document.getElementById('courseForm');
+            const courseModalTitle = document.getElementById('courseModalTitle');
+            const courseIdInput = document.getElementById('courseId'); // Dla edycji
+            const courseTitleInput = document.getElementById('courseTitle');
+            const courseDescriptionInput = document.getElementById('courseDescription');
+            const courseCategoryInput = document.getElementById('courseCategory');
+            const coursePriceInput = document.getElementById('coursePrice');
+            const courseStatusInput = document.getElementById('courseStatus');
+
+
             let allUsersData = []; 
+            let allCoursesData = []; // Do przechowywania danych kursów
 
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
@@ -232,6 +302,7 @@
             }
 
             async function fetchAndDisplayUsers() {
+                // ... (bez zmian) ...
                 console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
                 try {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
@@ -270,6 +341,7 @@
             }
 
             function renderUserTable(users) {
+                // ... (bez zmian) ...
                 console.log("Admin Dashboard JS: renderUserTable() called with", users.length, "użytkowników");
                 userTableBody.innerHTML = ''; 
                 users.forEach(user => {
@@ -285,12 +357,14 @@
                                 <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>
-                    `; // Dodano data-username do przycisku usuwania
+                    `; 
                     userTableBody.insertAdjacentHTML('beforeend', rowHTML);
                 });
-                addEventListenersToActionButtons(); // Zmieniono nazwę funkcji i będzie dodawać listenery do obu typów przycisków
+                addEventListenersToActionButtons(); 
             }
 
+            // --- Funkcje dla modala edycji użytkownika ---
+            // ... (openEditModal, closeEditModal - bez zmian) ...
             function openEditModal(userId) {
                 console.log("Admin Dashboard JS: openEditModal() called for userId:", userId);
                 const user = allUsersData.find(u => u.id === parseInt(userId));
@@ -323,7 +397,124 @@
                     editUserForm.reset();
                 }
             }
+            
+            // --- NOWE: Funkcje dla kursów ---
+            async function fetchAndDisplayCourses() {
+                console.log("Admin Dashboard JS: fetchAndDisplayCourses() called");
+                try {
+                    courseTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Ładowanie danych kursów...</td></tr>';
+                    const response = await fetch('/api/admin/courses');
+                    if (!response.ok) {
+                        throw new Error(`Błąd HTTP! status: ${response.status}`);
+                    }
+                    allCoursesData = await response.json();
+                    console.log("Admin Dashboard JS: Kursy pobrane:", allCoursesData);
 
+                    if (allCoursesData.length === 0) {
+                        courseTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Brak dodanych kursów.</td></tr>';
+                        statsTotalCourses.textContent = '0';
+                        return;
+                    }
+
+                    courseTableBody.innerHTML = '';
+                    allCoursesData.forEach(course => {
+                        const row = `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${course.id}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${course.title}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${course.category || '-'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${course.price ? parseFloat(course.price).toFixed(2) + ' PLN' : 'Darmowy'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        ${course.status === 'published' ? 'bg-green-100 text-green-800' : 
+                                          course.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
+                                          'bg-gray-100 text-gray-800'}">
+                                        ${course.status}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(course.created_at)}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button title="Edytuj Kurs" class="edit-course-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-courseid="${course.id}"><i class="fas fa-edit"></i></button>
+                                    <button title="Usuń Kurs" class="delete-course-btn text-red-600 hover:text-red-800 action-btn" data-courseid="${course.id}" data-coursetitle="${course.title}"><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                        courseTableBody.insertAdjacentHTML('beforeend', row);
+                    });
+                    statsTotalCourses.textContent = allCoursesData.length;
+                    // TODO: Dodać listenery do przycisków edycji/usuwania kursów
+                } catch (error) {
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania kursów:', error);
+                    courseTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych kursów.</td></tr>';
+                    statsTotalCourses.textContent = 'Błąd';
+                }
+            }
+
+            function openCourseModal(course = null) { // Przyjmuje opcjonalny obiekt kursu do edycji
+                console.log("Admin Dashboard JS: openCourseModal() called, course:", course);
+                courseForm.reset();
+                if (course) {
+                    courseModalTitle.textContent = 'Edytuj Kurs';
+                    courseIdInput.value = course.id;
+                    courseTitleInput.value = course.title;
+                    courseDescriptionInput.value = course.description || '';
+                    courseCategoryInput.value = course.category || '';
+                    coursePriceInput.value = course.price ? parseFloat(course.price).toFixed(2) : '';
+                    courseStatusInput.value = course.status;
+                } else {
+                    courseModalTitle.textContent = 'Dodaj Nowy Kurs';
+                    courseIdInput.value = ''; // Wyczyść ID dla nowego kursu
+                }
+                if (courseModal) courseModal.classList.add('modal-visible');
+            }
+
+            function closeCourseModal() {
+                if (courseModal) courseModal.classList.remove('modal-visible');
+                if (courseForm) courseForm.reset();
+            }
+
+            if (addCourseBtn) {
+                addCourseBtn.addEventListener('click', () => openCourseModal());
+            }
+            if (closeCourseModalBtn) closeCourseModalBtn.addEventListener('click', closeCourseModal);
+            if (cancelCourseModalBtn) cancelCourseModalBtn.addEventListener('click', closeCourseModal);
+
+            if (courseForm) {
+                courseForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const courseData = {
+                        title: courseTitleInput.value,
+                        description: courseDescriptionInput.value,
+                        category: courseCategoryInput.value,
+                        price: coursePriceInput.value ? parseFloat(coursePriceInput.value) : 0.00,
+                        status: courseStatusInput.value,
+                    };
+                    // TODO: Logika dla edycji (PUT) vs dodawania (POST) na podstawie courseIdInput.value
+
+                    try {
+                        const response = await fetch('/api/admin/courses', { // Na razie tylko POST
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(courseData),
+                        });
+                        const responseData = await response.json();
+                        if (!response.ok) {
+                            throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
+                        }
+                        alert('Kurs dodany pomyślnie!');
+                        closeCourseModal();
+                        fetchAndDisplayCourses(); // Odśwież listę kursów
+                        fetchAndDisplayUsers(); // Odśwież statystyki (jeśli liczba kursów tam jest)
+                    } catch (error) {
+                        console.error('Błąd podczas dodawania kursu:', error);
+                        alert(`Nie udało się dodać kursu: ${error.message}`);
+                    }
+                });
+            }
+
+
+            // --- Obsługa przycisków akcji (edycja/usuwanie użytkowników) ---
+            // ... (handleDeleteUser, addEventListenersToActionButtons - bez zmian) ...
             async function handleDeleteUser(userId, username) {
                 console.log(`Admin Dashboard JS: handleDeleteUser() called for userId: ${userId}, username: ${username}`);
                 if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
@@ -332,14 +523,14 @@
                             method: 'DELETE',
                         });
                         
-                        const responseData = await response.json(); // Spróbuj odczytać odpowiedź, nawet jeśli jest to błąd
+                        const responseData = await response.json(); 
                         console.log("Admin Dashboard JS: Odpowiedź serwera na DELETE:", response.status, responseData);
 
                         if (!response.ok) {
                             throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
                         }
                         alert(`Użytkownik "${username}" usunięty pomyślnie.`);
-                        fetchAndDisplayUsers(); // Odśwież listę
+                        fetchAndDisplayUsers(); 
                     } catch (error) {
                         console.error(`Admin Dashboard JS: Błąd podczas usuwania użytkownika ID ${userId}:`, error);
                         alert(`Nie udało się usunąć użytkownika: ${error.message}`);
@@ -349,11 +540,11 @@
                 }
             }
 
-            function addEventListenersToActionButtons() { // Zmieniono nazwę
+            function addEventListenersToActionButtons() { 
                 const editButtons = document.querySelectorAll('.edit-user-btn');
                 console.log("Admin Dashboard JS: addEventListenersToActionButtons() - znaleziono przycisków edycji:", editButtons.length);
                 editButtons.forEach(button => {
-                    if (!button.hasAttribute('data-listener-attached-edit')) { // Zmieniono atrybut
+                    if (!button.hasAttribute('data-listener-attached-edit')) { 
                         button.addEventListener('click', function() {
                             const userId = this.dataset.userid;
                             console.log("Admin Dashboard JS: Przycisk Edytuj kliknięty dla userId:", userId);
@@ -366,10 +557,10 @@
                 const deleteButtons = document.querySelectorAll('.delete-user-btn');
                 console.log("Admin Dashboard JS: addEventListenersToActionButtons() - znaleziono przycisków usuwania:", deleteButtons.length);
                 deleteButtons.forEach(button => {
-                    if (!button.hasAttribute('data-listener-attached-delete')) { // Zmieniono atrybut
+                    if (!button.hasAttribute('data-listener-attached-delete')) { 
                         button.addEventListener('click', function() {
                             const userId = this.dataset.userid;
-                            const username = this.dataset.username; // Pobierz username dla potwierdzenia
+                            const username = this.dataset.username; 
                             console.log("Admin Dashboard JS: Przycisk Usuń kliknięty dla userId:", userId);
                             handleDeleteUser(userId, username);
                         });
@@ -384,6 +575,7 @@
             if(editUserForm) {
                 editUserForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    // ... (logika edycji użytkownika bez zmian) ...
                     console.log("Admin Dashboard JS: Formularz edycji wysłany.");
                     const userId = editUserIdInput.value;
                     const updatedUserData = {
@@ -423,6 +615,8 @@
                     }
                 });
             }
+            // --- Koniec funkcji dla modala edycji użytkownika ---
+
 
             function showSection(targetId) {
                 console.log("Admin Dashboard JS: showSection() called for targetId:", targetId);
@@ -439,8 +633,13 @@
                      pageTitle.textContent = activeLink.textContent.trim();
                 }
 
-                if (targetId === 'user-management' || targetId === 'dashboard-main') {
+                if (targetId === 'user-management') {
                     fetchAndDisplayUsers();
+                } else if (targetId === 'course-management') { // NOWE: Ładuj kursy dla tej sekcji
+                    fetchAndDisplayCourses();
+                } else if (targetId === 'dashboard-main') { // Aktualizuj obie statystyki
+                    fetchAndDisplayUsers();
+                    fetchAndDisplayCourses();
                 }
             }
 
