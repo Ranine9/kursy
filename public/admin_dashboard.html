@@ -16,16 +16,28 @@
         .table-responsive-wrapper { @apply overflow-x-auto; }
         .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
 
-        /* Style dla modala */
+        /* Style dla modala - bardziej bezpośrednie i "agresywne" */
         .modal-base {
-            @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center z-50;
-            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(75, 85, 99, 0.5); /* Tailwind's bg-gray-600 bg-opacity-50 */
+            overflow-y: auto;
+            height: 100%;
+            width: 100%;
+            display: none; /* Domyślnie ukryty */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000; /* Bardzo wysoki z-index */
         }
         .modal-visible {
-            display: flex !important;
+            display: flex !important; /* Klasa do pokazywania modala */
         }
         .modal-content {
             @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto;
+            position: relative; /* Dla pozycjonowania przycisku zamknięcia */
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -191,7 +203,7 @@
     </div>
 
     <script>
-        // Cały kod JavaScript pozostaje bez zmian - jest taki sam jak w poprzedniej wersji
+        // Cały kod JavaScript pozostaje bez zmian
         document.addEventListener('DOMContentLoaded', function () {
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
