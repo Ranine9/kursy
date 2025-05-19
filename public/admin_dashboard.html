@@ -17,8 +17,13 @@
         .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
 
         /* Style dla modala */
-        .modal {
-            @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50;
+        .modal-base { /* Zmieniono nazwę z .modal na .modal-base, żeby uniknąć konfliktu z potencjalną klasą 'modal' z Tailwind */
+            @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center z-50;
+            /* Domyślnie ukryty, będziemy kontrolować przez JS */
+            display: none; 
+        }
+        .modal-visible {
+            display: flex !important; /* Klasa do pokazywania modala */
         }
         .modal-content {
             @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto;
@@ -31,10 +36,6 @@
         }
         .form-label {
             @apply block text-sm font-medium text-gray-700;
-        }
-        /* Klasa do ukrywania, jeśli chcemy nią sterować przez JS inaczej niż przez 'hidden' */
-        .modal-hidden-custom {
-             display: none !important;
         }
     </style>
 </head>
@@ -149,8 +150,7 @@
         </main>
     </div>
 
-    <div id="editUserModal" class="modal"> 
-        <div class="modal-content relative">
+    <div id="editUserModal" class="modal-base"> <div class="modal-content relative">
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -294,18 +294,23 @@
                 editUserRoleInput.value = user.role;
                 editUserPasswordInput.value = ''; 
                 
-                // Zmieniamy sposób pokazywania modala
-                editUserModal.classList.remove('hidden'); // Upewnij się, że 'hidden' jest usunięte
-                // Możesz też spróbować: editUserModal.style.display = 'flex';
-
-                console.log("Admin Dashboard JS: Modal edycji powinien być teraz widoczny. Sprawdzany styl:", window.getComputedStyle(editUserModal).display);
+                // Używamy teraz klas .modal-base i .modal-visible
+                if (editUserModal) {
+                    editUserModal.classList.add('modal-visible'); // Pokaż modal
+                    console.log("Admin Dashboard JS: Modal edycji powinien być teraz widoczny (dodano modal-visible). Sprawdzany styl:", window.getComputedStyle(editUserModal).display);
+                } else {
+                    console.error("Admin Dashboard JS: Element editUserModal nie został znaleziony!");
+                }
             }
 
             function closeEditModal() {
                 console.log("Admin Dashboard JS: closeEditModal() called");
-                editUserModal.classList.add('hidden'); // Dodaj 'hidden' z powrotem
-                // Możesz też spróbować: editUserModal.style.display = 'none';
-                editUserForm.reset();
+                if (editUserModal) {
+                    editUserModal.classList.remove('modal-visible'); // Ukryj modal
+                }
+                if (editUserForm) {
+                    editUserForm.reset();
+                }
             }
 
             function addEventListenersToEditButtons() {
@@ -329,6 +334,7 @@
             if(editUserForm) {
                 editUserForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    // ... (reszta logiki formularza bez zmian) ...
                     console.log("Admin Dashboard JS: Formularz edycji wysłany.");
                     const userId = editUserIdInput.value;
                     const updatedUserData = {
@@ -370,6 +376,7 @@
             }
 
             function showSection(targetId) {
+                // ... (reszta logiki showSection bez zmian) ...
                 console.log("Admin Dashboard JS: showSection() called for targetId:", targetId);
                 sections.forEach(section => {
                     section.classList.toggle('hidden', section.id !== targetId);
