@@ -6,23 +6,18 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const { Pool } = require('pg'); // Klient PostgreSQL
-const pgSession = require('connect-pg-simple')(session); // Do przechowywania sesji w PostgreSQL
-const nodemailer = require('nodemailer'); // Do wysyłania e-maili
+const { Pool } = require('pg');
+const pgSession = require('connect-pg-simple')(session);
+const nodemailer = require('nodemailer');
 
-// Inicjalizacja aplikacji Express
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// WAŻNE: Poinformuj Express, że działa za reverse proxy (np. na Render)
-// To pozwala na poprawne działanie `secure: true` dla ciasteczek sesji.
-app.set('trust proxy', 1); // Ufa pierwszemu proxy
+app.set('trust proxy', 1);
 
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
+// ... (bez zmian)
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
-    // W środowisku produkcyjnym można rozważyć zakończenie procesu, jeśli baza jest krytyczna
-    // process.exit(1); 
 }
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -30,15 +25,11 @@ const pool = new Pool({
 });
 
 pool.connect((err, client, release) => {
-    if (err) {
-        return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
-    }
+    if (err) return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
     if (client) {
         client.query('SELECT NOW()', (err, result) => {
-            if (release) release(); // Upewnij się, że release jest zdefiniowane przed wywołaniem
-            if (err) {
-                return console.error('Błąd podczas wykonywania zapytania testowego do bazy', err.stack);
-            }
+            if (release) release();
+            if (err) return console.error('Błąd podczas wykonywania zapytania testowego do bazy', err.stack);
             console.log('Pomyślnie połączono z PostgreSQL. Serwer czasu bazy danych:', result.rows[0].now);
         });
     } else {
@@ -47,6 +38,7 @@ pool.connect((err, client, release) => {
 });
 
 async function initializeDatabase() {
+    // ... (bez zmian - tworzenie tabel users i session)
     const createUserTableQuery = `
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -65,14 +57,11 @@ async function initializeDatabase() {
         );
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `;
-
     try {
         await pool.query(createUserTableQuery);
         console.log('Tabela "users" sprawdzona/utworzona pomyślnie.');
-        
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
-
     } catch (err) {
         console.error('Błąd podczas inicjalizacji bazy danych (tworzenia tabel):', err);
     }
@@ -80,43 +69,69 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
-// Użyj zmiennych środowiskowych do konfiguracji transportu email
 let transporter;
-if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT || "587"),
-        secure: (process.env.EMAIL_PORT === '465'),
+const emailHost = process.env.EMAIL_HOST;
+const emailPort = parseInt(process.env.EMAIL_PORT || "587");
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS; // Hasło/Klucz API
+
+console.log("Odczytane zmienne środowiskowe dla Nodemailer:");
+console.log("  EMAIL_HOST:", emailHost ? emailHost.substring(0, 10) + "..." : "NIEUSTAWIONY"); // Logujemy tylko część dla bezpieczeństwa
+console.log("  EMAIL_PORT:", emailPort);
+console.log("  EMAIL_USER:", emailUser ? emailUser.substring(0, 5) + "***" : "NIEUSTAWIONY");
+console.log("  EMAIL_PASS:", emailPass ? "USTAWIONE (długość: " + emailPass.length + ")" : "NIEUSTAWIONE");
+
+
+if (emailHost && emailUser && emailPass) {
+    let transportOptions = {
+        host: emailHost,
+        port: emailPort,
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: emailUser,
+            pass: emailPass,
         },
-    });
+        logger: true, // Włączamy bardziej szczegółowe logowanie z nodemailer
+        debug: true   // Włączamy debugowanie z nodemailer
+    };
+
+    if (emailPort === 587) {
+        transportOptions.secure = false; // Dla STARTTLS, secure jest false
+        transportOptions.requireTLS = true; // Wymuś STARTTLS
+        console.log("Konfiguracja Nodemailer dla portu 587 (STARTTLS): secure=false, requireTLS=true");
+    } else if (emailPort === 465) {
+        transportOptions.secure = true; // Dla SSL, secure jest true
+        console.log("Konfiguracja Nodemailer dla portu 465 (SSL): secure=true");
+    } else {
+        console.log("Konfiguracja Nodemailer dla portu", emailPort, "(domyślne ustawienia secure)");
+         transportOptions.secure = (emailPort === 465); // Domyślne zachowanie
+    }
+    
+    console.log("Nodemailer auth object:", JSON.stringify(transportOptions.auth, (key, value) => key === 'pass' ? '********' : value));
+
+
+    transporter = nodemailer.createTransport(transportOptions);
 
     transporter.verify(function(error, success) {
         if (error) {
-            console.error("Błąd konfiguracji Nodemailer:", error);
-            console.warn("Wysyłanie e-maili może nie działać poprawnie. Sprawdź zmienne środowiskowe EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS.");
+            console.error("Błąd weryfikacji konfiguracji Nodemailer:", error);
         } else {
-            console.log("Nodemailer jest skonfigurowany i gotowy do wysyłania e-maili.");
+            console.log("Nodemailer jest skonfigurowany i zweryfikowany pomyślnie.");
         }
     });
 } else {
-    console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili nie będzie aktywna.");
-    // Tworzymy "fałszywy" transporter, który tylko loguje, zamiast wysyłać
+    console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email. Wysyłka maili będzie symulowana.");
     transporter = {
         sendMail: async (mailOptions) => {
             console.log("Symulacja wysyłki e-maila (konfiguracja Nodemailer niekompletna):");
             console.log("  DO:", mailOptions.to);
             console.log("  TEMAT:", mailOptions.subject);
-            console.log("  TREŚĆ (TEXT):", mailOptions.text);
             return { messageId: "symulacja-" + Date.now() };
         }
     };
 }
 
-
 async function sendRegistrationEmail(userEmail, username) {
+    // ... (treść mailOptions bez zmian)
     const mailOptions = {
         from: `"Platforma KursyOnline" <${process.env.EMAIL_USER || 'noreply@example.com'}>`,
         to: userEmail,
@@ -126,15 +141,20 @@ async function sendRegistrationEmail(userEmail, username) {
     };
 
     try {
-        let info = await transporter.sendMail(mailOptions); // Używamy transportera (prawdziwego lub fałszywego)
+        console.log(`Próba wysłania e-maila rejestracyjnego do: ${userEmail} z użyciem użytkownika SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'}`);
+        let info = await transporter.sendMail(mailOptions);
         console.log('Informacja o wysłaniu emaila z potwierdzeniem rejestracji: %s do %s', info.messageId, userEmail);
     } catch (error) {
         console.error('Błąd podczas wysyłania emaila z potwierdzeniem rejestracji:', error);
+        // Dodatkowe logowanie błędu, jeśli jest dostępny obiekt error.response
+        if (error.response) {
+            console.error('Odpowiedź serwera SMTP:', error.response);
+        }
     }
 }
 
-
 // --- Konfiguracja aplikacji Express ---
+// ... (bodyParser, sessionStore, app.use(session(...)), static, middleware logujący żądania - bez zmian)
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionSecret = process.env.SESSION_SECRET;
@@ -177,6 +197,7 @@ app.use((req, res, next) => {
 
 
 // --- Definicje ścieżek (Routes) ---
+// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - logika wysyłania emaila jest w POST /register)
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -213,7 +234,7 @@ app.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         
-        const insertUserQuery = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email'; // Dodano email do RETURNING
+        const insertUserQuery = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email';
         const newUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword]);
         const newUser = newUserResult.rows[0];
         console.log('Nowy użytkownik zarejestrowany i zapisany do bazy:', newUser);
@@ -229,10 +250,9 @@ app.post('/register', async (req, res) => {
             }
             console.log('Sesja (ID: ' + req.sessionID + ') zapisana po rejestracji.');
             
-            // Wyślij email powitalny
             await sendRegistrationEmail(newUser.email, newUser.username); 
             
-            console.log('Przekierowanie do /dashboard po rejestracji i wysłaniu emaila.');
+            console.log('Przekierowanie do /dashboard po rejestracji i (próbie) wysłania emaila.');
             res.redirect('/dashboard');
         });
 
@@ -331,9 +351,11 @@ app.get('/logout', (req, res) => {
     });
 });
 
+
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
+    // ... (reszta logów startowych bez zmian)
     if (!process.env.DATABASE_URL) {
         console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona.');
     }
@@ -345,8 +367,8 @@ app.listen(PORT, () => {
     } else {
         console.log('Aplikacja działa w trybie produkcyjnym.');
     }
-    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili będzie symulowana.");
+    if (!emailHost || !emailUser || !emailPass) { // Sprawdzamy odczytane zmienne
+        console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji email. Wysyłka maili będzie symulowana.");
     }
     console.log('---');
     console.log('Ustawiono "trust proxy" na 1.');
