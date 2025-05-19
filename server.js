@@ -52,21 +52,22 @@ async function initializeDatabase() {
         ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
     `;
 
-    // NOWA TABELA: courses
-    const createCoursesTableQuery = `
-        CREATE TABLE IF NOT EXISTS courses (
+    // NOWA TABELA: materials
+    const createMaterialsTableQuery = `
+        CREATE TABLE IF NOT EXISTS materials (
             id SERIAL PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             description TEXT,
             category VARCHAR(100),
-            price NUMERIC(10, 2) DEFAULT 0.00, -- Cena z dwoma miejscami po przecinku
-            author_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Opcjonalnie: powiązanie z autorem (użytkownikiem)
+            price NUMERIC(10, 2) DEFAULT 0.00,
+            file_url VARCHAR(1024), -- Link do pliku
+            cover_image_url VARCHAR(1024), -- Link do obrazka okładki
             status VARCHAR(50) DEFAULT 'draft' NOT NULL, -- np. draft, published, archived
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Trigger do automatycznej aktualizacji updated_at (PostgreSQL)
+    // Trigger do automatycznej aktualizacji updated_at
     const createUpdatedAtTriggerFunction = `
         CREATE OR REPLACE FUNCTION trigger_set_timestamp()
         RETURNS TRIGGER AS $$
@@ -76,14 +77,13 @@ async function initializeDatabase() {
         END;
         $$ LANGUAGE plpgsql;
     `;
-    const applyUpdatedAtTriggerToCourses = `
-        DROP TRIGGER IF EXISTS set_timestamp_courses ON courses; -- Usuń stary trigger, jeśli istnieje
-        CREATE TRIGGER set_timestamp_courses
-        BEFORE UPDATE ON courses
+    const applyUpdatedAtTriggerToMaterials = `
+        DROP TRIGGER IF EXISTS set_timestamp_materials ON materials; 
+        CREATE TRIGGER set_timestamp_materials
+        BEFORE UPDATE ON materials
         FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
     `;
-
 
     const addAdminUserIfNeeded = async () => {
         // ... (bez zmian)
@@ -127,13 +127,12 @@ async function initializeDatabase() {
         console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
         await addAdminUserIfNeeded();
         
-        await pool.query(createCoursesTableQuery); // Tworzenie tabeli kursów
-        console.log('Tabela "courses" sprawdzona/utworzona pomyślnie.');
+        await pool.query(createMaterialsTableQuery); // Tworzenie tabeli materiałów
+        console.log('Tabela "materials" sprawdzona/utworzona pomyślnie.');
         
-        // Utwórz funkcję triggera i trigger dla tabeli courses
         await pool.query(createUpdatedAtTriggerFunction);
-        await pool.query(applyUpdatedAtTriggerToCourses);
-        console.log('Trigger "updated_at" dla tabeli "courses" sprawdzony/utworzony pomyślnie.');
+        await pool.query(applyUpdatedAtTriggerToMaterials); // Zastosuj trigger do tabeli materials
+        console.log('Trigger "updated_at" dla tabeli "materials" sprawdzony/utworzony pomyślnie.');
 
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
@@ -212,11 +211,11 @@ if (emailHost && emailUser && emailPass) {
 async function sendRegistrationEmail(userEmail, username) {
     const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com';
     const mailOptions = {
-        from: `"Platforma KursyOnline" <${fromAddress}>`,
+        from: `"Platforma KursyOnline" <${fromAddress}>`, // Nazwa Twojej platformy
         to: userEmail,
-        subject: 'Witaj w KursyOnline! Potwierdzenie rejestracji',
-        text: `Witaj ${username},\n\nDziękujemy za rejestrację na platformie KursyOnline!\n\nPozdrawiamy,\nZespół KursyOnline`,
-        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na platformie KursyOnline!</p><p>Pozdrawiamy,<br>Zespół KursyOnline</p>`,
+        subject: 'Witaj na Platformie! Potwierdzenie rejestracji', // Zmieniono temat
+        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie!\n\nPozdrawiamy,\nZespół Platformy`, // Zmieniono treść
+        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, // Zmieniono treść
     };
     try {
         console.log(`Próba wysłania e-maila rejestracyjnego DO: ${userEmail} OD: ${fromAddress} (login SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'})`);
@@ -272,6 +271,7 @@ app.use((req, res, next) => {
     console.log(`-----------------------------------------------------`);
     next();
 });
+
 
 // --- Middleware autoryzacyjne ---
 // ... (isAuthenticated i isAdmin bez zmian)
@@ -442,6 +442,7 @@ app.get('/admin/dashboard', isAuthenticated, isAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
+// API dla użytkowników (bez zmian)
 app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT id, username, email, role, created_at FROM users ORDER BY id ASC');
@@ -453,6 +454,7 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    // ... (kod aktualizacji użytkownika bez zmian) ...
     const userId = parseInt(req.params.id); 
     const { username, email, role, password } = req.body; 
 
@@ -528,6 +530,7 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    // ... (kod usuwania użytkownika bez zmian) ...
     const userIdToDelete = parseInt(req.params.id);
     const adminUserId = req.session.userId; 
 
@@ -555,46 +558,51 @@ app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) =>
     }
 });
 
-// NOWE: API Endpoints dla kursów
-// Pobieranie wszystkich kursów
-app.get('/api/admin/courses', isAuthenticated, isAdmin, async (req, res) => {
+// === NOWE API Endpoints dla Materiałów ===
+// Pobieranie wszystkich materiałów (dla admina)
+app.get('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM courses ORDER BY created_at DESC');
+        const result = await pool.query('SELECT * FROM materials ORDER BY created_at DESC');
         res.json(result.rows);
     } catch (error) {
-        console.error("Błąd podczas pobierania listy kursów dla admina:", error);
-        res.status(500).json({ error: 'Błąd serwera podczas pobierania kursów.' });
+        console.error("Błąd podczas pobierania listy materiałów dla admina:", error);
+        res.status(500).json({ error: 'Błąd serwera podczas pobierania materiałów.' });
     }
 });
 
-// Tworzenie nowego kursu
-app.post('/api/admin/courses', isAuthenticated, isAdmin, async (req, res) => {
-    const { title, description, category, price, status } = req.body;
-    const author_id = req.session.userId; // Admin tworzący kurs jest jego autorem
+// Tworzenie nowego materiału (dla admina)
+app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
+    const { title, description, category, price, file_url, cover_image_url, status } = req.body;
+    // W przyszłości author_id można by pobierać z sesji admina, jeśli admini też mogą być autorami
+    // const author_id = req.session.userId; 
 
     if (!title) {
-        return res.status(400).json({ message: 'Tytuł kursu jest wymagany.' });
+        return res.status(400).json({ message: 'Tytuł materiału jest wymagany.' });
+    }
+    if (!file_url) {
+        return res.status(400).json({ message: 'Link do pliku (file_url) jest wymagany.' });
     }
 
     try {
-        const insertCourseQuery = `
-            INSERT INTO courses (title, description, category, price, author_id, status) 
-            VALUES ($1, $2, $3, $4, $5, $6) 
-            RETURNING *`;
+        const insertMaterialQuery = `
+            INSERT INTO materials (title, description, category, price, file_url, cover_image_url, status) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            RETURNING *`; // Zwracamy cały nowo utworzony obiekt materiału
         const values = [
             title, 
             description || null, 
             category || null, 
-            price || 0.00, 
-            author_id, 
+            price ? parseFloat(price) : 0.00, // Upewnij się, że cena jest liczbą
+            file_url,
+            cover_image_url || null,
             status || 'draft'
         ];
-        const result = await pool.query(insertCourseQuery, values);
-        console.log('Nowy kurs dodany do bazy:', result.rows[0]);
-        res.status(201).json({ message: 'Kurs dodany pomyślnie.', course: result.rows[0] });
+        const result = await pool.query(insertMaterialQuery, values);
+        console.log('Nowy materiał dodany do bazy:', result.rows[0]);
+        res.status(201).json({ message: 'Materiał dodany pomyślnie.', material: result.rows[0] });
     } catch (error) {
-        console.error("Błąd podczas tworzenia nowego kursu:", error);
-        res.status(500).json({ message: 'Błąd serwera podczas tworzenia kursu.' });
+        console.error("Błąd podczas tworzenia nowego materiału:", error);
+        res.status(500).json({ message: 'Błąd serwera podczas tworzenia materiału.' });
     }
 });
 
@@ -602,6 +610,7 @@ app.post('/api/admin/courses', isAuthenticated, isAdmin, async (req, res) => {
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
+    // ... (reszta logów startowych bez zmian)
     if (!process.env.DATABASE_URL) {
         console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona.');
     }
@@ -624,6 +633,6 @@ app.listen(PORT, () => {
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL.');
     console.log('Tabela "session" powinna być tworzona przy starcie serwera.');
     console.log('Pole "role" w tabeli "users" jest teraz dodawane/sprawdzane przy starcie.');
-    console.log('Tabela "courses" jest teraz tworzona przy starcie serwera.');
+    console.log('Tabela "materials" jest teraz tworzona przy starcie serwera.'); // Zmieniono z courses na materials
     console.log('---');
 });
