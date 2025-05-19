@@ -11,7 +11,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .sidebar-link-active { @apply bg-blue-700 text-white; }
+        .sidebar-link-active { @apply bg-blue-700 text-white; } /* To może nadal działać, ale warto obserwować */
         .sidebar-link { @apply transition-colors duration-200 ease-in-out; }
         .table-responsive-wrapper { @apply overflow-x-auto; }
         .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
@@ -22,7 +22,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(75, 85, 99, 0.5); 
+            background-color: rgba(75, 85, 99, 0.5); /* Tailwind's bg-gray-600 bg-opacity-50 */
             overflow-y: auto;
             height: 100%;
             width: 100%;
@@ -34,9 +34,10 @@
         .modal-visible {
             display: flex !important;
         }
+        /* Usunięto @apply z .modal-content, style będą bezpośrednio w HTML */
         .modal-content {
-            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto;
-            position: relative;
+            /* @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto; */
+            position: relative; /* Dla pozycjonowania przycisku zamknięcia */
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -158,8 +159,10 @@
                 </section>
             </div>
         </main>
-    </div> <div id="editUserModal" class="modal-base"> 
-        <div class="modal-content relative">
+    </div>
+
+    <div id="editUserModal" class="modal-base"> 
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative">
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
