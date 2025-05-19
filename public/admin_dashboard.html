@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administracyjny - KursyOnline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style dla aktywnego linku w sidebarze */
+        .sidebar-link-active {
+            @apply bg-blue-700 text-white;
+        }
+        /* Płynne przejścia dla hover */
+        .sidebar-link {
+            @apply transition-colors duration-200 ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="flex h-screen bg-gray-200">
+        <aside class="w-64 bg-gray-800 text-gray-100 flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-700">
+                <a href="/admin/dashboard" class="text-2xl font-semibold">Admin Kursy<span class="text-blue-400">Online</span></a>
+            </div>
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 sidebar-link-active">
+                    <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i>
+                    Panel Główny
+                </a>
+                <a href="#user-management" id="nav-users" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-users w-6 text-center mr-3"></i>
+                    Użytkownicy
+                </a>
+                <a href="#course-management" id="nav-courses" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-book-open w-6 text-center mr-3"></i>
+                    Kursy
+                </a>
+                <a href="#settings" id="nav-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-cog w-6 text-center mr-3"></i>
+                    Ustawienia
+                </a>
+            </nav>
+            <div class="px-6 py-4 border-t border-gray-700">
+                <a href="/logout" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-sign-out-alt w-6 text-center mr-3"></i>
+                    Wyloguj się
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-md">
+                <div class="container mx-auto px-6 py-4">
+                    <h1 id="page-title" class="text-2xl font-semibold text-gray-700">Panel Główny</h1>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                
+                <section id="dashboard-main" class="admin-section">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Witaj w Panelu Administracyjnym!</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Zarejestrowani Użytkownicy</h3>
+                            <p class="text-3xl font-bold text-blue-600">125</p> </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Kursów</h3>
+                            <p class="text-3xl font-bold text-green-600">15</p> </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywne Subskrypcje</h3>
+                            <p class="text-3xl font-bold text-yellow-500">78</p> </div>
+                    </div>
+                </section>
+
+                <section id="user-management" class="admin-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
+                        </div>
+                    <div class="bg-white shadow-lg rounded-lg overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nazwa Użytkownika</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Rejestracji</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">AdminKursowy</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">admin@example.com</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-05-20</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">JanKowalski</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">jan@example.com</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-05-21</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="course-management" class="admin-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Kursami</h2>
+                        <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                            <i class="fas fa-plus mr-2"></i>Dodaj Nowy Kurs
+                        </button>
+                    </div>
+                     <div class="bg-white shadow-lg rounded-lg overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Kursu</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tytuł Kursu</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoria</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Liczba Lekcji</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">KURS001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Wprowadzenie do JavaScript</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Programowanie</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">25</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Opublikowany</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="settings" class="admin-section hidden">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Ustawienia Panelu</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <p>Tutaj znajdą się różne opcje konfiguracyjne panelu administracyjnego, np. zmiana hasła admina, ustawienia globalne platformy itp.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('aside nav a');
+            const sections = document.querySelectorAll('.admin-section');
+            const pageTitle = document.getElementById('page-title');
+
+            // Funkcja do pokazywania sekcji i aktualizowania aktywnego linku
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === '#' + targetId) {
+                        link.classList.add('sidebar-link-active');
+                        pageTitle.textContent = link.textContent.trim(); // Ustawia tytuł strony
+                    } else {
+                        link.classList.remove('sidebar-link-active');
+                    }
+                });
+            }
+
+            // Obsługa kliknięć w linki nawigacyjne
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault(); // Zapobiegamy domyślnemu przewijaniu
+                    const targetId = this.getAttribute('href').substring(1); // Pobieramy ID sekcji z href
+                    showSection(targetId);
+                });
+            });
+
+            // Pokaż domyślną sekcję (Panel Główny) przy załadowaniu
+            showSection('dashboard-main');
+        });
+    </script>
+</body>
+</html>
