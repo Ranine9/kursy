@@ -110,7 +110,7 @@
                 </section>
 
                 <section id="course-management" class="admin-section hidden">
-                    <div class="flex justify-between items-center mb-6">
+                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Kursami</h2>
                         <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
                             <i class="fas fa-plus mr-2"></i>Dodaj Nowy Kurs
@@ -188,6 +188,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            console.log("Admin Dashboard JS: DOMContentLoaded"); // DEBUG
+
             const navLinks = document.querySelectorAll('aside nav a');
             const sections = document.querySelectorAll('.admin-section');
             const pageTitle = document.getElementById('page-title');
@@ -195,7 +197,6 @@
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
 
-            // Modal edycji użytkownika
             const editUserModal = document.getElementById('editUserModal');
             const closeEditUserModalBtn = document.getElementById('closeEditUserModal');
             const cancelEditUserBtn = document.getElementById('cancelEditUser');
@@ -206,7 +207,7 @@
             const editUserRoleInput = document.getElementById('editUserRole');
             const editUserPasswordInput = document.getElementById('editUserPassword');
 
-            let allUsersData = []; // Przechowujemy pobranych użytkowników
+            let allUsersData = []; 
 
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
@@ -215,9 +216,11 @@
             }
 
             async function fetchAndDisplayUsers() {
+                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called"); // DEBUG
                 try {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
                     const response = await fetch('/api/admin/users');
+                    console.log("Admin Dashboard JS: fetch response status:", response.status); // DEBUG
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
                              userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
@@ -226,7 +229,8 @@
                         }
                         return;
                     }
-                    allUsersData = await response.json(); // Zapisz dane globalnie
+                    allUsersData = await response.json();
+                    console.log("Admin Dashboard JS: Użytkownicy pobrani:", allUsersData); // DEBUG
 
                     if (allUsersData.length === 0) {
                         userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
@@ -235,14 +239,14 @@
                         return;
                     }
 
-                    renderUserTable(allUsersData); // Wywołaj funkcję renderującą tabelę
+                    renderUserTable(allUsersData);
                     
                     const adminCount = allUsersData.filter(user => user.role === 'admin').length;
                     statsTotalUsers.textContent = allUsersData.length;
                     statsTotalAdmins.textContent = adminCount;
 
                 } catch (error) {
-                    console.error('Błąd podczas pobierania użytkowników:', error);
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error); // DEBUG
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych.</td></tr>';
                     statsTotalUsers.textContent = 'Błąd';
                     statsTotalAdmins.textContent = 'Błąd';
@@ -250,6 +254,7 @@
             }
 
             function renderUserTable(users) {
+                console.log("Admin Dashboard JS: renderUserTable() called with", users.length, "użytkowników"); // DEBUG
                 userTableBody.innerHTML = ''; 
                 users.forEach(user => {
                     const row = `
@@ -267,81 +272,99 @@
                     `;
                     userTableBody.insertAdjacentHTML('beforeend', row);
                 });
-                addEventListenersToEditButtons();
+                addEventListenersToEditButtons(); // Ważne: wywołaj po dodaniu wierszy do DOM
             }
 
             function openEditModal(userId) {
+                console.log("Admin Dashboard JS: openEditModal() called for userId:", userId); // DEBUG
                 const user = allUsersData.find(u => u.id === parseInt(userId));
                 if (!user) {
-                    console.error('Nie znaleziono użytkownika o ID:', userId);
+                    console.error('Admin Dashboard JS: Nie znaleziono użytkownika o ID w openEditModal:', userId); // DEBUG
                     alert('Nie znaleziono użytkownika.');
                     return;
                 }
+                console.log("Admin Dashboard JS: Użytkownik do edycji znaleziony:", user); // DEBUG
                 editUserIdInput.value = user.id;
                 editUsernameInput.value = user.username;
                 editUserEmailInput.value = user.email;
                 editUserRoleInput.value = user.role;
-                editUserPasswordInput.value = ''; // Wyczyść pole hasła
+                editUserPasswordInput.value = ''; 
                 editUserModal.classList.remove('hidden');
+                console.log("Admin Dashboard JS: Modal edycji otwarty."); // DEBUG
             }
 
             function closeEditModal() {
+                console.log("Admin Dashboard JS: closeEditModal() called"); // DEBUG
                 editUserModal.classList.add('hidden');
-                editUserForm.reset(); // Zresetuj formularz
+                editUserForm.reset();
             }
 
             function addEventListenersToEditButtons() {
                 const editButtons = document.querySelectorAll('.edit-user-btn');
+                console.log("Admin Dashboard JS: addEventListenersToEditButtons() - znaleziono przycisków edycji:", editButtons.length); // DEBUG
                 editButtons.forEach(button => {
-                    button.addEventListener('click', function() {
+                    // Usuń poprzednie listenery, jeśli istnieją, aby uniknąć wielokrotnego dodawania
+                    // To jest prosty sposób, można by też użyć .replaceWith(button.cloneNode(true))
+                    const newButton = button.cloneNode(true);
+                    button.parentNode.replaceChild(newButton, button);
+
+                    newButton.addEventListener('click', function() {
                         const userId = this.dataset.userid;
+                        console.log("Admin Dashboard JS: Przycisk Edytuj kliknięty dla userId:", userId); // DEBUG
                         openEditModal(userId);
                     });
                 });
             }
             
-            closeEditUserModalBtn.addEventListener('click', closeEditModal);
-            cancelEditUserBtn.addEventListener('click', closeEditModal);
+            if(closeEditUserModalBtn) closeEditUserModalBtn.addEventListener('click', closeEditModal);
+            if(cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', closeEditModal);
 
-            editUserForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const userId = editUserIdInput.value;
-                const updatedUserData = {
-                    username: editUsernameInput.value,
-                    email: editUserEmailInput.value,
-                    role: editUserRoleInput.value,
-                };
-                if (editUserPasswordInput.value) { // Jeśli podano nowe hasło
-                    updatedUserData.password = editUserPasswordInput.value;
-                }
-
-                try {
-                    const response = await fetch(`/api/admin/users/${userId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(updatedUserData),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || `Błąd HTTP! status: ${response.status}`);
+            if(editUserForm) {
+                editUserForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    console.log("Admin Dashboard JS: Formularz edycji wysłany."); // DEBUG
+                    const userId = editUserIdInput.value;
+                    const updatedUserData = {
+                        username: editUsernameInput.value,
+                        email: editUserEmailInput.value,
+                        role: editUserRoleInput.value,
+                    };
+                    if (editUserPasswordInput.value && editUserPasswordInput.value.trim() !== '') {
+                        updatedUserData.password = editUserPasswordInput.value;
                     }
-                    
-                    alert('Dane użytkownika zaktualizowane pomyślnie!');
-                    closeEditModal();
-                    fetchAndDisplayUsers(); // Odśwież listę użytkowników
 
-                } catch (error) {
-                    console.error('Błąd podczas aktualizacji użytkownika:', error);
-                    alert(`Nie udało się zaktualizować danych użytkownika: ${error.message}`);
-                }
-            });
+                    console.log("Admin Dashboard JS: Dane do aktualizacji:", updatedUserData, "dla userId:", userId); // DEBUG
+
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(updatedUserData),
+                        });
+                        
+                        const responseData = await response.json(); // Zawsze próbuj odczytać odpowiedź
+                        console.log("Admin Dashboard JS: Odpowiedź serwera na PUT:", response.status, responseData); // DEBUG
+
+                        if (!response.ok) {
+                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        }
+                        
+                        alert('Dane użytkownika zaktualizowane pomyślnie!');
+                        closeEditModal();
+                        fetchAndDisplayUsers(); 
+
+                    } catch (error) {
+                        console.error('Admin Dashboard JS: Błąd podczas aktualizacji użytkownika:', error); // DEBUG
+                        alert(`Nie udało się zaktualizować danych użytkownika: ${error.message}`);
+                    }
+                });
+            }
 
 
             function showSection(targetId) {
-                // ... (logika showSection bez zmian) ...
+                console.log("Admin Dashboard JS: showSection() called for targetId:", targetId); // DEBUG
                 sections.forEach(section => {
                     section.classList.toggle('hidden', section.id !== targetId);
                 });
@@ -364,11 +387,17 @@
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
+                    console.log("Admin Dashboard JS: Link nawigacyjny kliknięty, targetId:", targetId); // DEBUG
                     showSection(targetId);
                 });
             });
 
-            showSection('dashboard-main');
+            // Pokaż domyślną sekcję i załaduj dane przy starcie, jeśli elementy istnieją
+            if (document.getElementById('dashboard-main')) {
+                 showSection('dashboard-main');
+            } else {
+                console.warn("Admin Dashboard JS: Nie znaleziono sekcji 'dashboard-main' przy inicjalizacji.");
+            }
         });
     </script>
 </body>
