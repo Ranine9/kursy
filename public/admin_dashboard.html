@@ -18,6 +18,7 @@
 
         /* Style dla modala */
         .modal {
+            /* display: flex; -- Tailwind dodaje to przez klasę flex */
             @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50;
         }
         .modal-content {
@@ -31,6 +32,10 @@
         }
         .form-label {
             @apply block text-sm font-medium text-gray-700;
+        }
+        /* Dodajemy klasę do jawnego pokazywania, jeśli 'hidden' sprawia problemy */
+        .modal-visible {
+            display: flex !important;
         }
     </style>
 </head>
@@ -145,8 +150,7 @@
         </main>
     </div>
 
-    <div id="editUserModal" class="modal hidden">
-        <div class="modal-content relative">
+    <div id="editUserModal" class="modal hidden"> <div class="modal-content relative">
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -188,7 +192,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log("Admin Dashboard JS: DOMContentLoaded"); // DEBUG
+            console.log("Admin Dashboard JS: DOMContentLoaded");
 
             const navLinks = document.querySelectorAll('aside nav a');
             const sections = document.querySelectorAll('.admin-section');
@@ -216,11 +220,11 @@
             }
 
             async function fetchAndDisplayUsers() {
-                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called"); // DEBUG
+                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
                 try {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
                     const response = await fetch('/api/admin/users');
-                    console.log("Admin Dashboard JS: fetch response status:", response.status); // DEBUG
+                    console.log("Admin Dashboard JS: fetch response status:", response.status);
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
                              userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
@@ -230,7 +234,7 @@
                         return;
                     }
                     allUsersData = await response.json();
-                    console.log("Admin Dashboard JS: Użytkownicy pobrani:", allUsersData); // DEBUG
+                    console.log("Admin Dashboard JS: Użytkownicy pobrani:", allUsersData);
 
                     if (allUsersData.length === 0) {
                         userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
@@ -246,7 +250,7 @@
                     statsTotalAdmins.textContent = adminCount;
 
                 } catch (error) {
-                    console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error); // DEBUG
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error);
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych.</td></tr>';
                     statsTotalUsers.textContent = 'Błąd';
                     statsTotalAdmins.textContent = 'Błąd';
@@ -254,10 +258,10 @@
             }
 
             function renderUserTable(users) {
-                console.log("Admin Dashboard JS: renderUserTable() called with", users.length, "użytkowników"); // DEBUG
+                console.log("Admin Dashboard JS: renderUserTable() called with", users.length, "użytkowników");
                 userTableBody.innerHTML = ''; 
                 users.forEach(user => {
-                    const row = `
+                    const rowHTML = `
                         <tr data-userid="${user.id}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
@@ -270,49 +274,61 @@
                             </td>
                         </tr>
                     `;
-                    userTableBody.insertAdjacentHTML('beforeend', row);
+                    userTableBody.insertAdjacentHTML('beforeend', rowHTML);
                 });
-                addEventListenersToEditButtons(); // Ważne: wywołaj po dodaniu wierszy do DOM
+                // Przenieś dodawanie listenerów tutaj, aby upewnić się, że są dodawane do nowo utworzonych przycisków
+                addEventListenersToEditButtons(); 
             }
 
             function openEditModal(userId) {
-                console.log("Admin Dashboard JS: openEditModal() called for userId:", userId); // DEBUG
+                console.log("Admin Dashboard JS: openEditModal() called for userId:", userId);
                 const user = allUsersData.find(u => u.id === parseInt(userId));
                 if (!user) {
-                    console.error('Admin Dashboard JS: Nie znaleziono użytkownika o ID w openEditModal:', userId); // DEBUG
+                    console.error('Admin Dashboard JS: Nie znaleziono użytkownika o ID w openEditModal:', userId);
                     alert('Nie znaleziono użytkownika.');
                     return;
                 }
-                console.log("Admin Dashboard JS: Użytkownik do edycji znaleziony:", user); // DEBUG
+                console.log("Admin Dashboard JS: Użytkownik do edycji znaleziony:", user);
                 editUserIdInput.value = user.id;
                 editUsernameInput.value = user.username;
                 editUserEmailInput.value = user.email;
                 editUserRoleInput.value = user.role;
                 editUserPasswordInput.value = ''; 
-                editUserModal.classList.remove('hidden');
-                console.log("Admin Dashboard JS: Modal edycji otwarty."); // DEBUG
+                
+                // Zamiast classList.remove('hidden'), spróbujmy jawnie ustawić styl
+                editUserModal.classList.remove('hidden'); // Najpierw usuń 'hidden'
+                // editUserModal.style.display = 'flex'; // Potem jawnie ustaw display
+                // LUB użyj nowej klasy
+                // editUserModal.classList.add('modal-visible');
+                // editUserModal.classList.remove('hidden');
+
+
+                console.log("Admin Dashboard JS: Modal edycji powinien być teraz widoczny. Sprawdzany styl:", window.getComputedStyle(editUserModal).display);
             }
 
             function closeEditModal() {
-                console.log("Admin Dashboard JS: closeEditModal() called"); // DEBUG
+                console.log("Admin Dashboard JS: closeEditModal() called");
+                // editUserModal.style.display = 'none'; // Ukryj przez styl
+                // LUB
                 editUserModal.classList.add('hidden');
+                // editUserModal.classList.remove('modal-visible');
                 editUserForm.reset();
             }
 
             function addEventListenersToEditButtons() {
                 const editButtons = document.querySelectorAll('.edit-user-btn');
-                console.log("Admin Dashboard JS: addEventListenersToEditButtons() - znaleziono przycisków edycji:", editButtons.length); // DEBUG
+                console.log("Admin Dashboard JS: addEventListenersToEditButtons() - znaleziono przycisków edycji:", editButtons.length);
                 editButtons.forEach(button => {
-                    // Usuń poprzednie listenery, jeśli istnieją, aby uniknąć wielokrotnego dodawania
-                    // To jest prosty sposób, można by też użyć .replaceWith(button.cloneNode(true))
-                    const newButton = button.cloneNode(true);
-                    button.parentNode.replaceChild(newButton, button);
-
-                    newButton.addEventListener('click', function() {
-                        const userId = this.dataset.userid;
-                        console.log("Admin Dashboard JS: Przycisk Edytuj kliknięty dla userId:", userId); // DEBUG
-                        openEditModal(userId);
-                    });
+                    // Sprawdzamy, czy listener już nie istnieje, żeby uniknąć duplikatów
+                    // To jest uproszczenie; w bardziej złożonych scenariuszach można by zarządzać listenerami inaczej.
+                    if (!button.hasAttribute('data-listener-attached')) {
+                        button.addEventListener('click', function() {
+                            const userId = this.dataset.userid;
+                            console.log("Admin Dashboard JS: Przycisk Edytuj kliknięty dla userId:", userId);
+                            openEditModal(userId);
+                        });
+                        button.setAttribute('data-listener-attached', 'true');
+                    }
                 });
             }
             
@@ -322,7 +338,7 @@
             if(editUserForm) {
                 editUserForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
-                    console.log("Admin Dashboard JS: Formularz edycji wysłany."); // DEBUG
+                    console.log("Admin Dashboard JS: Formularz edycji wysłany.");
                     const userId = editUserIdInput.value;
                     const updatedUserData = {
                         username: editUsernameInput.value,
@@ -333,7 +349,7 @@
                         updatedUserData.password = editUserPasswordInput.value;
                     }
 
-                    console.log("Admin Dashboard JS: Dane do aktualizacji:", updatedUserData, "dla userId:", userId); // DEBUG
+                    console.log("Admin Dashboard JS: Dane do aktualizacji:", updatedUserData, "dla userId:", userId);
 
                     try {
                         const response = await fetch(`/api/admin/users/${userId}`, {
@@ -344,8 +360,8 @@
                             body: JSON.stringify(updatedUserData),
                         });
                         
-                        const responseData = await response.json(); // Zawsze próbuj odczytać odpowiedź
-                        console.log("Admin Dashboard JS: Odpowiedź serwera na PUT:", response.status, responseData); // DEBUG
+                        const responseData = await response.json();
+                        console.log("Admin Dashboard JS: Odpowiedź serwera na PUT:", response.status, responseData);
 
                         if (!response.ok) {
                             throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
@@ -356,15 +372,14 @@
                         fetchAndDisplayUsers(); 
 
                     } catch (error) {
-                        console.error('Admin Dashboard JS: Błąd podczas aktualizacji użytkownika:', error); // DEBUG
+                        console.error('Admin Dashboard JS: Błąd podczas aktualizacji użytkownika:', error);
                         alert(`Nie udało się zaktualizować danych użytkownika: ${error.message}`);
                     }
                 });
             }
 
-
             function showSection(targetId) {
-                console.log("Admin Dashboard JS: showSection() called for targetId:", targetId); // DEBUG
+                console.log("Admin Dashboard JS: showSection() called for targetId:", targetId);
                 sections.forEach(section => {
                     section.classList.toggle('hidden', section.id !== targetId);
                 });
@@ -387,12 +402,11 @@
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
-                    console.log("Admin Dashboard JS: Link nawigacyjny kliknięty, targetId:", targetId); // DEBUG
+                    console.log("Admin Dashboard JS: Link nawigacyjny kliknięty, targetId:", targetId);
                     showSection(targetId);
                 });
             });
 
-            // Pokaż domyślną sekcję i załaduj dane przy starcie, jeśli elementy istnieją
             if (document.getElementById('dashboard-main')) {
                  showSection('dashboard-main');
             } else {
