@@ -1,0 +1,28 @@
+{
+  "name": "kursy-online-backend",
+  "version": "1.0.0",
+  "description": "Backend dla platformy kursów wideo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "kursy",
+    "wideo",
+    "edukacja",
+    "express",
+    "nodejs"
+  ],
+  "author": "Twoje Imię lub Nazwa Firmy",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
