@@ -25,7 +25,7 @@
 
     <header class="bg-white shadow-sm">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <a href="index.html" class="text-3xl font-bold text-blue-600">Kursy<span class="text-gray-700">Online</span></a>
+             <a href="index.html" class="text-3xl font-bold text-blue-600">Kursy<span class="text-gray-700">Online</span></a>
         </div>
     </header>
 
@@ -41,9 +41,8 @@
                     </a>
                 </p>
             </div>
-            <form class="mt-8 space-y-6" action="#" method="POST">
-                <input type="hidden" name="remember" value="true">
-                <div class="rounded-md shadow-sm -space-y-px">
+            <form class="mt-8 space-y-6" action="/login" method="POST">
+                <input type="hidden" name="remember" value="true"> <div class="rounded-md shadow-sm -space-y-px">
                     <div>
                         <label for="email-address" class="block text-sm font-medium text-gray-700">Adres email</label>
                         <input id="email-address" name="email" type="email" autocomplete="email" required
