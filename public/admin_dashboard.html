@@ -6,177 +6,253 @@
     <title>Panel Administracyjny - Platforma Materiałów</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* Tailwind gray-100 */
         }
-        .sidebar-link-active { @apply bg-blue-700 text-white; }
-        .sidebar-link { @apply transition-colors duration-200 ease-in-out; }
-        .table-responsive-wrapper { @apply overflow-x-auto; }
-        .action-btn { @apply p-1 rounded hover:bg-gray-200 transition-colors; }
+        .sidebar {
+            @apply w-64 bg-gray-900 text-gray-300 flex flex-col transition-all duration-300 ease-in-out;
+        }
+        .sidebar-link {
+            @apply flex items-center px-4 py-3 text-sm hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-150;
+        }
+        .sidebar-link-active {
+            @apply bg-blue-600 text-white shadow-lg;
+        }
+        .sidebar-link i {
+            @apply mr-3 w-5 text-center;
+        }
+        .main-content {
+            @apply flex-1 flex flex-col overflow-hidden;
+        }
+        .header {
+            @apply bg-white shadow-md px-6 py-4 flex justify-between items-center;
+        }
+        .page-section {
+            @apply p-6 space-y-6; 
+        }
+        .stat-card {
+            @apply bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300;
+        }
+        .table-wrapper {
+            @apply bg-white shadow-xl rounded-xl overflow-hidden;
+        }
+        .table thead th {
+            @apply px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50;
+        }
+        .table tbody tr:hover {
+            @apply bg-gray-50;
+        }
+        .table tbody td {
+            @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200;
+        }
+        .action-btn {
+            @apply p-2 rounded-md hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700;
+        }
+        .btn-primary-solid {
+             @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+        }
+         .btn-secondary-outline {
+            @apply bg-transparent hover:bg-gray-100 text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm transition-colors;
+        }
 
+        /* Modal Styles */
         .modal-base {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(75, 85, 99, 0.5); /* Półprzezroczyste tło dla całego modala */
-            overflow-y: auto;
-            height: 100%;
-            width: 100%;
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            z-index: 1000; 
+            @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-[1000] transition-opacity duration-300;
+            opacity: 0;
+            visibility: hidden;
         }
         .modal-visible {
-            display: flex !important;
+            opacity: 1;
+            visibility: visible;
         }
-        .modal-content-user { 
-            @apply p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative;
-            /* bg-white zostanie dodane bezpośrednio w HTML dla pewności */
+        .modal-content { 
+            @apply bg-white rounded-xl shadow-2xl w-full relative transform transition-all duration-300 ease-out;
+            max-height: 90vh; 
+            overflow-y: auto; 
         }
-        .modal-content-lg { 
-            @apply p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; 
-            /* bg-white zostanie dodane bezpośrednio w HTML dla pewności */
+        .modal-content-user {
+            @apply max-w-lg; 
         }
-        .modal-close-btn {
-            @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
+        .modal-content-material {
+            @apply max-w-3xl; 
         }
-        .form-input {
-            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        .modal-header {
+            @apply px-6 py-4 border-b border-gray-200 flex justify-between items-center; /* Dodano flex dla przycisku zamknięcia */
         }
-        .form-label {
-            @apply block text-sm font-medium text-gray-700;
+        .modal-title {
+            @apply text-xl font-semibold text-gray-800;
         }
-        .form-textarea {
-            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        .modal-body {
+            @apply p-6 space-y-6; 
         }
-        .form-group {
-            @apply mb-6; 
+        .modal-footer {
+            @apply px-6 py-4 bg-gray-50 border-t border-gray-200 text-right space-x-3 rounded-b-xl;
         }
-        .form-group-title {
-            @apply text-lg font-semibold text-gray-700 mb-3 border-b pb-2;
+        .modal-close-btn-standalone { /* Zmieniona nazwa, aby uniknąć konfliktu z .modal-close-btn wewnątrz .modal-header */
+            @apply text-gray-400 hover:text-gray-600 transition-colors;
         }
-        .form-grid { 
-            @apply grid grid-cols-1 md:grid-cols-2 gap-x-6;
+
+
+        /* Form Styles within Modal */
+        .form-label { @apply block text-sm font-medium text-gray-700 mb-1; }
+        .form-input, .form-textarea, .form-select {
+            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow;
         }
-        .input-hint {
-            @apply text-xs text-gray-500 mt-1;
+        .form-textarea { min-height: 120px; }
+        .form-group { @apply mb-5; }
+        .form-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-6; }
+        .input-hint { @apply text-xs text-gray-500 mt-1; }
+        
+        #coverImagePreview {
+            @apply mt-3 rounded-lg border border-gray-300 object-cover;
+            max-height: 150px;
+            width: auto; 
+        }
+        .spinner {
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border-left-color: white; 
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <div class="flex h-screen bg-gray-200">
-        <aside class="w-64 bg-gray-800 text-gray-100 flex flex-col">
-            <div class="px-6 py-4 border-b border-gray-700">
-                <a href="/admin/dashboard.html" class="text-2xl font-semibold">Admin Platforma<span class="text-blue-400">M</span></a>
+<body class="text-gray-800">
+    <div class="flex h-screen">
+        <aside class="sidebar">
+            <div class="px-6 py-5 border-b border-gray-700 flex items-center">
+                <i class="fas fa-book-open text-blue-400 text-2xl mr-3"></i>
+                <a href="/admin/dashboard.html" class="text-xl font-bold text-white">Platforma<span class="text-blue-400">M</span></a>
             </div>
-            <nav class="flex-1 px-4 py-4 space-y-2">
-                <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 sidebar-link-active">
-                    <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i> Panel Główny
+            <nav class="flex-1 px-3 py-4 space-y-1.5">
+                <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link sidebar-link-active">
+                    <i class="fas fa-tachometer-alt"></i> Panel Główny
                 </a>
-                <a href="#user-management" id="nav-users" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-users w-6 text-center mr-3"></i> Użytkownicy
+                <a href="#user-management" id="nav-users" class="sidebar-link">
+                    <i class="fas fa-users"></i> Użytkownicy
                 </a>
-                <a href="#material-management" id="nav-materials" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-file-alt w-6 text-center mr-3"></i> Materiały
+                <a href="#material-management" id="nav-materials" class="sidebar-link">
+                    <i class="fas fa-layer-group"></i> Materiały
                 </a>
-                <a href="#settings" id="nav-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-cog w-6 text-center mr-3"></i> Ustawienia
+                <a href="#settings" id="nav-settings" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Ustawienia
                 </a>
             </nav>
-            <div class="px-6 py-4 border-t border-gray-700">
-                <a href="/logout" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
-                    <i class="fas fa-sign-out-alt w-6 text-center mr-3"></i> Wyloguj się
+            <div class="px-3 py-4 border-t border-gray-700">
+                <a href="/logout" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Wyloguj się
                 </a>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-md">
-                <div class="container mx-auto px-6 py-4">
-                    <h1 id="page-title" class="text-2xl font-semibold text-gray-700">Panel Główny</h1>
-                </div>
+        <main class="main-content">
+            <header class="header">
+                <h1 id="page-title" class="text-2xl font-semibold text-gray-800">Panel Główny</h1>
             </header>
 
-            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                <section id="dashboard-main" class="admin-section">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Witaj w Panelu Administracyjnym!</h2>
+            <div class="flex-1 overflow-x-hidden overflow-y-auto">
+                <section id="dashboard-main" class="page-section">
+                    <h2 class="text-2xl font-semibold mb-6 text-gray-700">Statystyki Platformy</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Zarejestrowani Użytkownicy</h3>
-                            <p id="stats-total-users" class="text-3xl font-bold text-blue-600">Ładowanie...</p>
+                        <div class="stat-card">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-users fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-500">Zarejestrowani Użytkownicy</h3>
+                                    <p id="stats-total-users" class="text-2xl font-bold text-gray-800">Ładowanie...</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Materiałów</h3>
-                            <p id="stats-total-materials" class="text-3xl font-bold text-green-600">Ładowanie...</p>
+                        <div class="stat-card">
+                             <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                    <i class="fas fa-layer-group fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-500">Liczba Materiałów</h3>
+                                    <p id="stats-total-materials" class="text-2xl font-bold text-gray-800">Ładowanie...</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywni Admini</h3>
-                            <p id="stats-total-admins" class="text-3xl font-bold text-purple-600">Ładowanie...</p>
+                        <div class="stat-card">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                                    <i class="fas fa-user-shield fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-500">Aktywni Admini</h3>
+                                    <p id="stats-total-admins" class="text-2xl font-bold text-gray-800">Ładowanie...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="user-management" class="admin-section hidden">
+                <section id="user-management" class="page-section admin-section hidden">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
-                        </div>
-                    <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <h2 class="text-2xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table min-w-full">
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nazwa Użytkownika</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rola</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Rejestracji</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
+                                    <th>ID</th>
+                                    <th>Nazwa Użytkownika</th>
+                                    <th>Email</th>
+                                    <th>Rola</th>
+                                    <th>Data Rejestracji</th>
+                                    <th>Akcje</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>
+                            <tbody id="user-table-body">
+                                <tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie danych użytkowników... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <section id="material-management" class="admin-section hidden">
+                <section id="material-management" class="page-section admin-section hidden">
                      <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Materiałami</h2>
-                        <button id="addMaterialBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold text-gray-700">Zarządzanie Materiałami</h2>
+                        <button id="addMaterialBtn" class="btn-primary-solid">
                             <i class="fas fa-plus mr-2"></i>Dodaj Nowy Materiał
                         </button>
                     </div>
-                     <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                     <div class="table-wrapper">
+                        <table class="table min-w-full">
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tytuł</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoria</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cena</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link Pliku</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utworzono</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
+                                    <th>ID</th>
+                                    <th>Tytuł</th>
+                                    <th>Kategoria</th>
+                                    <th>Cena</th>
+                                    <th>Status</th>
+                                    <th>Link Pliku</th>
+                                    <th>Utworzono</th>
+                                    <th>Akcje</th>
                                 </tr>
                             </thead>
-                            <tbody id="material-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>
+                            <tbody id="material-table-body">
+                                <tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie danych materiałów... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <section id="settings" class="admin-section hidden">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Ustawienia Panelu</h2>
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <p>Tutaj znajdą się różne opcje konfiguracyjne panelu administracyjnego.</p>
-                         <p class="mt-2">Na przykład: zmiana hasła admina, ustawienia SMTP, itp.</p>
+                <section id="settings" class="page-section admin-section hidden">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-6">Ustawienia Platformy</h2>
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <p class="text-gray-600">Ta sekcja jest w przygotowaniu. W przyszłości znajdą się tu opcje konfiguracji globalnych ustawień platformy.</p>
                     </div>
                 </section>
             </div>
@@ -184,118 +260,109 @@
     </div>
 
     <div id="editUserModal" class="modal-base"> 
-        <div class="modal-content-user bg-white"> {/* Dodano bg-white bezpośrednio */}
-            <button id="closeEditUserModal" class="modal-close-btn">
-                <i class="fas fa-times fa-lg"></i>
-            </button>
-            <h3 class="text-xl font-semibold mb-6 text-gray-800">Edytuj Użytkownika</h3>
+        <div class="modal-content modal-content-user bg-white">
+            <div class="modal-header">
+                <h3 class="modal-title">Edytuj Użytkownika</h3>
+                <button id="closeEditUserModal" class="modal-close-btn-standalone" aria-label="Zamknij modal">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
             <form id="editUserForm">
-                <input type="hidden" id="editUserId">
-                <div class="space-y-4">
-                    <div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
                         <label for="editUsername" class="form-label">Nazwa użytkownika</label>
                         <input type="text" id="editUsername" name="username" class="form-input" required>
                     </div>
-                    <div>
+                    <div class="form-group">
                         <label for="editUserEmail" class="form-label">Email</label>
                         <input type="email" id="editUserEmail" name="email" class="form-input" required>
                     </div>
-                    <div>
+                    <div class="form-group">
                         <label for="editUserRole" class="form-label">Rola</label>
-                        <select id="editUserRole" name="role" class="form-input">
-                            <option value="user">user</option>
-                            <option value="admin">admin</option>
+                        <select id="editUserRole" name="role" class="form-select">
+                            <option value="user">Użytkownik (user)</option>
+                            <option value="admin">Administrator (admin)</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="editUserPassword" class="form-label">Nowe hasło (pozostaw puste, jeśli bez zmian)</label>
-                        <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków">
+                    <div class="form-group">
+                        <label for="editUserPassword" class="form-label">Nowe hasło</label>
+                        <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków (pozostaw puste bez zmian)">
+                        <p class="input-hint">Wypełnij tylko, jeśli chcesz zmienić hasło.</p>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-end space-x-3">
-                    <button type="button" id="cancelEditUser" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                        Anuluj
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
-                        Zapisz zmiany
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" id="cancelEditUser" class="btn-secondary-outline">Anuluj</button>
+                    <button type="submit" class="btn-primary-solid">Zapisz zmiany</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="materialModal" class="modal-base">
-        <div class="modal-content-lg bg-white"> {/* Dodano bg-white bezpośrednio */}
-            <button id="closeMaterialModal" class="modal-close-btn">
-                <i class="fas fa-times fa-lg"></i>
-            </button>
-            <h3 id="materialModalTitle" class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3">Dodaj Nowy Materiał</h3>
-            <form id="materialForm" class="space-y-6">
-                <input type="hidden" id="materialId">
+        <div class="modal-content modal-content-material bg-white">
+            <div class="modal-header">
+                <h3 id="materialModalTitle" class="modal-title">Dodaj Nowy Materiał</h3>
+                 <button id="closeMaterialModal" class="modal-close-btn-standalone" aria-label="Zamknij modal">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            <form id="materialForm">
+                <div class="modal-body">
+                    <input type="hidden" id="materialId">
+                    
+                    <div class="form-group">
+                        <label for="materialTitle" class="form-label">Tytuł materiału <span class="text-red-500">*</span></label>
+                        <input type="text" id="materialTitle" name="title" class="form-input" required placeholder="Np. Zaawansowany Kurs JavaScript">
+                    </div>
 
-                <div class="form-group">
-                    <h4 class="form-group-title">Podstawowe Informacje</h4>
-                    <div class="form-grid">
-                        <div>
-                            <label for="materialTitle" class="form-label">Tytuł materiału <span class="text-red-500">*</span></label>
-                            <input type="text" id="materialTitle" name="title" class="form-input" required placeholder="Np. Kurs Programowania w Pythonie">
+                    <div class="form-group">
+                        <div class="flex items-center justify-between">
+                            <label for="materialDescription" class="form-label">Opis materiału</label>
+                            {/* Usunięto przycisk Gemini API stąd */}
                         </div>
-                        <div>
+                        <textarea id="materialDescription" name="description" class="form-textarea" rows="5" placeholder="Szczegółowy opis: co zawiera materiał, dla kogo jest przeznaczony, jakie korzyści przyniesie użytkownikowi..."></textarea>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
                             <label for="materialCategory" class="form-label">Kategoria</label>
-                            <input type="text" id="materialCategory" name="category" class="form-input" placeholder="Np. Programowanie, Marketing, Grafika">
+                            <input type="text" id="materialCategory" name="category" class="form-input" placeholder="Np. Programowanie, Design, Biznes">
                         </div>
-                    </div>
-                    <div class="mt-4">
-                        <label for="materialDescription" class="form-label">Opis materiału</label>
-                        <textarea id="materialDescription" name="description" class="form-textarea" rows="6" placeholder="Szczegółowy opis zawartości materiału, korzyści dla użytkownika..."></textarea>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <h4 class="form-group-title">Dostęp i Cena</h4>
-                    <div class="form-grid">
-                        <div>
-                            <label for="materialFileUrl" class="form-label">Link do pliku (URL) <span class="text-red-500">*</span></label>
-                            <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://example.com/plik.pdf" required>
-                            <p class="input-hint">Bezpośredni link do pobrania pliku materiału.</p>
-                        </div>
-                        <div>
+                        <div class="form-group">
                             <label for="materialPrice" class="form-label">Cena (PLN)</label>
-                            <input type="number" id="materialPrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00 dla darmowego">
+                            <input type="number" id="materialPrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00">
                             <p class="input-hint">Wpisz 0 lub zostaw puste dla materiału darmowego.</p>
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <h4 class="form-group-title">Prezentacja</h4>
-                    <div>
-                        <label for="materialCoverImageUrl" class="form-label">Link do obrazka okładki (URL)</label>
-                        <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://example.com/okladka.jpg">
-                        <p class="input-hint">URL obrazka, który będzie wyświetlany jako miniatura.</p>
-                        <img id="coverImagePreview" src="https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki" alt="Podgląd okładki" class="mt-2 rounded-md max-h-40 object-contain border hidden">
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="materialFileUrl" class="form-label">Link do pliku (URL) <span class="text-red-500">*</span></label>
+                            <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://example.com/material.zip" required>
+                            <p class="input-hint">Bezpośredni URL do pliku materiału.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="materialCoverImageUrl" class="form-label">Link do obrazka okładki (URL)</label>
+                            <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://example.com/cover.jpg">
+                             <img id="coverImagePreview" src="https://placehold.co/300x150/E2E8F0/A0AEC0?text=Podgląd" alt="Podgląd okładki" class="hidden">
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <h4 class="form-group-title">Publikacja</h4>
-                    <div>
+                    <div class="form-group">
                         <label for="materialStatus" class="form-label">Status publikacji <span class="text-red-500">*</span></label>
-                        <select id="materialStatus" name="status" class="form-input" required>
-                            <option value="draft">Szkic (Draft) - niewidoczny dla użytkowników</option>
-                            <option value="published">Opublikowany (Published) - widoczny dla użytkowników</option>
-                            <option value="archived">Zarchiwizowany (Archived) - ukryty, ale zachowany</option>
+                        <select id="materialStatus" name="status" class="form-select" required>
+                            <option value="draft">Szkic (Draft) - niewidoczny</option>
+                            <option value="published">Opublikowany (Published) - widoczny</option>
+                            <option value="archived">Zarchiwizowany (Archived) - ukryty</option>
                         </select>
                     </div>
                 </div>
-
-                <div class="mt-8 pt-6 border-t flex justify-end space-x-3">
-                    <button type="button" id="cancelMaterialModal" class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                        Anuluj
-                    </button>
-                    <button type="submit" id="saveMaterialButton" class="px-6 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center">
-                        <span class="btn-text">Zapisz Materiał</span>
-                        <span class="btn-loader hidden ml-2"><i class="fas fa-spinner fa-spin"></i></span>
+                <div class="modal-footer">
+                    <button type="button" id="cancelMaterialModal" class="btn-secondary-outline">Anuluj</button>
+                    <button type="submit" id="saveMaterialButton" class="btn-primary-solid flex items-center">
+                        <span class="btn-text-save">Zapisz Materiał</span>
+                        <span class="btn-loader-save hidden ml-2"><span class="spinner"></span></span>
                     </button>
                 </div>
             </form>
@@ -304,10 +371,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log("Admin Dashboard JS: DOMContentLoaded");
+            console.log("Admin Dashboard JS v3 (bez Gemini): DOMContentLoaded");
 
             const navLinks = document.querySelectorAll('aside nav a');
-            const sections = document.querySelectorAll('.admin-section');
+            const sections = document.querySelectorAll('.page-section.admin-section');
             const pageTitle = document.getElementById('page-title');
             
             const userTableBody = document.getElementById('user-table-body');
@@ -341,8 +408,8 @@
             const materialStatusInput = document.getElementById('materialStatus');
             const coverImagePreview = document.getElementById('coverImagePreview');
             const saveMaterialButton = document.getElementById('saveMaterialButton');
-            const saveMaterialButtonText = saveMaterialButton.querySelector('.btn-text');
-            const saveMaterialButtonLoader = saveMaterialButton.querySelector('.btn-loader');
+            const saveMaterialButtonText = saveMaterialButton.querySelector('.btn-text-save'); 
+            const saveMaterialButtonLoader = saveMaterialButton.querySelector('.btn-loader-save');
 
 
             let allUsersData = []; 
@@ -355,10 +422,9 @@
             }
 
             async function fetchAndDisplayUsers() {
-                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
                 if (!userTableBody) { console.warn("userTableBody not found, skipping user fetch."); return; }
+                userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie danych użytkowników... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
                 try {
-                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
                     const response = await fetch('/api/admin/users', {credentials: 'include'});
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
@@ -385,24 +451,24 @@
                 if (!userTableBody) { console.warn("userTableBody not found for render"); return; }
                 userTableBody.innerHTML = ''; 
                 if (users.length === 0) {
-                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
+                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
                     return;
                 }
                 users.forEach(user => {
                     const rowHTML = `
-                        <tr data-userid="${user.id}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email}</td>
+                            <td>
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
                                     ${user.role}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button title="Edytuj" class="edit-user-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
-                                <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
+                            <td>${formatDate(user.created_at)}</td>
+                            <td class="space-x-2">
+                                <button title="Edytuj" class="edit-user-btn action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
+                                <button title="Usuń" class="delete-user-btn action-btn text-red-500 hover:text-red-700" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>
                     `; 
@@ -472,10 +538,9 @@
             if(cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', closeEditModal);
 
             async function fetchAndDisplayMaterials() {
-                console.log("Admin Dashboard JS: fetchAndDisplayMaterials() called");
                 if (!materialTableBody) { console.warn("materialTableBody not found, skipping material fetch."); return; }
+                 materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie danych materiałów... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
                 try {
-                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>';
                     const response = await fetch('/api/admin/materials', {credentials: 'include'});
                      if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
@@ -500,29 +565,29 @@
                 if (!materialTableBody) { console.warn("materialTableBody not found for render"); return; }
                 materialTableBody.innerHTML = '';
                 if (materials.length === 0) {
-                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Brak dodanych materiałów.</td></tr>';
+                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-500">Brak dodanych materiałów.</td></tr>';
                     return;
                 }
                 materials.forEach(material => {
                     const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline" title="${material.file_url}">${material.file_url.length > 30 ? material.file_url.substring(0,27) + '...' : material.file_url}</a>` : '-';
                     const row = `
-                        <tr data-materialid="${material.id}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.id}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.title}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.category || '-'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.price ? parseFloat(material.price).toFixed(2) + ' PLN' : 'Darmowy'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <tr>
+                            <td>${material.id}</td>
+                            <td>${material.title}</td>
+                            <td>${material.category || '-'}</td>
+                            <td>${material.price ? parseFloat(material.price).toFixed(2) + ' PLN' : 'Darmowy'}</td>
+                            <td>
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     ${material.status === 'published' ? 'bg-green-100 text-green-800' : 
                                       material.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
                                       'bg-red-100 text-red-800'}"> ${material.status}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fileUrlDisplay}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(material.created_at)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button title="Edytuj Materiał" class="edit-material-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-materialid="${material.id}"><i class="fas fa-edit"></i></button>
-                                <button title="Usuń Materiał" class="delete-material-btn text-red-600 hover:text-red-800 action-btn" data-materialid="${material.id}" data-materialtitle="${material.title}"><i class="fas fa-trash-alt"></i></button>
+                            <td>${fileUrlDisplay}</td>
+                            <td>${formatDate(material.created_at)}</td>
+                            <td class="space-x-2">
+                                <button title="Edytuj Materiał" class="edit-material-btn action-btn" data-materialid="${material.id}"><i class="fas fa-edit"></i></button>
+                                <button title="Usuń Materiał" class="delete-material-btn action-btn text-red-500 hover:text-red-700" data-materialid="${material.id}" data-materialtitle="${material.title}"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>
                     `;
@@ -534,7 +599,7 @@
             function openMaterialModal(material = null) {
                 if (!materialForm || !materialModalTitle || !materialIdInput || !materialTitleInput || !materialDescriptionInput || !materialCategoryInput || !materialPriceInput || !materialFileUrlInput || !materialCoverImageUrlInput || !materialStatusInput || !materialModal || !coverImagePreview) return;
                 materialForm.reset();
-                coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki'; // Reset podglądu
+                coverImagePreview.src = 'https://placehold.co/300x150/E2E8F0/A0AEC0?text=Podgląd'; 
                 coverImagePreview.classList.add('hidden');
 
                 if (material) {
@@ -547,7 +612,7 @@
                     materialFileUrlInput.value = material.file_url || '';
                     materialCoverImageUrlInput.value = material.cover_image_url || '';
                     materialStatusInput.value = material.status;
-                    if (material.cover_image_url) {
+                    if (material.cover_image_url && material.cover_image_url.trim() !== '') {
                         coverImagePreview.src = material.cover_image_url;
                         coverImagePreview.classList.remove('hidden');
                     }
@@ -562,7 +627,7 @@
                 if (materialModal) materialModal.classList.remove('modal-visible');
                 if (materialForm) materialForm.reset();
                 if (coverImagePreview) {
-                    coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki';
+                    coverImagePreview.src = 'https://placehold.co/300x150/E2E8F0/A0AEC0?text=Podgląd';
                     coverImagePreview.classList.add('hidden');
                 }
             }
@@ -573,12 +638,12 @@
                         coverImagePreview.src = this.value;
                         coverImagePreview.classList.remove('hidden');
                     } else {
-                        coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki';
+                        coverImagePreview.src = 'https://placehold.co/300x150/E2E8F0/A0AEC0?text=Podgląd';
                         coverImagePreview.classList.add('hidden');
                     }
                 });
                 coverImagePreview.onerror = function() {
-                    this.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Błąd+URL+Okładki';
+                    this.src = 'https://placehold.co/300x150/E2E8F0/A0AEC0?text=Błąd+URL';
                     this.classList.remove('hidden'); 
                 };
             }
@@ -592,9 +657,9 @@
                 materialForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
                     
-                    saveMaterialButtonText.classList.add('hidden');
-                    saveMaterialButtonLoader.classList.remove('hidden');
-                    saveMaterialButton.disabled = true;
+                    if (saveMaterialButtonText) saveMaterialButtonText.classList.add('hidden');
+                    if (saveMaterialButtonLoader) saveMaterialButtonLoader.classList.remove('hidden');
+                    if (saveMaterialButton) saveMaterialButton.disabled = true;
 
                     const materialId = materialIdInput.value; 
                     const materialData = {
@@ -632,15 +697,14 @@
                     } catch (error) {
                         alert(`Nie udało się zapisać materiału: ${error.message}`);
                     } finally {
-                        saveMaterialButtonText.classList.remove('hidden');
-                        saveMaterialButtonLoader.classList.add('hidden');
-                        saveMaterialButton.disabled = false;
+                        if (saveMaterialButtonText) saveMaterialButtonText.classList.remove('hidden');
+                        if (saveMaterialButtonLoader) saveMaterialButtonLoader.classList.add('hidden');
+                        if (saveMaterialButton) saveMaterialButton.disabled = false;
                     }
                 });
             }
 
             async function handleDeleteMaterial(materialId, materialTitle) {
-                console.log(`Admin Dashboard JS: handleDeleteMaterial() called for materialId: ${materialId}, title: ${materialTitle}`);
                 if (confirm(`Czy na pewno chcesz usunąć materiał "${materialTitle}" (ID: ${materialId})? Tej operacji nie można cofnąć.`)) {
                     try {
                         const response = await fetch(`/api/admin/materials/${materialId}`, {
@@ -713,11 +777,9 @@
                         button.setAttribute('data-listener-attached-delete-material', 'true');
                     }
                 });
-                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (dla użytkowników i materiałów)");
             }
             
             function showSection(targetId) {
-                console.log("Admin Dashboard JS: showSection() called for targetId:", targetId);
                 sections.forEach(section => {
                     section.classList.toggle('hidden', section.id !== targetId);
                 });
@@ -732,8 +794,8 @@
                 } else if (targetId === 'material-management') { 
                     fetchAndDisplayMaterials(); 
                 } else if (targetId === 'dashboard-main') {
-                    fetchAndDisplayUsers(); // Statystyki użytkowników
-                    fetchAndDisplayMaterials(); // Statystyki materiałów
+                    fetchAndDisplayUsers(); 
+                    fetchAndDisplayMaterials(); 
                 }
             }
 
