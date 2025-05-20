@@ -17,6 +17,8 @@ app.set('trust proxy', 1);
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
+    // W środowisku deweloperskim można by tu ustawić domyślny connection string, np. z dotenv
+    // process.exit(1); // Zatrzymanie aplikacji, jeśli baza danych jest krytyczna
 }
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -40,11 +42,13 @@ pool.connect((err, client, release) => {
     }
 });
 
+// --- Inicjalizacja Bazy Danych ---
 async function initializeDatabase() {
     const client = await pool.connect(); 
     try {
         await client.query('BEGIN'); 
 
+        // Tabela użytkowników
         const createUserTableQuery = `
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -58,24 +62,7 @@ async function initializeDatabase() {
         await client.query(createUserTableQuery);
         console.log('Tabela "users" sprawdzona/utworzona.');
 
-        const checkRoleColumnQuery = `
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name='users' AND column_name='role';
-        `;
-        const roleColumnCheck = await client.query(checkRoleColumnQuery);
-        if (roleColumnCheck.rows.length === 0) {
-            const alterUserTableQuery = `
-                ALTER TABLE users
-                ADD COLUMN role VARCHAR(50) DEFAULT 'user' NOT NULL;
-            `;
-            await client.query(alterUserTableQuery);
-            console.log('Kolumna "role" została dodana do tabeli "users".');
-        } else {
-            console.log('Kolumna "role" już istnieje w tabeli "users".');
-        }
-
-
+        // Tabela materiałów
         const createMaterialsTableQuery = `
             CREATE TABLE IF NOT EXISTS materials (
                 id SERIAL PRIMARY KEY,
@@ -93,6 +80,7 @@ async function initializeDatabase() {
         await client.query(createMaterialsTableQuery);
         console.log('Tabela "materials" sprawdzona/utworzona.');
         
+        // Tabela łącząca użytkowników i materiały (nabyte materiały)
         const createUserMaterialsTableQuery = `
             CREATE TABLE IF NOT EXISTS user_materials (
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -104,6 +92,7 @@ async function initializeDatabase() {
         await client.query(createUserMaterialsTableQuery);
         console.log('Tabela "user_materials" sprawdzona/utworzona.');
 
+        // Trigger do aktualizacji `updated_at` w tabeli `materials`
         const createUpdatedAtTriggerFunction = `
             CREATE OR REPLACE FUNCTION trigger_set_timestamp()
             RETURNS TRIGGER AS $$
@@ -125,6 +114,52 @@ async function initializeDatabase() {
         await client.query(applyUpdatedAtTriggerToMaterials);
         console.log('Trigger "updated_at" dla "materials" sprawdzony/utworzony.');
         
+        // Tabela ustawień aplikacji
+        const createAppSettingsTableQuery = `
+            CREATE TABLE IF NOT EXISTS app_settings (
+                setting_key VARCHAR(255) PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        await client.query(createAppSettingsTableQuery);
+        console.log('Tabela "app_settings" sprawdzona/utworzona.');
+
+        // Trigger do aktualizacji `updated_at` w tabeli `app_settings`
+        const applyUpdatedAtTriggerToAppSettings = `
+            DROP TRIGGER IF EXISTS set_timestamp_app_settings ON app_settings;
+            CREATE TRIGGER set_timestamp_app_settings
+            BEFORE UPDATE ON app_settings
+            FOR EACH ROW
+            EXECUTE PROCEDURE trigger_set_timestamp();
+        `;
+        await client.query(applyUpdatedAtTriggerToAppSettings);
+        console.log('Trigger "updated_at" dla "app_settings" sprawdzony/utworzony.');
+
+
+        // Domyślne ustawienia aplikacji (jeśli nie istnieją)
+        const defaultSettings = [
+            { key: 'siteName', value: 'Platforma Materiałów PRO' },
+            { key: 'adminEmail', value: process.env.ADMIN_EMAIL || 'admin@example.com' },
+            { key: 'maintenanceMode', value: 'false' },
+            { key: 'maintenanceMessage', value: 'Strona jest obecnie w trybie konserwacji. Zapraszamy później!' },
+            { key: 'itemsPerPageAdmin', value: '10' },
+            { key: 'allowRegistration', value: 'true' },
+            { key: 'defaultUserRole', value: 'user' },
+            { key: 'defaultMaterialStatus', value: 'draft' },
+            { key: 'failedLoginAttempts', value: '5' },
+            { key: 'lockoutDuration', value: '15' } // w minutach
+        ];
+
+        for (const setting of defaultSettings) {
+            const res = await client.query('SELECT setting_value FROM app_settings WHERE setting_key = $1', [setting.key]);
+            if (res.rows.length === 0) {
+                await client.query('INSERT INTO app_settings (setting_key, setting_value) VALUES ($1, $2)', [setting.key, setting.value]);
+                console.log(`Dodano domyślne ustawienie: ${setting.key} = ${setting.value}`);
+            }
+        }
+        
+        // Dodanie użytkownika admina (jeśli nie istnieje)
         const addAdminUserIfNeeded = async () => {
             try {
                 const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
@@ -151,6 +186,7 @@ async function initializeDatabase() {
         };
         await addAdminUserIfNeeded();
         
+        // Tabela sesji (dla connect-pg-simple)
         const createSessionTableQuery = `
             CREATE TABLE IF NOT EXISTS "session" (
                 "sid" varchar NOT NULL COLLATE "default",
@@ -179,7 +215,7 @@ initializeDatabase().catch(err => console.error("Nie udało się zainicjalizowa�
 // --- Konfiguracja Nodemailer ---
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
-const emailPort = parseInt(process.env.EMAIL_PORT || "587");
+const emailPort = parseInt(process.env.EMAIL_PORT || "587"); // Domyślnie 587 dla STARTTLS
 const emailUser = process.env.EMAIL_USER; 
 const emailPass = process.env.EMAIL_PASS; 
 const emailSenderAddress = process.env.EMAIL_SENDER_ADDRESS; 
@@ -200,20 +236,21 @@ if (emailHost && emailUser && emailPass) {
             user: emailUser, 
             pass: emailPass, 
         },
-        logger: true, 
-        debug: true   
+        logger: process.env.NODE_ENV !== 'production', // Loguj tylko w trybie deweloperskim
+        debug: process.env.NODE_ENV !== 'production'   // Debuguj tylko w trybie deweloperskim
     };
 
     if (emailPort === 587) {
-        transportOptions.secure = false; 
-        transportOptions.requireTLS = true; 
+        transportOptions.secure = false; // Dla STARTTLS secure jest false
+        transportOptions.requireTLS = true; // Wymuś STARTTLS
         console.log("Konfiguracja Nodemailer dla portu 587 (STARTTLS): secure=false, requireTLS=true");
     } else if (emailPort === 465) {
-        transportOptions.secure = true; 
+        transportOptions.secure = true; // Dla SSL secure jest true
         console.log("Konfiguracja Nodemailer dla portu 465 (SSL): secure=true");
     } else {
+        // Dla innych portów, pozwól Nodemailerowi zdecydować lub ustaw domyślnie
         console.log("Konfiguracja Nodemailer dla portu", emailPort, "(domyślne ustawienia secure)");
-         transportOptions.secure = (emailPort === 465); 
+         transportOptions.secure = (emailPort === 465); // Domyślnie secure=true tylko dla portu 465
     }
     
     console.log("Nodemailer auth object (login do SMTP):", JSON.stringify(transportOptions.auth, (key, value) => key === 'pass' ? '********' : value));
@@ -231,36 +268,39 @@ if (emailHost && emailUser && emailPass) {
     console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili będzie symulowana.");
     transporter = {
         sendMail: async (mailOptions) => {
-            console.log("Symulacja wysyłki e-maila (konfiguracja SMTP niekompletna):");
-            console.log("  OD:", mailOptions.from)
+            console.log("--- Symulacja wysyłki e-maila (konfiguracja SMTP niekompletna) ---");
+            console.log("  OD:", mailOptions.from);
             console.log("  DO:", mailOptions.to);
             console.log("  TEMAT:", mailOptions.subject);
+            console.log("  TREŚĆ (HTML):", mailOptions.html ? mailOptions.html.substring(0,100) + "..." : "Brak");
+            console.log("--- Koniec symulacji ---");
             return { messageId: "symulacja-" + Date.now() };
         }
     };
 }
 
-async function sendRegistrationEmail(userEmail, username) {
-    const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com'; 
+async function sendEmail(to, subject, text, html) {
+    const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com';
     const mailOptions = {
-        from: `"Platforma Materiałów" <${fromAddress}>`, 
-        to: userEmail,
-        subject: 'Witaj na Platformie! Potwierdzenie rejestracji', 
-        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie z materiałami!\n\nPozdrawiamy,\nZespół Platformy`, 
-        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie z materiałami!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, 
+        from: `"Platforma Materiałów" <${fromAddress}>`,
+        to: to,
+        subject: subject,
+        text: text,
+        html: html,
     };
     try {
-        console.log(`Próba wysłania e-maila rejestracyjnego DO: ${userEmail} OD: ${fromAddress} (login SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'})`);
+        console.log(`Próba wysłania e-maila DO: ${to} OD: ${fromAddress} TEMAT: ${subject}`);
         let info = await transporter.sendMail(mailOptions);
-        console.log('Informacja o wysłaniu emaila z potwierdzeniem rejestracji: %s do %s', info.messageId, userEmail);
+        console.log('Informacja o wysłaniu emaila: %s do %s', info.messageId, to);
+        return { success: true, info };
     } catch (error) {
-        console.error('Błąd podczas wysyłania emaila z potwierdzeniem rejestracji:', error);
+        console.error(`Błąd podczas wysyłania emaila do ${to}:`, error);
         if (error.response) {
             console.error('Odpowiedź serwera SMTP:', error.response);
         }
+        return { success: false, error };
     }
 }
-
 
 // --- Konfiguracja aplikacji Express ---
 app.use(bodyParser.json()); 
@@ -270,7 +310,7 @@ const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
     console.error('FATAL ERROR: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona! Sesje nie będą działać poprawnie.');
 } else if (sessionSecret === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!' && process.env.NODE_ENV === 'production') {
-    console.warn('UWAGA: Używasz domyślnego sekretu sesji w środowisku produkcyjnym! ZMIEŃ TO NATYCHMIAST na długi, losowy ciąg znaków w zmiennych środowiskowych Render!');
+    console.warn('UWAGA: Używasz domyślnego sekretu sesji w środowisku produkcyjnym! ZMIEŃ TO NATYCHMIAST na długi, losowy ciąg znaków w zmiennych środowiskowych!');
 }
 
 const sessionStore = new pgSession({
@@ -286,7 +326,7 @@ app.use(session({
     saveUninitialized: false, 
     cookie: {
         secure: process.env.NODE_ENV === 'production', 
-        maxAge: 1000 * 60 * 60 * 24, 
+        maxAge: 1000 * 60 * 60 * 24, // 1 dzień
         httpOnly: true, 
         sameSite: 'lax' 
     }
@@ -294,12 +334,9 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware do logowania żądań (opcjonalne, ale pomocne)
 app.use((req, res, next) => {
-    console.log(`-----------------------------------------------------`);
-    console.log(`Przychodzące żądanie: ${req.method} ${req.url}`);
-    console.log(`  ID Sesji z żądania (req.sessionID): ${req.sessionID}`);
-    console.log(`  Zawartość sesji (req.session):`, JSON.stringify(req.session, null, 2));
-    console.log(`-----------------------------------------------------`);
+    console.log(`[REQ] ${new Date().toISOString()} | ${req.method} ${req.url} | SesjaID: ${req.sessionID} | UserID: ${req.session.userId || 'Niezalogowany'}`);
     next();
 });
 
@@ -333,6 +370,7 @@ async function isAdmin(req, res, next) {
             if (req.originalUrl.startsWith('/api/')) {
                 return res.status(403).json({ message: 'Brak uprawnień - tylko dla administratorów.'});
             }
+            // Przekieruj na dashboard użytkownika, jeśli próbuje wejść do /admin/* bez uprawnień
             return res.redirect('/dashboard.html?error=admin_required'); 
         }
     } catch (error) {
@@ -396,7 +434,13 @@ app.post('/register', async (req, res) => {
                 console.error('Błąd podczas zapisywania sesji po rejestracji:', err);
                 return res.status(500).json({ message: 'Wystąpił błąd serwera podczas próby zapisania sesji.'});
             }
-            await sendRegistrationEmail(newUser.email, newUser.username); 
+            // Wyślij email powitalny
+            await sendEmail(
+                newUser.email,
+                'Witaj na Platformie Materiałów PRO!',
+                `Witaj ${newUser.username},\n\nDziękujemy za rejestrację na naszej platformie Materiały PRO!\n\nPozdrawiamy,\nZespół Materiały PRO`,
+                `<p>Witaj <strong>${newUser.username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie Materiały PRO!</p><p>Pozdrawiamy,<br>Zespół Materiały PRO</p>`
+            );
             
             res.status(201).json({ 
                 message: 'Rejestracja pomyślna!', 
@@ -413,8 +457,7 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    const redirectUrl = req.query.redirect; // Odczytaj parametr redirect z query string
-
+    const redirectUrl = req.query.redirect; 
 
     if (!email || !password) {
         return res.status(400).json({ message: 'Email i hasło są wymagane!' });
@@ -443,14 +486,12 @@ app.post('/login', async (req, res) => {
                 return res.status(500).json({ message: 'Wystąpił błąd serwera podczas próby zapisania sesji.'});
             }
             
-            let determinedRedirectTo = redirectUrl || (user.role === 'admin' ? '/admin/dashboard.html' : '/dashboard.html');
-            // Dodatkowa logika, aby upewnić się, że admin zawsze idzie do panelu admina, jeśli nie ma innego redirect
-            if (user.role === 'admin' && (!redirectUrl || !redirectUrl.startsWith('/admin/'))) {
-                determinedRedirectTo = '/admin/dashboard.html';
-            } else if (user.role !== 'admin' && redirectUrl && redirectUrl.startsWith('/admin/')) {
-                determinedRedirectTo = '/dashboard.html'; // Zwykły user nie powinien być kierowany do panelu admina
+            let determinedRedirectTo = redirectUrl || (user.role === 'admin' ? '/admin_dashboard.html' : '/dashboard.html');
+            if (user.role === 'admin' && (!redirectUrl || !redirectUrl.startsWith('/admin_dashboard.html'))) {
+                determinedRedirectTo = '/admin_dashboard.html';
+            } else if (user.role !== 'admin' && redirectUrl && redirectUrl.startsWith('/admin_dashboard.html')) {
+                determinedRedirectTo = '/dashboard.html'; 
             }
-
 
             res.status(200).json({ 
                 message: 'Logowanie pomyślne!', 
@@ -479,7 +520,8 @@ app.get('/api/user', isAuthenticated, (req, res) => {
     res.json({
         username: req.session.username,
         userId: req.session.userId,
-        role: req.session.role 
+        role: req.session.role,
+        email: req.session.email // Dodaj email do danych użytkownika w sesji, jeśli potrzebne
     });
 });
 
@@ -500,8 +542,8 @@ app.get('/logout', (req, res) => {
 
 
 // --- Ścieżki dla Panelu Administracyjnego ---
-app.get('/admin/dashboard.html', isAuthenticated, isAdmin, (req, res) => { 
-    console.log(`Dostęp do /admin/dashboard.html udzielony dla admina: ${req.session.username}`);
+app.get('/admin_dashboard.html', isAuthenticated, isAdmin, (req, res) => { 
+    console.log(`Dostęp do /admin_dashboard.html udzielony dla admina: ${req.session.username}`);
     res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
@@ -695,23 +737,120 @@ app.delete('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res
     }
 });
 
+// === API Endpoints dla Ustawień Administratora ===
+app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT setting_key, setting_value FROM app_settings');
+        const settings = result.rows.reduce((acc, row) => {
+            // Konwersja wartości na odpowiednie typy, jeśli to konieczne
+            if (row.setting_key === 'maintenanceMode' || row.setting_key === 'allowRegistration') {
+                acc[row.setting_key] = (row.setting_value === 'true');
+            } else if (['itemsPerPageAdmin', 'failedLoginAttempts', 'lockoutDuration'].includes(row.setting_key)) {
+                acc[row.setting_key] = parseInt(row.setting_value, 10);
+            }
+            else {
+                acc[row.setting_key] = row.setting_value;
+            }
+            return acc;
+        }, {});
+
+        // Dodaj informacje o konfiguracji SMTP (tylko informacyjnie, nie samo hasło)
+        settings.smtpHost = process.env.EMAIL_HOST || 'Nie skonfigurowano';
+        settings.smtpPort = parseInt(process.env.EMAIL_PORT || '0');
+        settings.smtpUser = process.env.EMAIL_USER || 'Nie skonfigurowano';
+        settings.smtpPassConfigured = !!process.env.EMAIL_PASS; // true jeśli hasło jest ustawione
+        settings.smtpSender = process.env.EMAIL_SENDER_ADDRESS || settings.smtpUser || 'Nie skonfigurowano';
+        settings.smtpSecure = (settings.smtpPort === 465); // Proste założenie, można ulepszyć
+
+        res.json(settings);
+    } catch (error) {
+        console.error("Błąd podczas pobierania ustawień aplikacji:", error);
+        res.status(500).json({ message: 'Błąd serwera podczas pobierania ustawień.' });
+    }
+});
+
+app.post('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+    const settingsToUpdate = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        for (const key in settingsToUpdate) {
+            if (Object.prototype.hasOwnProperty.call(settingsToUpdate, key)) {
+                // Pomijamy klucze związane z SMTP, które są tylko do odczytu z env
+                if (key.startsWith('smtp')) continue;
+
+                let valueToSave = settingsToUpdate[key];
+                // Konwersja boolean na string dla bazy danych
+                if (typeof valueToSave === 'boolean') {
+                    valueToSave = valueToSave.toString();
+                }
+
+                const upsertQuery = `
+                    INSERT INTO app_settings (setting_key, setting_value) 
+                    VALUES ($1, $2) 
+                    ON CONFLICT (setting_key) 
+                    DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
+                `;
+                await client.query(upsertQuery, [key, valueToSave]);
+            }
+        }
+        await client.query('COMMIT');
+        res.json({ message: 'Ustawienia zostały pomyślnie zaktualizowane.' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Błąd podczas aktualizacji ustawień aplikacji:", error);
+        res.status(500).json({ message: 'Błąd serwera podczas zapisywania ustawień.' });
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/admin/settings/test-smtp', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // Pobierz email admina z ustawień lub zmiennej środowiskowej
+        let adminEmailToTest = process.env.ADMIN_EMAIL; // Domyślnie z env
+        const adminEmailSetting = await pool.query("SELECT setting_value FROM app_settings WHERE setting_key = 'adminEmail'");
+        if (adminEmailSetting.rows.length > 0 && adminEmailSetting.rows[0].setting_value) {
+            adminEmailToTest = adminEmailSetting.rows[0].setting_value;
+        }
+        
+        if (!adminEmailToTest) {
+            return res.status(400).json({ message: 'Adres email administratora nie jest skonfigurowany w ustawieniach ani w zmiennych środowiskowych.' });
+        }
+
+        if (!emailHost || !emailUser || !emailPass) {
+             return res.status(400).json({ message: 'Konfiguracja SMTP (host, użytkownik, hasło) nie jest kompletna na serwerze.' });
+        }
+
+        const emailResult = await sendEmail(
+            adminEmailToTest,
+            'Testowa wiadomość SMTP z Panelu Admina',
+            `Witaj,\n\nTo jest testowa wiadomość email wysłana z panelu administracyjnego Twojej platformy.\nJeśli ją otrzymałeś, konfiguracja SMTP działa poprawnie.\n\nPozdrawiamy,\nSystem MateriałyPRO\n\nCzas wysłania: ${new Date().toLocaleString('pl-PL')}`,
+            `<p>Witaj,</p><p>To jest testowa wiadomość email wysłana z panelu administracyjnego Twojej platformy.</p><p>Jeśli ją otrzymałeś, konfiguracja SMTP działa poprawnie.</p><p>Pozdrawiamy,<br>System MateriałyPRO</p><p><i>Czas wysłania: ${new Date().toLocaleString('pl-PL')}</i></p>`
+        );
+
+        if (emailResult.success) {
+            res.json({ message: `Testowy email został wysłany pomyślnie na adres ${adminEmailToTest}.` });
+        } else {
+            throw emailResult.error; // Rzuć błąd, aby został złapany przez catch
+        }
+    } catch (error) {
+        console.error("Błąd podczas wysyłania testowego emaila SMTP:", error);
+        res.status(500).json({ message: `Nie udało się wysłać testowego emaila. Błąd: ${error.message || 'Nieznany błąd SMTP'}` });
+    }
+});
+
 
 // === PUBLICZNE API Endpoints dla Materiałów (dla zalogowanych użytkowników) ===
 
 app.get('/api/materials', isAuthenticated, async (req, res) => {
-    console.log(`[DEBUG /api/materials] Rozpoczęto obsługę żądania dla użytkownika ID: ${req.session.userId}`);
     try {
         const queryText = "SELECT id, title, description, category, price, cover_image_url, status FROM materials WHERE status = 'published' ORDER BY created_at DESC";
-        console.log(`[DEBUG /api/materials] Wykonuję zapytanie: ${queryText}`);
-        
         const result = await pool.query(queryText);
-        
-        console.log(`[DEBUG /api/materials] Zapytanie wykonane. Liczba znalezionych materiałów ('published'): ${result.rows.length}`);
         res.json(result.rows);
     } catch (error) {
-        console.error("[DEBUG /api/materials] Błąd KRYTYCZNY podczas pobierania opublikowanych materiałów:", error);
-        console.error("[DEBUG /api/materials] Error stack:", error.stack); // Dodatkowy log stosu błędu
-        res.status(500).json({ message: 'Błąd serwera podczas pobierania materiałów. Prosimy spróbować później.' });
+        console.error("Błąd podczas pobierania opublikowanych materiałów:", error);
+        res.status(500).json({ message: 'Błąd serwera podczas pobierania materiałów.' });
     }
 });
 
@@ -741,8 +880,10 @@ app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => {
             return res.status(409).json({ message: `Już posiadasz materiał "${material.title}". Znajdziesz go w swoim panelu.` });
         }
 
+        // TODO: Dodać logikę płatności, jeśli material.price > 0
         if (material.price > 0) {
             console.log(`Użytkownik ${userId} próbuje nabyć płatny materiał ${materialId} (${material.price} PLN) - logika płatności niezaimplementowana.`);
+            // return res.status(501).json({ message: 'Płatności nie są jeszcze zaimplementowane.' });
         }
 
         await pool.query(
@@ -760,7 +901,6 @@ app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => {
 
 app.get('/api/my-materials', isAuthenticated, async (req, res) => {
     const userId = req.session.userId;
-    console.log(`[DEBUG /api/my-materials] Rozpoczęto obsługę żądania dla użytkownika ID: ${userId}`);
     try {
         const query = `
             SELECT m.id, m.title, m.description, m.category, m.cover_image_url, m.file_url, um.acquired_at
@@ -769,13 +909,10 @@ app.get('/api/my-materials', isAuthenticated, async (req, res) => {
             WHERE um.user_id = $1
             ORDER BY um.acquired_at DESC;
         `;
-        console.log(`[DEBUG /api/my-materials] Wykonuję zapytanie dla użytkownika ID: ${userId}`);
         const result = await pool.query(query, [userId]);
-        console.log(`[DEBUG /api/my-materials] Znaleziono ${result.rows.length} materiałów dla użytkownika ID: ${userId}`);
         res.json(result.rows);
     } catch (error) {
-        console.error(`[DEBUG /api/my-materials] Błąd KRYTYCZNY podczas pobierania materiałów dla użytkownika ID: ${userId}:`, error);
-        console.error("[DEBUG /api/my-materials] Error stack:", error.stack);
+        console.error(`Błąd podczas pobierania materiałów dla użytkownika ID: ${userId}:`, error);
         res.status(500).json({ message: 'Błąd serwera podczas pobierania Twoich materiałów.' });
     }
 });
@@ -796,8 +933,7 @@ app.listen(PORT, () => {
     console.log('--- Podsumowanie konfiguracji ---');
     console.log('  Ustawiono "trust proxy" na 1.');
     console.log('  Magazyn sesji: PostgreSQL (tabela "session").');
-    console.log('  Inicjalizacja bazy danych przy starcie (tabele: users, materials, user_materials, session).');
-    console.log('  Dodano ścieżkę /material_gallery.html dla zalogowanych użytkowników.');
-    console.log('  API /api/materials jest teraz chronione i wymaga zalogowania.');
+    console.log('  Inicjalizacja bazy danych przy starcie (tabele: users, materials, user_materials, session, app_settings).');
+    console.log('  Dodano endpointy API dla zarządzania ustawieniami aplikacji.');
     console.log('---');
 });
