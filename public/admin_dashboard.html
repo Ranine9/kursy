@@ -34,7 +34,6 @@
         .modal-visible {
             display: flex !important;
         }
-        /* Klasy Tailwind dla .modal-content są teraz bezpośrednio w HTML */
         .modal-content {
             position: relative; 
         }
@@ -270,7 +269,6 @@
             const sections = document.querySelectorAll('.admin-section');
             const pageTitle = document.getElementById('page-title');
             
-            // Elementy dla zarządzania użytkownikami
             const userTableBody = document.getElementById('user-table-body');
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
@@ -284,7 +282,6 @@
             const editUserRoleInput = document.getElementById('editUserRole');
             const editUserPasswordInput = document.getElementById('editUserPassword');
             
-            // Elementy dla zarządzania materiałami
             const materialTableBody = document.getElementById('material-table-body'); 
             const statsTotalMaterials = document.getElementById('stats-total-materials'); 
             const addMaterialBtn = document.getElementById('addMaterialBtn'); 
@@ -447,7 +444,7 @@
                 materials.forEach(material => {
                     const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline" title="${material.file_url}">${material.file_url.length > 30 ? material.file_url.substring(0,27) + '...' : material.file_url}</a>` : '-';
                     const row = `
-                        <tr>
+                        <tr data-materialid="${material.id}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.title}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.category || '-'}</td>
@@ -505,6 +502,7 @@
             if (materialForm) {
                 materialForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    const materialId = materialIdInput.value; // Pobierz ID materiału (będzie puste dla nowych)
                     const materialData = {
                         title: materialTitleInput.value,
                         description: materialDescriptionInput.value,
@@ -517,11 +515,13 @@
                     
                     let method = 'POST';
                     let url = '/api/admin/materials';
-                    // TODO: Logika edycji PUT
-                    // if (materialIdInput.value) {
-                    //     method = 'PUT';
-                    //     url = `/api/admin/materials/${materialIdInput.value}`;
-                    // }
+                    let successMessage = 'Materiał dodany pomyślnie!';
+
+                    if (materialId) { // Jeśli jest ID, to edytujemy istniejący materiał
+                        method = 'PUT';
+                        url = `/api/admin/materials/${materialId}`;
+                        successMessage = 'Materiał zaktualizowany pomyślnie!';
+                    }
 
                     try {
                         const response = await fetch(url, {
@@ -529,7 +529,7 @@
                         });
                         const responseData = await response.json();
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        alert('Materiał zapisany pomyślnie!');
+                        alert(successMessage);
                         closeMaterialModal();
                         fetchAndDisplayMaterials(); 
                     } catch (error) {
@@ -539,6 +539,7 @@
             }
 
             function addEventListenersToActionButtons() { 
+                // Dla użytkowników
                 const editUserButtons = document.querySelectorAll('.edit-user-btn');
                 editUserButtons.forEach(button => {
                     if (!button.hasAttribute('data-listener-attached-edit')) { 
@@ -553,8 +554,70 @@
                         button.setAttribute('data-listener-attached-delete', 'true');
                     }
                 });
-                // TODO: Listenery dla przycisków materiałów (edycja/usuwanie)
-                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (w tym dla materiałów, jeśli istnieją)");
+
+                // Dla materiałów
+                const editMaterialButtons = document.querySelectorAll('.edit-material-btn');
+                editMaterialButtons.forEach(button => {
+                    if (!button.hasAttribute('data-listener-attached-edit-material')) {
+                        button.addEventListener('click', function() {
+                            const materialId = this.dataset.materialid;
+                            const materialToEdit = allMaterialsData.find(m => m.id === parseInt(materialId));
+                            if (materialToEdit) {
+                                openMaterialModal(materialToEdit);
+                            } else {
+                                console.error("Nie znaleziono materiału do edycji o ID:", materialId);
+                            }
+                        });
+                        button.setAttribute('data-listener-attached-edit-material', 'true');
+                    }
+                });
+
+                const deleteMaterialButtons = document.querySelectorAll('.delete-material-btn');
+                 deleteMaterialButtons.forEach(button => {
+                    if (!button.hasAttribute('data-listener-attached-delete-material')) {
+                        button.addEventListener('click', function() {
+                            const materialId = this.dataset.materialid;
+                            const materialTitle = this.dataset.materialtitle;
+                            handleDeleteMaterial(materialId, materialTitle);
+                        });
+                        button.setAttribute('data-listener-attached-delete-material', 'true');
+                    }
+                });
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (dla użytkowników i materiałów)");
+            }
+
+            async function handleDeleteMaterial(materialId, materialTitle) {
+                console.log(`Admin Dashboard JS: handleDeleteMaterial() called for materialId: ${materialId}, title: ${materialTitle}`);
+                if (confirm(`Czy na pewno chcesz usunąć materiał "${materialTitle}" (ID: ${materialId})? Tej operacji nie można cofnąć.`)) {
+                    try {
+                        const response = await fetch(`/api/admin/materials/${materialId}`, {
+                            method: 'DELETE',
+                        });
+                        
+                        // Sprawdź, czy odpowiedź ma treść przed próbą parsowania JSON
+                        let responseData = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            responseData = await response.json();
+                        } else {
+                            // Jeśli nie JSON, użyj tekstu lub pustego obiektu
+                            responseData.message = await response.text() || (response.ok ? `Materiał "${materialTitle}" usunięty.` : 'Błąd serwera.');
+                        }
+                        
+                        console.log("Admin Dashboard JS: Odpowiedź serwera na DELETE materiału:", response.status, responseData);
+
+                        if (!response.ok) {
+                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        }
+                        alert(responseData.message || `Materiał "${materialTitle}" usunięty pomyślnie.`);
+                        fetchAndDisplayMaterials(); // Odśwież listę
+                    } catch (error) {
+                        console.error(`Admin Dashboard JS: Błąd podczas usuwania materiału ID ${materialId}:`, error);
+                        alert(`Nie udało się usunąć materiału: ${error.message}`);
+                    }
+                } else {
+                    console.log("Admin Dashboard JS: Anulowano usuwanie materiału ID:", materialId);
+                }
             }
             
             function showSection(targetId) {
