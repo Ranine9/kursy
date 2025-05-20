@@ -26,7 +26,12 @@ const pool = new Pool({
 });
 
 pool.connect((err, client, release) => {
-    if (err) return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
+    if (err) {
+        console.error('Błąd połączenia z pulą bazy danych PostgreSQL!', err.stack);
+        // Można rozważyć zatrzymanie aplikacji, jeśli połączenie z pulą jest niemożliwe
+        // process.exit(1); 
+        return;
+    }
     if (client) {
         client.query('SELECT NOW()', (err, result) => {
             if (release) release(); 
@@ -44,9 +49,12 @@ pool.connect((err, client, release) => {
 
 // --- Inicjalizacja Bazy Danych ---
 async function initializeDatabase() {
+    console.log('Rozpoczynanie inicjalizacji bazy danych...');
     const client = await pool.connect(); 
+    console.log('Połączono klienta bazy danych na potrzeby inicjalizacji.');
     try {
         await client.query('BEGIN'); 
+        console.log('Rozpoczęto transakcję inicjalizacji bazy danych.');
 
         // Tabela użytkowników
         const createUserTableQuery = `
@@ -103,6 +111,7 @@ async function initializeDatabase() {
             $$ LANGUAGE plpgsql;
         `;
         await client.query(createUpdatedAtTriggerFunction);
+        console.log('Funkcja triggera "trigger_set_timestamp" sprawdzona/utworzona.');
 
         const applyUpdatedAtTriggerToMaterials = `
             DROP TRIGGER IF EXISTS set_timestamp_materials ON materials; 
@@ -151,13 +160,17 @@ async function initializeDatabase() {
             { key: 'lockoutDuration', value: '15' } // w minutach
         ];
 
+        console.log('Sprawdzanie/dodawanie domyślnych ustawień...');
         for (const setting of defaultSettings) {
             const res = await client.query('SELECT setting_value FROM app_settings WHERE setting_key = $1', [setting.key]);
             if (res.rows.length === 0) {
                 await client.query('INSERT INTO app_settings (setting_key, setting_value) VALUES ($1, $2)', [setting.key, setting.value]);
-                console.log(`Dodano domyślne ustawienie: ${setting.key} = ${setting.value}`);
+                console.log(`  Dodano domyślne ustawienie: ${setting.key} = ${setting.value}`);
+            } else {
+                console.log(`  Ustawienie ${setting.key} już istnieje.`);
             }
         }
+        console.log('Zakończono sprawdzanie/dodawanie domyślnych ustawień.');
         
         // Dodanie użytkownika admina (jeśli nie istnieje)
         const addAdminUserIfNeeded = async () => {
@@ -178,6 +191,8 @@ async function initializeDatabase() {
                     if (res.rows[0].role !== 'admin' && res.rows[0].email === adminEmail) {
                         await client.query('UPDATE users SET role = $1 WHERE email = $2', ['admin', adminEmail]);
                         console.log(`Użytkownik ${adminEmail} już istniał, nadano/poprawiono rolę "admin".`);
+                    } else {
+                        console.log(`Użytkownik admin ${adminEmail} już istnieje z poprawną rolą.`);
                     }
                 }
             } catch (dbError) {
@@ -200,16 +215,18 @@ async function initializeDatabase() {
         console.log('Tabela "session" sprawdzona/utworzona.');
 
         await client.query('COMMIT');
-        console.log('Inicjalizacja bazy danych zakończona pomyślnie.');
+        console.log('Transakcja inicjalizacji bazy danych ZATWIERDZONA (COMMIT).');
 
     } catch (err) {
+        console.error('Krytyczny błąd podczas inicjalizacji bazy danych, wykonywanie ROLLBACK...', err);
         await client.query('ROLLBACK');
-        console.error('Błąd podczas inicjalizacji bazy danych (transakcja wycofana):', err);
+        console.log('Transakcja inicjalizacji bazy danych WYCOFANA (ROLLBACK).');
+        throw err; // Rzuć błąd dalej, aby został złapany przez startServer
     } finally {
         client.release();
+        console.log('Zwolniono klienta bazy danych po inicjalizacji.');
     }
 }
-initializeDatabase().catch(err => console.error("Nie udało się zainicjalizować bazy danych przy starcie:", err));
 
 
 // --- Konfiguracja Nodemailer ---
@@ -919,21 +936,31 @@ app.get('/api/my-materials', isAuthenticated, async (req, res) => {
 
 
 // --- Uruchomienie serwera ---
-app.listen(PORT, () => {
-    console.log(`Serwer uruchomiony na porcie ${PORT}`);
-    if (!process.env.DATABASE_URL) console.warn('OSTRZEŻENIE: DATABASE_URL nie jest ustawiona.');
-    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!') console.warn('OSTRZEŻENIE: SESSION_SECRET nie jest ustawiona lub używa wartości domyślnej!');
-    if (process.env.NODE_ENV !== 'production') {
-        console.warn('OSTRZEŻENIE: Aplikacja działa w trybie deweloperskim.');
-    } else {
-        console.log('Aplikacja działa w trybie produkcyjnym.');
+async function startServer() {
+    try {
+        await initializeDatabase(); // Poczekaj na zakończenie inicjalizacji bazy danych
+        app.listen(PORT, () => {
+            console.log(`Serwer uruchomiony na porcie ${PORT}`);
+            if (!process.env.DATABASE_URL) console.warn('OSTRZEŻENIE: DATABASE_URL nie jest ustawiona.');
+            if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!') console.warn('OSTRZEŻENIE: SESSION_SECRET nie jest ustawiona lub używa wartości domyślnej!');
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('OSTRZEŻENIE: Aplikacja działa w trybie deweloperskim.');
+            } else {
+                console.log('Aplikacja działa w trybie produkcyjnym.');
+            }
+            if (!emailHost || !emailUser || !emailPass) console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP. Wysyłka maili będzie symulowana.");
+            if (!emailSenderAddress && (emailHost && emailUser && emailPass)) console.warn("OSTRZEŻENIE: EMAIL_SENDER_ADDRESS nie jest ustawiona, używany będzie login SMTP lub domyślny adres.");
+            console.log('--- Podsumowanie konfiguracji ---');
+            console.log('  Ustawiono "trust proxy" na 1.');
+            console.log('  Magazyn sesji: PostgreSQL (tabela "session").');
+            console.log('  Inicjalizacja bazy danych przy starcie (tabele: users, materials, user_materials, session, app_settings).');
+            console.log('  Dodano endpointy API dla zarządzania ustawieniami aplikacji.');
+            console.log('---');
+        });
+    } catch (error) {
+        console.error("KRYTYCZNY BŁĄD: Nie udało się uruchomić serwera z powodu błędu inicjalizacji bazy danych.", error);
+        process.exit(1); // Zakończ proces, jeśli inicjalizacja bazy danych się nie powiedzie
     }
-    if (!emailHost || !emailUser || !emailPass) console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP. Wysyłka maili będzie symulowana.");
-    if (!emailSenderAddress && (emailHost && emailUser && emailPass)) console.warn("OSTRZEŻENIE: EMAIL_SENDER_ADDRESS nie jest ustawiona, używany będzie login SMTP lub domyślny adres.");
-    console.log('--- Podsumowanie konfiguracji ---');
-    console.log('  Ustawiono "trust proxy" na 1.');
-    console.log('  Magazyn sesji: PostgreSQL (tabela "session").');
-    console.log('  Inicjalizacja bazy danych przy starcie (tabele: users, materials, user_materials, session, app_settings).');
-    console.log('  Dodano endpointy API dla zarządzania ustawieniami aplikacji.');
-    console.log('---');
-});
+}
+
+startServer();
