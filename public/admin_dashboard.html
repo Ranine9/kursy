@@ -22,7 +22,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(75, 85, 99, 0.5); 
+            background-color: rgba(75, 85, 99, 0.5); /* Półprzezroczyste tło dla całego modala */
             overflow-y: auto;
             height: 100%;
             width: 100%;
@@ -34,8 +34,11 @@
         .modal-visible {
             display: flex !important;
         }
-        .modal-content-lg { /* Nowa klasa dla szerszego modala */
-            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; /* Zmieniono max-w-md na max-w-2xl */
+        .modal-content-user { /* Klasa dla modala użytkownika */
+            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative;
+        }
+        .modal-content-lg { /* Klasa dla szerszego modala materiałów */
+            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; 
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -48,15 +51,14 @@
         }
         .form-textarea {
             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
-            /* min-height: 100px; usunięte na rzecz atrybutu rows */
         }
         .form-group {
-            @apply mb-6; /* Zwiększony margines dla lepszego odstępu */
+            @apply mb-6; 
         }
         .form-group-title {
             @apply text-lg font-semibold text-gray-700 mb-3 border-b pb-2;
         }
-        .form-grid { /* Dla układu dwukolumnowego */
+        .form-grid { 
             @apply grid grid-cols-1 md:grid-cols-2 gap-x-6;
         }
         .input-hint {
@@ -180,7 +182,7 @@
     </div>
 
     <div id="editUserModal" class="modal-base"> 
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative">
+        <div class="modal-content-user"> {/* Użycie klasy dla modala użytkownika */}
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -221,7 +223,8 @@
     </div>
 
     <div id="materialModal" class="modal-base">
-        <div class="modal-content-lg"> <button id="closeMaterialModal" class="modal-close-btn">
+        <div class="modal-content-lg"> {/* Upewnienie się, że ta klasa ma bg-white */}
+            <button id="closeMaterialModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
             <h3 id="materialModalTitle" class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3">Dodaj Nowy Materiał</h3>
@@ -573,9 +576,8 @@
                     }
                 });
                 coverImagePreview.onerror = function() {
-                    // Jeśli URL jest nieprawidłowy lub obrazek się nie załaduje, pokaż placeholder
                     this.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Błąd+URL+Okładki';
-                    this.classList.remove('hidden'); // Upewnij się, że jest widoczny
+                    this.classList.remove('hidden'); 
                 };
             }
 
