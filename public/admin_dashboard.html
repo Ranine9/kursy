@@ -37,7 +37,7 @@
         .modal-content-user { /* Klasa dla modala użytkownika */
             @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative;
         }
-        .modal-content-lg { /* Klasa dla szerszego modala materiałów */
+        .modal-content-lg { /* Klasa dla szerszego modala materiałów - powinna mieć białe tło */
             @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; 
         }
         .modal-close-btn {
@@ -182,7 +182,7 @@
     </div>
 
     <div id="editUserModal" class="modal-base"> 
-        <div class="modal-content-user"> {/* Użycie klasy dla modala użytkownika */}
+        <div class="modal-content-user"> 
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -223,7 +223,7 @@
     </div>
 
     <div id="materialModal" class="modal-base">
-        <div class="modal-content-lg"> {/* Upewnienie się, że ta klasa ma bg-white */}
+        <div class="modal-content-lg"> 
             <button id="closeMaterialModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
