@@ -270,6 +270,7 @@
             const sections = document.querySelectorAll('.admin-section');
             const pageTitle = document.getElementById('page-title');
             
+            // Elementy dla zarządzania użytkownikami
             const userTableBody = document.getElementById('user-table-body');
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
@@ -283,6 +284,7 @@
             const editUserRoleInput = document.getElementById('editUserRole');
             const editUserPasswordInput = document.getElementById('editUserPassword');
             
+            // Elementy dla zarządzania materiałami
             const materialTableBody = document.getElementById('material-table-body'); 
             const statsTotalMaterials = document.getElementById('stats-total-materials'); 
             const addMaterialBtn = document.getElementById('addMaterialBtn'); 
@@ -552,7 +554,6 @@
                     }
                 });
                 // TODO: Listenery dla przycisków materiałów (edycja/usuwanie)
-                // Na razie tylko logujemy, że funkcja jest wywoływana
                 console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (w tym dla materiałów, jeśli istnieją)");
             }
             
