@@ -48,7 +48,7 @@
         }
         .form-textarea {
             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
-            min-height: 100px; 
+            /* min-height: 100px; usunięte na rzecz atrybutu rows */
         }
         .form-group {
             @apply mb-6; /* Zwiększony margines dla lepszego odstępu */
@@ -242,7 +242,7 @@
                     </div>
                     <div class="mt-4">
                         <label for="materialDescription" class="form-label">Opis materiału</label>
-                        <textarea id="materialDescription" name="description" class="form-textarea" placeholder="Szczegółowy opis zawartości materiału, korzyści dla użytkownika..."></textarea>
+                        <textarea id="materialDescription" name="description" class="form-textarea" rows="6" placeholder="Szczegółowy opis zawartości materiału, korzyści dla użytkownika..."></textarea>
                     </div>
                 </div>
 
