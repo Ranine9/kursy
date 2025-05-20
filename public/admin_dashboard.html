@@ -106,162 +106,30 @@
                 </section>
 
                 <section id="user-management" class="admin-section hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
-                    </div>
-                    <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nazwa Użytkownika</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rola</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Rejestracji</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                    </section>
 
                 <section id="material-management" class="admin-section hidden">
-                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Materiałami</h2>
-                        <button id="addMaterialBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
-                            <i class="fas fa-plus mr-2"></i>Dodaj Nowy Materiał
-                        </button>
-                    </div>
-                     <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tytuł</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoria</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cena</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link Pliku</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utworzono</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody id="material-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                     </section>
 
                 <section id="settings" class="admin-section hidden">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Ustawienia Panelu</h2>
-                    <div class="bg-white p-6 rounded-lg shadow-lg">
-                        <p>Tutaj znajdą się różne opcje konfiguracyjne panelu administracyjnego.</p>
-                    </div>
-                </section>
+                    </section>
             </div>
         </main>
     </div>
 
     <div id="editUserModal" class="modal-base"> 
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative">
-            <button id="closeEditUserModal" class="modal-close-btn">
-                <i class="fas fa-times fa-lg"></i>
-            </button>
-            <h3 class="text-xl font-semibold mb-6 text-gray-800">Edytuj Użytkownika</h3>
-            <form id="editUserForm">
-                <input type="hidden" id="editUserId">
-                <div class="space-y-4">
-                    <div>
-                        <label for="editUsername" class="form-label">Nazwa użytkownika</label>
-                        <input type="text" id="editUsername" name="username" class="form-input" required>
-                    </div>
-                    <div>
-                        <label for="editUserEmail" class="form-label">Email</label>
-                        <input type="email" id="editUserEmail" name="email" class="form-input" required>
-                    </div>
-                    <div>
-                        <label for="editUserRole" class="form-label">Rola</label>
-                        <select id="editUserRole" name="role" class="form-input">
-                            <option value="user">user</option>
-                            <option value="admin">admin</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="editUserPassword" class="form-label">Nowe hasło (pozostaw puste, jeśli bez zmian)</label>
-                        <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków">
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end space-x-3">
-                    <button type="button" id="cancelEditUser" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                        Anuluj
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
-                        Zapisz zmiany
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
     </div>
 
     <div id="materialModal" class="modal-base">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto relative">
-            <button id="closeMaterialModal" class="modal-close-btn">
-                <i class="fas fa-times fa-lg"></i>
-            </button>
-            <h3 id="materialModalTitle" class="text-xl font-semibold mb-6 text-gray-800">Dodaj Nowy Materiał</h3>
-            <form id="materialForm">
-                <input type="hidden" id="materialId">
-                <div class="space-y-4">
-                    <div>
-                        <label for="materialTitle" class="form-label">Tytuł materiału</label>
-                        <input type="text" id="materialTitle" name="title" class="form-input" required>
-                    </div>
-                    <div>
-                        <label for="materialDescription" class="form-label">Opis</label>
-                        <textarea id="materialDescription" name="description" class="form-textarea"></textarea>
-                    </div>
-                    <div>
-                        <label for="materialCategory" class="form-label">Kategoria</label>
-                        <input type="text" id="materialCategory" name="category" class="form-input">
-                    </div>
-                    <div>
-                        <label for="materialPrice" class="form-label">Cena (PLN)</label>
-                        <input type="number" id="materialPrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00">
-                    </div>
-                    <div>
-                        <label for="materialFileUrl" class="form-label">Link do pliku (URL)</label>
-                        <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://..." required>
-                    </div>
-                    <div>
-                        <label for="materialCoverImageUrl" class="form-label">Link do obrazka okładki (URL)</label>
-                        <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://...">
-                    </div>
-                    <div>
-                        <label for="materialStatus" class="form-label">Status</label>
-                        <select id="materialStatus" name="status" class="form-input">
-                            <option value="draft">Szkic (Draft)</option>
-                            <option value="published">Opublikowany (Published)</option>
-                            <option value="archived">Zarchiwizowany (Archived)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end space-x-3">
-                    <button type="button" id="cancelMaterialModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                        Anuluj
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg">
-                        Zapisz Materiał
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
     </div>
 
     <script>
+        // Cały kod JavaScript z poprzedniej wersji (artefakt admin_dashboard_materials_v1)
+        // Z kluczową aktualizacją w funkcji addEventListenersToActionButtons()
         document.addEventListener('DOMContentLoaded', function () {
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
@@ -475,7 +343,7 @@
                 materialForm.reset();
                 if (material) {
                     materialModalTitle.textContent = 'Edytuj Materiał';
-                    materialIdInput.value = material.id;
+                    materialIdInput.value = material.id; // Ustawiamy ID edytowanego materiału
                     materialTitleInput.value = material.title;
                     materialDescriptionInput.value = material.description || '';
                     materialCategoryInput.value = material.category || '';
@@ -485,7 +353,7 @@
                     materialStatusInput.value = material.status;
                 } else {
                     materialModalTitle.textContent = 'Dodaj Nowy Materiał';
-                    materialIdInput.value = '';
+                    materialIdInput.value = ''; // Wyczyść ID dla nowego materiału
                 }
                 materialModal.classList.add('modal-visible');
             }
@@ -495,7 +363,7 @@
                 if (materialForm) materialForm.reset();
             }
 
-            if (addMaterialBtn) addMaterialBtn.addEventListener('click', () => openMaterialModal());
+            if (addMaterialBtn) addMaterialBtn.addEventListener('click', () => openMaterialModal()); // Otwiera modal do dodawania (bez argumentu)
             if (closeMaterialModalBtn) closeMaterialModalBtn.addEventListener('click', closeMaterialModal);
             if (cancelMaterialModalBtn) cancelMaterialModalBtn.addEventListener('click', closeMaterialModal);
 
@@ -546,18 +414,21 @@
                             method: 'DELETE',
                         });
                         
-                        let responseData = {};
-                        const contentType = response.headers.get("content-type");
-                        if (contentType && contentType.indexOf("application/json") !== -1) {
-                            responseData = await response.json();
-                        } else {
-                            responseData.message = await response.text() || (response.ok ? `Materiał "${materialTitle}" usunięty.` : 'Błąd serwera.');
+                        let responseData = { message: `Materiał "${materialTitle}" usunięty pomyślnie.` }; // Domyślny komunikat sukcesu
+                        if (!response.ok) {
+                            // Spróbuj odczytać JSON tylko jeśli content-type to sugeruje, inaczej bierz text
+                             const contentType = response.headers.get("content-type");
+                            if (contentType && contentType.indexOf("application/json") !== -1) {
+                                responseData = await response.json();
+                            } else {
+                                responseData.message = await response.text() || `Błąd HTTP! status: ${response.status}`;
+                            }
+                            throw new Error(responseData.message);
+                        } else if (response.headers.get("content-type") && response.headers.get("content-type").indexOf("application/json") !== -1) {
+                            responseData = await response.json(); // Odczytaj JSON jeśli jest dostępny i OK
                         }
                         
-                        if (!response.ok) {
-                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
-                        }
-                        alert(responseData.message || `Materiał "${materialTitle}" usunięty pomyślnie.`);
+                        alert(responseData.message);
                         fetchAndDisplayMaterials(); 
                     } catch (error) {
                         console.error(`Admin Dashboard JS: Błąd podczas usuwania materiału ID ${materialId}:`, error);
@@ -591,7 +462,9 @@
                             const materialId = this.dataset.materialid;
                             const materialToEdit = allMaterialsData.find(m => m.id === parseInt(materialId));
                             if (materialToEdit) {
-                                openMaterialModal(materialToEdit);
+                                openMaterialModal(materialToEdit); // Przekazujemy dane materiału do modala
+                            } else {
+                                console.error("Nie znaleziono materiału do edycji o ID:", materialId);
                             }
                         });
                         button.setAttribute('data-listener-attached-edit-material', 'true');
@@ -609,7 +482,7 @@
                         button.setAttribute('data-listener-attached-delete-material', 'true');
                     }
                 });
-                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana");
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (dla użytkowników i materiałów)");
             }
             
             function showSection(targetId) {
