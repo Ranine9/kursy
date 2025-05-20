@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejestracja - Platforma Kursów Wideo</title>
+    <title>Rejestracja - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -19,13 +19,19 @@
         .form-input {
             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
         }
+        .error-message {
+            @apply text-red-500 text-sm mt-2 text-center;
+        }
+         .success-message { 
+            @apply text-green-500 text-sm mt-2 text-center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <header class="bg-white shadow-sm">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <a href="index.html" class="text-3xl font-bold text-blue-600">Kursy<span class="text-gray-700">Online</span></a>
+            <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
         </div>
     </header>
 
@@ -41,13 +47,13 @@
                     </a>
                 </p>
             </div>
-            <form class="mt-8 space-y-6" action="/register" method="POST">
-                <input type="hidden" name="remember" value="true"> <div class="rounded-md shadow-sm -space-y-px">
+            <form class="mt-8 space-y-6" id="registerForm">
+                <div class="rounded-md shadow-sm -space-y-px">
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-700">Nazwa użytkownika</label>
                         <input id="username" name="username" type="text" autocomplete="username" required
                                class="form-input"
-                               placeholder="np. JanKowalski">
+                               placeholder="np. JanKowalski123">
                     </div>
                     <div class="pt-4">
                         <label for="email-address" class="block text-sm font-medium text-gray-700">Adres email</label>
@@ -59,7 +65,7 @@
                         <label for="password" class="block text-sm font-medium text-gray-700">Hasło</label>
                         <input id="password" name="password" type="password" autocomplete="new-password" required
                                class="form-input"
-                               placeholder="Minimum 8 znaków">
+                               placeholder="Minimum 6 znaków">
                     </div>
                     <div class="pt-4">
                         <label for="confirm-password" class="block text-sm font-medium text-gray-700">Potwierdź hasło</label>
@@ -74,15 +80,21 @@
                         <input id="terms-and-conditions" name="terms-and-conditions" type="checkbox" required
                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         <label for="terms-and-conditions" class="ml-2 block text-sm text-gray-900">
-                            Akceptuję <a href="#" class="font-medium text-blue-600 hover:text-blue-500">regulamin</a>
+                            Akceptuję <a href="#" class="font-medium text-blue-600 hover:text-blue-500" title="Regulamin (placeholder)">regulamin</a>
                         </label>
                     </div>
                 </div>
+                
+                <div id="form-error-message-register" class="error-message hidden"></div>
+                <div id="form-success-message-register" class="success-message hidden"></div>
+
 
                 <div>
                     <button type="submit"
+                            id="registerButton"
                             class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn btn-primary">
-                        Zarejestruj się
+                        <span class="btn-text">Zarejestruj się</span>
+                        <span class="btn-loader hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...</span>
                     </button>
                 </div>
             </form>
@@ -91,12 +103,112 @@
 
     <footer class="bg-gray-800 text-gray-300 py-8 text-center mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p>&copy; <span id="currentYearRegister"></span> KursyOnline. Wszelkie prawa zastrzeżone.</p>
+            <p>&copy; <span id="currentYearRegister"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
     <script>
         document.getElementById('currentYearRegister').textContent = new Date().getFullYear();
+
+        const registerForm = document.getElementById('registerForm');
+        const registerButton = document.getElementById('registerButton');
+        const registerButtonText = registerButton.querySelector('.btn-text');
+        const registerButtonLoader = registerButton.querySelector('.btn-loader');
+        const formErrorMessageRegister = document.getElementById('form-error-message-register');
+        const formSuccessMessageRegister = document.getElementById('form-success-message-register'); // Dodane dla komunikatu o sukcesie
+
+        if (registerForm) {
+            registerForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Zapobiegaj domyślnej wysyłce formularza
+
+                // Pokaż loader, ukryj tekst przycisku
+                registerButtonText.classList.add('hidden');
+                registerButtonLoader.classList.remove('hidden');
+                registerButton.disabled = true;
+                formErrorMessageRegister.classList.add('hidden');
+                formSuccessMessageRegister.classList.add('hidden');
+
+
+                const formData = new FormData(registerForm);
+                const data = Object.fromEntries(formData.entries());
+
+                // Walidacja po stronie klienta (prosta)
+                if (data.password !== data['confirm-password']) {
+                    formErrorMessageRegister.textContent = 'Hasła nie są zgodne.';
+                    formErrorMessageRegister.classList.remove('hidden');
+                    registerButtonText.classList.remove('hidden');
+                    registerButtonLoader.classList.add('hidden');
+                    registerButton.disabled = false;
+                    return;
+                }
+                if (data.password.length < 6) {
+                    formErrorMessageRegister.textContent = 'Hasło musi mieć co najmniej 6 znaków.';
+                    formErrorMessageRegister.classList.remove('hidden');
+                    registerButtonText.classList.remove('hidden');
+                    registerButtonLoader.classList.add('hidden');
+                    registerButton.disabled = false;
+                    return;
+                }
+                if (!document.getElementById('terms-and-conditions').checked) {
+                     formErrorMessageRegister.textContent = 'Musisz zaakceptować regulamin.';
+                    formErrorMessageRegister.classList.remove('hidden');
+                    registerButtonText.classList.remove('hidden');
+                    registerButtonLoader.classList.add('hidden');
+                    registerButton.disabled = false;
+                    return;
+                }
+
+
+                try {
+                    const response = await fetch('/register', { // Endpoint rejestracji
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Rejestracja pomyślna
+                        formSuccessMessageRegister.textContent = result.message + (result.redirectTo ? ' Przekierowuję...' : '');
+                        formSuccessMessageRegister.classList.remove('hidden');
+                        
+                        // Automatyczne przekierowanie po chwili
+                        if (result.redirectTo) {
+                            setTimeout(() => {
+                                window.location.href = result.redirectTo;
+                            }, 2000); // 2 sekundy opóźnienia
+                        } else {
+                             // Fallback, jeśli serwer nie zwrócił redirectTo
+                            console.warn('Serwer nie zwrócił redirectTo po rejestracji, przekierowuję na /dashboard.html');
+                             setTimeout(() => {
+                                window.location.href = '/dashboard.html';
+                            }, 2000);
+                        }
+                    } else {
+                        // Błąd rejestracji
+                        formErrorMessageRegister.textContent = result.message || 'Wystąpił nieznany błąd podczas rejestracji.';
+                        formErrorMessageRegister.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Błąd fetch podczas rejestracji:', error);
+                    formErrorMessageRegister.textContent = 'Nie można połączyć się z serwerem. Spróbuj ponownie później.';
+                    formErrorMessageRegister.classList.remove('hidden');
+                } finally {
+                    // Ukryj loader, pokaż tekst przycisku (chyba że jest sukces i przekierowanie)
+                    if (!formSuccessMessageRegister.classList.contains('hidden')) {
+                        // Jeśli sukces, przycisk pozostaje nieaktywny
+                    } else {
+                        registerButtonText.classList.remove('hidden');
+                        registerButtonLoader.classList.add('hidden');
+                        registerButton.disabled = false;
+                    }
+                }
+            });
+        }
     </script>
 
 </body>
