@@ -12,7 +12,7 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.set('trust proxy', 1); // Ważne dla poprawnego działania secure cookies za reverse proxy
+app.set('trust proxy', 1); 
 
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
 if (!process.env.DATABASE_URL) {
@@ -41,9 +41,9 @@ pool.connect((err, client, release) => {
 });
 
 async function initializeDatabase() {
-    const client = await pool.connect(); // Użyjemy dedykowanego klienta dla transakcji DDL
+    const client = await pool.connect(); 
     try {
-        await client.query('BEGIN'); // Rozpocznij transakcję
+        await client.query('BEGIN'); 
 
         const createUserTableQuery = `
             CREATE TABLE IF NOT EXISTS users (
@@ -51,15 +51,13 @@ async function initializeDatabase() {
                 username VARCHAR(255) UNIQUE NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
-                -- Kolumna 'role' zostanie dodana poniżej przez ALTER TABLE, jeśli nie istnieje
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                -- Kolumna 'role' zostanie dodana przez ALTER TABLE
             );
         `;
-        // Najpierw utwórz tabelę users, jeśli nie istnieje (bez 'role' na tym etapie, aby uniknąć błędów, jeśli tabela już istnieje w starszej formie)
-        await client.query(createUserTableQuery.replace("role VARCHAR(50) DEFAULT 'user' NOT NULL,", ""));
+        await client.query(createUserTableQuery); // Usunięto .replace() - CREATE TABLE IF NOT EXISTS users z definicją 'role' jest w porządku
         console.log('Tabela "users" (wstępna struktura) sprawdzona/utworzona.');
 
-        // Teraz dodaj kolumnę 'role', jeśli nie istnieje
         const alterUserTableQuery = `
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
@@ -67,7 +65,6 @@ async function initializeDatabase() {
         await client.query(alterUserTableQuery);
         console.log('Kolumna "role" w tabeli "users" sprawdzona/dodana.');
 
-        // Sprawdzenie, czy kolumna 'role' faktycznie istnieje
         const checkRoleColumnQuery = `
             SELECT column_name 
             FROM information_schema.columns 
@@ -78,10 +75,7 @@ async function initializeDatabase() {
             console.log('Potwierdzenie: Kolumna "role" istnieje w tabeli "users".');
         } else {
             console.error('KRYTYCZNY BŁĄD: Kolumna "role" NIE została pomyślnie dodana do tabeli "users"!');
-            // Można rzucić błędem, aby zatrzymać dalszą inicjalizację, jeśli rola jest absolutnie krytyczna
-            // throw new Error('Nie udało się dodać kolumny "role" do tabeli users.');
         }
-
 
         const createMaterialsTableQuery = `
             CREATE TABLE IF NOT EXISTS materials (
@@ -155,7 +149,7 @@ async function initializeDatabase() {
             CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
         `;
         
-        await addAdminUserIfNeeded(); // Wywołaj to teraz, gdy kolumna 'role' na pewno jest
+        await addAdminUserIfNeeded();
         
         await client.query(createMaterialsTableQuery);
         console.log('Tabela "materials" sprawdzona/utworzona.');
@@ -170,20 +164,19 @@ async function initializeDatabase() {
         await client.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona.');
 
-        await client.query('COMMIT'); // Zatwierdź transakcję
+        await client.query('COMMIT');
         console.log('Inicjalizacja bazy danych zakończona pomyślnie.');
 
     } catch (err) {
-        await client.query('ROLLBACK'); // Wycofaj transakcję w razie błędu
+        await client.query('ROLLBACK');
         console.error('Błąd podczas inicjalizacji bazy danych (transakcja wycofana):', err);
     } finally {
-        client.release(); // Zwolnij klienta z puli
+        client.release();
     }
 }
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
-// ... (bez zmian)
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -601,6 +594,65 @@ app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+app.put('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const materialId = parseInt(req.params.id);
+    const { title, description, category, price, file_url, cover_image_url, status } = req.body;
+
+    if (!title || !file_url) {
+        return res.status(400).json({ message: 'Tytuł oraz link do pliku (file_url) są wymagane.' });
+    }
+    const validStatuses = ['draft', 'published', 'archived'];
+    if (status && !validStatuses.includes(status)) {
+        return res.status(400).json({ message: `Nieprawidłowy status. Dozwolone wartości: ${validStatuses.join(', ')}.` });
+    }
+
+    try {
+        const updateFields = [];
+        const values = [];
+        let queryParamIndex = 1;
+
+        if (title !== undefined) { updateFields.push(`title = $${queryParamIndex++}`); values.push(title); }
+        if (description !== undefined) { updateFields.push(`description = $${queryParamIndex++}`); values.push(description); }
+        if (category !== undefined) { updateFields.push(`category = $${queryParamIndex++}`); values.push(category); }
+        if (price !== undefined) { updateFields.push(`price = $${queryParamIndex++}`); values.push(price ? parseFloat(price) : 0.00); }
+        if (file_url !== undefined) { updateFields.push(`file_url = $${queryParamIndex++}`); values.push(file_url); }
+        if (cover_image_url !== undefined) { updateFields.push(`cover_image_url = $${queryParamIndex++}`); values.push(cover_image_url); }
+        if (status !== undefined) { updateFields.push(`status = $${queryParamIndex++}`); values.push(status); }
+        
+        if (updateFields.length === 0) {
+            return res.status(400).json({ message: 'Brak danych do aktualizacji.' });
+        }
+
+        values.push(materialId); 
+
+        const updateMaterialQuery = `UPDATE materials SET ${updateFields.join(', ')} WHERE id = $${queryParamIndex} RETURNING *`;
+        const result = await pool.query(updateMaterialQuery, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono materiału o podanym ID.' });
+        }
+        res.json({ message: 'Dane materiału zaktualizowane pomyślnie.', material: result.rows[0] });
+    } catch (error) {
+        console.error(`Błąd podczas aktualizacji materiału ID: ${materialId}:`, error);
+        res.status(500).json({ message: 'Błąd serwera podczas aktualizacji materiału.' });
+    }
+});
+
+app.delete('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const materialIdToDelete = parseInt(req.params.id);
+    try {
+        const result = await pool.query('DELETE FROM materials WHERE id = $1 RETURNING id, title', [materialIdToDelete]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono materiału o podanym ID.' });
+        }
+        res.json({ message: `Materiał "${result.rows[0].title}" (ID: ${result.rows[0].id}) został usunięty.` });
+    } catch (error) {
+        console.error(`Błąd podczas usuwania materiału ID: ${materialIdToDelete}:`, error);
+        res.status(500).json({ message: 'Błąd serwera podczas usuwania materiału.' });
+    }
+});
+
+
 // === PUBLICZNE API Endpoints dla Materiałów ===
 app.get('/api/materials', async (req, res) => {
     try {
@@ -623,7 +675,6 @@ app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => {
         if (materialCheck.rows.length === 0) {
             return res.status(404).json({ message: 'Materiał nie został znaleziony lub nie jest dostępny.' });
         }
-        // const materialPrice = parseFloat(materialCheck.rows[0].price); // Na razie pomijamy płatności
         const existingAcquisition = await pool.query( 'SELECT * FROM user_materials WHERE user_id = $1 AND material_id = $2', [userId, materialId] );
         if (existingAcquisition.rows.length > 0) {
             return res.status(409).json({ message: 'Już posiadasz ten materiał.' });
@@ -671,5 +722,6 @@ app.listen(PORT, () => {
     console.log('Tabela "materials" jest teraz tworzona przy starcie serwera.');
     console.log('Tabela "user_materials" jest teraz tworzona przy starcie serwera.');
     console.log('Dodano publiczne API dla materiałów i API do zarządzania "Moje Materiały".');
+    console.log('Dodano API do edycji i usuwania materiałów przez admina.');
     console.log('---');
 });
