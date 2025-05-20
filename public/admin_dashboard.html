@@ -16,9 +16,25 @@
             background-color: #2563eb; /* blue-600 */
             color: white;
         }
-        .modal-overlay {
+        .modal-overlay { /* Używane dla tła modala */
             background-color: rgba(0, 0, 0, 0.75);
+            display: none; /* Domyślnie ukryte */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 40; /* Poniżej modala */
+            align-items: center;
+            justify-content: center;
         }
+        .modal-box { /* Kontener dla treści modala */
+             z-index: 50; /* Nad overlayem */
+        }
+        .modal-visible { /* Klasa do pokazywania modala i tła */
+            display: flex !important;
+        }
+
         .spinner {
             border-top-color: transparent;
             animation: spin 1s linear infinite;
@@ -26,30 +42,33 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .action-button { @apply p-1.5 text-gray-500 hover:text-gray-700 transition-colors; }
     </style>
 </head>
 <body class="text-gray-800 antialiased">
     <div class="flex h-screen bg-gray-100">
         <aside class="w-64 bg-gray-800 text-gray-300 flex flex-col flex-shrink-0">
             <div class="h-20 flex items-center justify-center px-6 border-b border-gray-700">
-                <a href="/admin/dashboard.html" class="flex items-center space-x-3"> {/* Docelowo /admin_panel_v2.html */}
+                <a href="/admin/dashboard.html" class="flex items-center space-x-3">
                     <i class="fas fa-shield-halved text-blue-400 text-3xl"></i>
                     <span class="text-xl font-semibold text-white">Admin<span class="text-blue-400">Panel</span></span>
                 </a>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <a href="#dashboard-main" id="nav-dashboard" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150 sidebar-link-active">
-                    <i class="fas fa-chart-pie w-5 mr-3 text-center"></i> Panel Główny
-                </a>
-                <a href="#user-management" id="nav-users" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
-                    <i class="fas fa-users-cog w-5 mr-3 text-center"></i> Użytkownicy
-                </a>
-                <a href="#material-management" id="nav-materials" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
-                    <i class="fas fa-folder-open w-5 mr-3 text-center"></i> Materiały
-                </a>
-                <a href="#settings" id="nav-settings" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
-                    <i class="fas fa-cogs w-5 mr-3 text-center"></i> Ustawienia
-                </a>
+            <nav class="flex-1 px-4 py-6 space-y-2 app-sidebar"> {/* Dodano klasę app-sidebar dla JS */}
+                <div class="sidebar-nav"> {/* Dodano div dla spójności z selektorem JS */}
+                    <a href="#dashboard-main" id="nav-dashboard" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150 sidebar-link-active">
+                        <i class="fas fa-chart-pie w-5 mr-3 text-center"></i> Panel Główny
+                    </a>
+                    <a href="#user-management" id="nav-users" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
+                        <i class="fas fa-users-cog w-5 mr-3 text-center"></i> Użytkownicy
+                    </a>
+                    <a href="#material-management" id="nav-materials" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
+                        <i class="fas fa-folder-open w-5 mr-3 text-center"></i> Materiały
+                    </a>
+                    <a href="#settings" id="nav-settings" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
+                        <i class="fas fa-cogs w-5 mr-3 text-center"></i> Ustawienia
+                    </a>
+                </div>
             </nav>
             <div class="px-4 py-4 border-t border-gray-700">
                 <a href="/logout" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
@@ -62,8 +81,7 @@
             <header class="bg-white shadow h-20 flex items-center justify-between px-8">
                 <h1 id="page-title" class="text-2xl font-semibold text-gray-700">Panel Główny</h1>
                 <div class="flex items-center space-x-4">
-                    {/* Można dodać ikonę powiadomień lub profilu */}
-                    <span class="text-sm text-gray-600">Witaj, Admin!</span>
+                    <span id="admin-username-display" class="text-sm text-gray-600">Witaj, Admin!</span>
                 </div>
             </header>
 
@@ -80,7 +98,7 @@
                                 <p id="stats-total-users" class="text-2xl font-bold text-gray-800">Ładowanie...</p>
                             </div>
                         </div>
-                        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
+                        <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
                             <div class="p-3 bg-green-100 rounded-full">
                                 <i class="fas fa-folder-open text-green-500 text-xl"></i>
                             </div>
@@ -117,8 +135,9 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
+                            {/* UPEWNIJ SIĘ, ŻE TO ID JEST TUTAJ */}
                             <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie...</td></tr>
+                                <tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -140,12 +159,14 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoria</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cena</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link Pliku</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utworzono</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
+                            {/* UPEWNIJ SIĘ, ŻE TO ID JEST TUTAJ */}
                             <tbody id="material-table-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="7" class="text-center py-10 text-gray-500">Ładowanie...</td></tr>
+                                <tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -161,7 +182,7 @@
         </div>
     </div>
 
-    <div id="editUserModal" class="fixed inset-0 modal-overlay hidden items-center justify-center p-4 z-50">
+    <div id="editUserModal" class="modal-overlay hidden items-center justify-center p-4">
         <div class="modal-box max-w-lg bg-white rounded-lg shadow-xl p-0">
             <div class="flex justify-between items-center px-6 py-4 border-b">
                 <h3 class="text-lg font-semibold text-gray-800">Edytuj Użytkownika</h3>
@@ -196,7 +217,7 @@
         </div>
     </div>
 
-    <div id="materialModal" class="fixed inset-0 modal-overlay hidden items-center justify-center p-4 z-50">
+    <div id="materialModal" class="modal-overlay hidden items-center justify-center p-4">
         <div class="modal-box max-w-2xl bg-white rounded-lg shadow-xl p-0">
             <div class="flex justify-between items-center px-6 py-4 border-b">
                 <h3 id="materialModalTitle" class="text-lg font-semibold text-gray-800">Dodaj Nowy Materiał</h3>
@@ -205,35 +226,35 @@
             <form id="materialForm" class="p-6 space-y-4">
                 <input type="hidden" id="materialId">
                 <div>
-                    <label for="materialTitle" class="block text-sm font-medium text-gray-700">Tytuł <span class="text-red-500">*</span></label>
-                    <input type="text" id="materialTitle" name="title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" required>
+                    <label for="materialTitle" class="form-label">Tytuł materiału <span class="text-red-500">*</span></label>
+                    <input type="text" id="materialTitle" name="title" class="form-input" required>
                 </div>
                 <div>
-                    <label for="materialDescription" class="block text-sm font-medium text-gray-700">Opis</label>
-                    <textarea id="materialDescription" name="description" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"></textarea>
+                    <label for="materialDescription" class="form-label">Opis</label>
+                    <textarea id="materialDescription" name="description" rows="3" class="form-textarea"></textarea>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="materialCategory" class="block text-sm font-medium text-gray-700">Kategoria</label>
-                        <input type="text" id="materialCategory" name="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2">
+                        <label for="materialCategory" class="form-label">Kategoria</label>
+                        <input type="text" id="materialCategory" name="category" class="form-input">
                     </div>
                     <div>
-                        <label for="materialPrice" class="block text-sm font-medium text-gray-700">Cena (PLN)</label>
-                        <input type="number" id="materialPrice" name="price" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" placeholder="0.00">
+                        <label for="materialPrice" class="form-label">Cena (PLN)</label>
+                        <input type="number" id="materialPrice" name="price" step="0.01" min="0" class="form-input" placeholder="0.00">
                     </div>
                 </div>
                 <div>
-                    <label for="materialFileUrl" class="block text-sm font-medium text-gray-700">Link do pliku <span class="text-red-500">*</span></label>
-                    <input type="url" id="materialFileUrl" name="file_url" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" required>
+                    <label for="materialFileUrl" class="form-label">Link do pliku <span class="text-red-500">*</span></label>
+                    <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://" required>
                 </div>
                 <div>
-                    <label for="materialCoverImageUrl" class="block text-sm font-medium text-gray-700">Link do okładki (URL)</label>
-                    <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2">
-                    <img id="coverImagePreview" src="https://placehold.co/200x100/E2E8F0/A0AEC0?text=Podgląd" alt="Podgląd okładki" class="mt-2 rounded border hidden max-h-28">
+                    <label for="materialCoverImageUrl" class="form-label">Link do okładki (URL)</label>
+                    <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://">
+                    <img id="coverImagePreview" src="https://placehold.co/200x100/E2E8F0/A0AEC0?text=Podgląd" alt="Podgląd okładki" class="mt-2 rounded border hidden max-h-28 object-contain">
                 </div>
                 <div>
-                    <label for="materialStatus" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
-                    <select id="materialStatus" name="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" required>
+                    <label for="materialStatus" class="form-label">Status <span class="text-red-500">*</span></label>
+                    <select id="materialStatus" name="status" class="form-input" required>
                         <option value="draft">Szkic</option>
                         <option value="published">Opublikowany</option>
                         <option value="archived">Zarchiwizowany</option>
@@ -243,25 +264,29 @@
                     <button type="button" id="cancelMaterialModal" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">Anuluj</button>
                     <button type="submit" id="saveMaterialButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center">
                         <span class="btn-text-save">Zapisz Materiał</span>
-                        <span class="btn-loader-save hidden ml-2"><span class="spinner w-4 h-4"></span></span>
+                        <span class="btn-loader-save hidden ml-2"><span class="spinner w-4 h-4 border-white"></span></span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl text-sm hidden transition-opacity duration-300">
+        <span id="toast-message"></span>
+    </div>
+
 
     <script>
+        // Pełny kod JavaScript z ostatniej wersji (admin_dashboard_materials_v1),
+        // z poprawionymi selektorami i upewnieniem się, że ID tabel są poprawne.
         document.addEventListener('DOMContentLoaded', function () {
-            console.log("Admin Panel 2.0 JS: DOMContentLoaded");
+            console.log("Admin Dashboard JS: DOMContentLoaded");
 
-            const navLinks = document.querySelectorAll('.app-sidebar .sidebar-nav a');
-            const sections = document.querySelectorAll('.admin-content-section');
+            const navLinks = document.querySelectorAll('aside nav a'); // Poprawiony selektor, jeśli trzeba
+            const sections = document.querySelectorAll('.admin-content-section'); // Używamy tej klasy dla sekcji
             const pageTitle = document.getElementById('page-title');
+            const adminUsernameDisplay = document.getElementById('admin-username-display');
             
-            // Reszta selektorów i logiki JS z poprzedniej wersji (admin_dashboard_v3_modern)
-            // powinna zostać tutaj wklejona i dostosowana do nowych klas, jeśli to konieczne.
-            // Na przykład, selektory dla tabel, przycisków akcji, modali itp.
-
             const userTableBody = document.getElementById('user-table-body');
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
@@ -293,11 +318,38 @@
             const materialStatusInput = document.getElementById('materialStatus');
             const coverImagePreview = document.getElementById('coverImagePreview');
             const saveMaterialButton = document.getElementById('saveMaterialButton');
-            const saveMaterialButtonText = saveMaterialButton.querySelector('.btn-text-save'); 
-            const saveMaterialButtonLoader = saveMaterialButton.querySelector('.btn-loader-save');
+            const saveMaterialButtonText = saveMaterialButton ? saveMaterialButton.querySelector('.btn-text-save') : null; 
+            const saveMaterialButtonLoader = saveMaterialButton ? saveMaterialButton.querySelector('.btn-loader-save') : null;
+
+            const toastNotification = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
 
             let allUsersData = []; 
             let allMaterialsData = []; 
+
+            function showToast(message, type = 'success') {
+                if (!toastNotification || !toastMessage) return;
+                toastMessage.textContent = message;
+                toastNotification.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-blue-600');
+                if (type === 'error') {
+                    toastNotification.classList.add('bg-red-600');
+                } else if (type === 'info') {
+                    toastNotification.classList.add('bg-blue-600');
+                } else {
+                    toastNotification.classList.add('bg-green-600'); // Domyślnie sukces
+                }
+                toastNotification.classList.remove('opacity-0');
+                toastNotification.classList.add('opacity-100');
+
+                setTimeout(() => {
+                    toastNotification.classList.remove('opacity-100');
+                    toastNotification.classList.add('opacity-0');
+                    setTimeout(() => {
+                        toastNotification.classList.add('hidden');
+                    }, 300); // Czas trwania przejścia opacity
+                }, 3000); // Czas wyświetlania toasta
+            }
+
 
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
@@ -305,9 +357,25 @@
                 return new Date(dateString).toLocaleDateString('pl-PL', options);
             }
 
+            async function fetchAdminData() {
+                try {
+                    const response = await fetch('/api/user', {credentials: 'include'});
+                    if (response.ok) {
+                        const userData = await response.json();
+                        if (adminUsernameDisplay && userData.username) {
+                            adminUsernameDisplay.textContent = `Witaj, ${userData.username}!`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn("Nie udało się pobrać danych admina:", error);
+                }
+            }
+
+
             async function fetchAndDisplayUsers() {
+                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
                 if (!userTableBody) { console.warn("userTableBody not found, skipping user fetch."); return; }
-                userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
+                userTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>`;
                 try {
                     const response = await fetch('/api/admin/users', {credentials: 'include'});
                     if (!response.ok) {
@@ -319,7 +387,7 @@
                     if (statsTotalUsers) statsTotalUsers.textContent = allUsersData.length;
                     if (statsTotalAdmins) statsTotalAdmins.textContent = allUsersData.filter(user => user.role === 'admin').length;
                 } catch (error) {
-                    console.error('Błąd pobierania użytkowników:', error);
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error);
                     if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Błąd: ${error.message}</td></tr>`;
                     if (statsTotalUsers) statsTotalUsers.textContent = 'Błąd';
                     if (statsTotalAdmins) statsTotalAdmins.textContent = 'Błąd';
@@ -327,7 +395,7 @@
             }
 
             function renderUserTable(users) {
-                if (!userTableBody) return;
+                if (!userTableBody) { console.warn("userTableBody not found for render"); return; }
                 userTableBody.innerHTML = ''; 
                 if (users.length === 0) {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-500">Brak użytkowników.</td></tr>';
@@ -335,17 +403,17 @@
                 }
                 users.forEach(user => {
                     const rowHTML = `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4">${user.id}</td>
-                            <td class="px-6 py-4">${user.username}</td>
-                            <td class="px-6 py-4">${user.email}</td>
-                            <td class="px-6 py-4">
+                        <tr class="hover:bg-gray-50" data-userid="${user.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
                                     ${user.role}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">${formatDate(user.created_at)}</td>
-                            <td class="px-6 py-4 space-x-2 whitespace-nowrap">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                 <button title="Edytuj" class="edit-user-btn action-button text-blue-500 hover:text-blue-700" data-userid="${user.id}"><i class="fas fa-pencil-alt"></i></button>
                                 <button title="Usuń" class="delete-user-btn action-button text-red-500 hover:text-red-700" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
                             </td>
@@ -358,28 +426,28 @@
             
             function openEditModal(userId) { 
                 const user = allUsersData.find(u => u.id === parseInt(userId));
-                if (!user) { alert('Nie znaleziono użytkownika.'); return; }
+                if (!user) { showToast('Nie znaleziono użytkownika.', 'error'); return; }
                 if (editUserIdInput) editUserIdInput.value = user.id;
                 if (editUsernameInput) editUsernameInput.value = user.username;
                 if (editUserEmailInput) editUserEmailInput.value = user.email;
                 if (editUserRoleInput) editUserRoleInput.value = user.role;
                 if (editUserPasswordInput) editUserPasswordInput.value = ''; 
-                if (editUserModal) editUserModal.classList.remove('hidden'); 
+                if (editUserModal) editUserModal.classList.add('modal-visible'); 
             }
             function closeEditModal() { 
-                if (editUserModal) editUserModal.classList.add('hidden'); 
+                if (editUserModal) editUserModal.classList.remove('modal-visible'); 
                 if (editUserForm) editUserForm.reset();
             }
             async function handleDeleteUser(userId, username) { 
-                if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})?`)) {
+                if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
                     try {
                         const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
                         const responseData = await response.json(); 
-                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        alert(responseData.message || `Użytkownik "${username}" usunięty.`);
+                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        showToast(responseData.message || `Użytkownik "${username}" usunięty.`, 'success');
                         fetchAndDisplayUsers(); 
                     } catch (error) {
-                        alert(`Błąd usuwania użytkownika: ${error.message}`);
+                        showToast(`Błąd usuwania użytkownika: ${error.message}`, 'error');
                     }
                 }
             }
@@ -404,12 +472,12 @@
                             credentials: 'include'
                         });
                         const responseData = await response.json();
-                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        alert(responseData.message || 'Dane zaktualizowane.');
+                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        showToast(responseData.message || 'Dane zaktualizowane.', 'success');
                         closeEditModal();
                         fetchAndDisplayUsers(); 
                     } catch (error) {
-                        alert(`Błąd aktualizacji: ${error.message}`);
+                        showToast(`Błąd aktualizacji: ${error.message}`, 'error');
                     }
                 });
             }
@@ -417,8 +485,9 @@
             if(cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', closeEditModal);
 
             async function fetchAndDisplayMaterials() {
-                if (!materialTableBody) { console.warn("materialTableBody not found"); return; }
-                 materialTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
+                console.log("Admin Dashboard JS: fetchAndDisplayMaterials() called");
+                if (!materialTableBody) { console.warn("materialTableBody not found, skipping material fetch."); return; }
+                materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
                 try {
                     const response = await fetch('/api/admin/materials', {credentials: 'include'});
                      if (!response.ok) {
@@ -429,8 +498,8 @@
                     renderMaterialTable(allMaterialsData);
                     if (statsTotalMaterials) statsTotalMaterials.textContent = allMaterialsData.length;
                 } catch (error) {
-                    console.error('Błąd pobierania materiałów:', error);
-                    if (materialTableBody) materialTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Błąd: ${error.message}</td></tr>`;
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania materiałów:', error);
+                    if (materialTableBody) materialTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Błąd: ${error.message}</td></tr>`;
                     if (statsTotalMaterials) statsTotalMaterials.textContent = 'Błąd';
                 }
             }
@@ -439,26 +508,28 @@
                 if (!materialTableBody) return;
                 materialTableBody.innerHTML = '';
                 if (materials.length === 0) {
-                    materialTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-500">Brak materiałów.</td></tr>';
+                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-500">Brak materiałów.</td></tr>';
                     return;
                 }
                 materials.forEach(material => {
                     const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline" title="${material.file_url}">${material.file_url.length > 25 ? material.file_url.substring(0,22) + '...' : material.file_url}</a>` : '-';
                     const row = `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4">${material.id}</td>
-                            <td class="px-6 py-4">${material.title}</td>
-                            <td class="px-6 py-4">${material.category || '-'}</td>
-                            <td class="px-6 py-4">${material.price ? parseFloat(material.price).toFixed(2) + ' PLN' : 'Darmowy'}</td>
-                            <td class="px-6 py-4">
+                        <tr class="hover:bg-gray-50" data-materialid="${material.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.title}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.category || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.price ? parseFloat(material.price).toFixed(2) + ' PLN' : 'Darmowy'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     ${material.status === 'published' ? 'bg-green-100 text-green-800' : 
                                       material.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                                      'bg-red-100 text-red-800'}"> ${material.status}
+                                      'bg-red-100 text-red-800'}"> 
+                                    ${material.status}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">${formatDate(material.created_at)}</td>
-                            <td class="px-6 py-4 space-x-2 whitespace-nowrap">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fileUrlDisplay}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(material.created_at)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                 <button title="Edytuj Materiał" class="edit-material-btn action-button text-blue-500 hover:text-blue-700" data-materialid="${material.id}"><i class="fas fa-pencil-alt"></i></button>
                                 <button title="Usuń Materiał" class="delete-material-btn action-button text-red-500 hover:text-red-700" data-materialid="${material.id}" data-materialtitle="${material.title}"><i class="fas fa-trash-alt"></i></button>
                             </td>
@@ -493,11 +564,11 @@
                     materialModalTitle.textContent = 'Dodaj Nowy Materiał';
                     if(materialIdInput) materialIdInput.value = '';
                 }
-                if(materialModal) materialModal.classList.remove('hidden');
+                if(materialModal) materialModal.classList.add('modal-visible');
             }
 
             function closeMaterialModal() {
-                if (materialModal) materialModal.classList.add('hidden');
+                if (materialModal) materialModal.classList.remove('modal-visible');
                 if (materialForm) materialForm.reset();
                 if (coverImagePreview) {
                     coverImagePreview.src = 'https://placehold.co/200x100/E2E8F0/A0AEC0?text=Podgląd';
@@ -563,11 +634,11 @@
                         });
                         const responseData = await response.json();
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        alert(successMessage);
+                        showToast(successMessage, 'success');
                         closeMaterialModal();
                         fetchAndDisplayMaterials(); 
                     } catch (error) {
-                        alert(`Nie udało się zapisać materiału: ${error.message}`);
+                        showToast(`Nie udało się zapisać materiału: ${error.message}`, 'error');
                     } finally {
                         if (saveMaterialButtonText) saveMaterialButtonText.classList.remove('hidden');
                         if (saveMaterialButtonLoader) saveMaterialButtonLoader.classList.add('hidden');
@@ -583,19 +654,19 @@
                             method: 'DELETE',
                             credentials: 'include'
                         });
-                        const responseData = await response.json().catch(() => ({ message: `Materiał "${materialTitle}" usunięty.`})); // Fallback
+                        const responseData = await response.json().catch(() => ({ message: `Materiał "${materialTitle}" usunięty.`})); 
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        alert(responseData.message);
+                        showToast(responseData.message, 'success');
                         fetchAndDisplayMaterials(); 
                     } catch (error) {
-                        alert(`Błąd usuwania materiału: ${error.message}`);
+                        showToast(`Błąd usuwania materiału: ${error.message}`, 'error');
                     }
                 }
             }
             
             function addEventListenersToActionButtons() { 
                 document.querySelectorAll('.edit-user-btn').forEach(button => {
-                    button.removeEventListener('click', openEditModalHandler); // Usuń stary listener
+                    button.removeEventListener('click', openEditModalHandler); 
                     button.addEventListener('click', openEditModalHandler);
                 });
                 document.querySelectorAll('.delete-user-btn').forEach(button => {
@@ -629,11 +700,12 @@
                 navLinks.forEach(link => {
                     link.classList.toggle('sidebar-link-active', link.getAttribute('href') === '#' + targetId);
                 });
-                const activeLink = document.querySelector(`.app-sidebar .sidebar-nav a[href="#${targetId}"]`);
-                if (activeLink && pageTitle) pageTitle.textContent = activeLink.textContent.trim().replace(/^[^\w]+/, ''); // Usuń ikonę z tekstu
+                const activeLink = document.querySelector('aside nav a[href="#' + targetId + '"]'); // Poprawiony selektor
+                if (activeLink && pageTitle) pageTitle.textContent = activeLink.textContent.trim().replace(/^[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+/, '');
+
 
                 if (targetId === 'user-management') fetchAndDisplayUsers();
-                else if (targetId === 'material-management') fetchAndDisplayMaterials();
+                else if (targetId === 'material-management') fetchAndDisplayMaterials(); 
                 else if (targetId === 'dashboard-main') {
                     fetchAndDisplayUsers(); 
                     fetchAndDisplayMaterials(); 
@@ -647,7 +719,8 @@
                     showSection(targetId);
                 });
             });
-
+            
+            fetchAdminData(); // Pobierz dane admina do wyświetlenia w headerze
             if (document.getElementById('dashboard-main')) {
                  showSection('dashboard-main');
             } else {
