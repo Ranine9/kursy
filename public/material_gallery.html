@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria Materiałów - Platforma Materiałów Cyfrowych</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .btn {
+            @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
+        }
+        .card {
+            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-shadow hover:shadow-2xl flex flex-col;
+        }
+        .card-content {
+            @apply p-6 flex-grow;
+        }
+        .card-actions {
+            @apply p-6 pt-0;
+        }
+        .card-image-placeholder {
+            @apply w-full h-48 bg-gray-300 flex items-center justify-center text-gray-500;
+            background-size: cover;
+            background-position: center;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .scroll-animate { /* Dodane dla spójności, jeśli będziemy chcieli animować karty */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .scroll-animate.appeared {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
+                <nav class="hidden md:flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
+                    <a href="/dashboard.html" id="dashboard-link-header" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Panel Użytkownika</a>
+                    <button id="logout-button-header" class="btn btn-secondary text-sm">Wyloguj</button>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button-gallery" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu-gallery" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Strona Główna</a>
+                <a href="/dashboard.html" id="dashboard-link-mobile" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Panel Użytkownika</a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
+                 <button id="logout-button-mobile-gallery" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-10 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Galeria Materiałów</h1>
+            <p class="mt-2 text-lg text-gray-600">Przeglądaj wszystkie dostępne materiały i wybierz coś dla siebie.</p>
+        </div>
+
+        <section id="materials-gallery-section">
+            <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+                <div id="loader-container" class="col-span-full flex justify-center items-center">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <div id="no-materials-message" class="hidden col-span-full text-center py-10 text-gray-500">
+                <i class="fas fa-box-open fa-3x mb-4"></i>
+                <p class="text-xl">Ups! Wygląda na to, że obecnie nie ma żadnych dostępnych materiałów.</p>
+                <p>Sprawdź ponownie później lub skontaktuj się z administratorem.</p>
+            </div>
+            <div id="error-message" class="hidden col-span-full text-center py-10 text-red-500">
+                 <i class="fas fa-exclamation-triangle fa-3x mb-4"></i>
+                <p class="text-xl">Wystąpił błąd podczas ładowania materiałów.</p>
+                <p>Spróbuj odświeżyć stronę lub skontaktuj się z pomocą techniczną.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-8 text-center mt-auto">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <p>&copy; <span id="currentYearGallery"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+        </div>
+    </footer>
+
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+            <div class="text-center">
+                <h3 id="messageModalTitle" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
+                <p id="messageModalText" class="text-gray-600 mb-6"></p>
+                <button id="messageModalCloseBtn" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('currentYearGallery').textContent = new Date().getFullYear();
+
+        // Modal
+        const messageModal = document.getElementById('messageModal');
+        const messageModalTitle = document.getElementById('messageModalTitle');
+        const messageModalText = document.getElementById('messageModalText');
+        const messageModalCloseBtn = document.getElementById('messageModalCloseBtn');
+
+        function showModal(title, message) {
+            if (messageModal && messageModalTitle && messageModalText) {
+                messageModalTitle.textContent = title;
+                messageModalText.textContent = message;
+                messageModal.classList.remove('hidden');
+            }
+        }
+
+        if (messageModalCloseBtn && messageModal) {
+            messageModalCloseBtn.addEventListener('click', () => {
+                messageModal.classList.add('hidden');
+            });
+        }
+
+        // Dynamiczne ładowanie materiałów
+        const materialsGrid = document.getElementById('materials-grid');
+        const loaderContainer = document.getElementById('loader-container');
+        const noMaterialsMessage = document.getElementById('no-materials-message');
+        const errorMessageContainer = document.getElementById('error-message');
+
+        async function fetchAndDisplayMaterials() {
+            if (!materialsGrid || !loaderContainer || !noMaterialsMessage || !errorMessageContainer) {
+                console.error("Brakuje kluczowych elementów DOM do wyświetlania materiałów w galerii.");
+                return;
+            }
+
+            loaderContainer.style.display = 'flex'; 
+            materialsGrid.innerHTML = ''; 
+            materialsGrid.appendChild(loaderContainer); 
+            noMaterialsMessage.classList.add('hidden');
+            errorMessageContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/materials', { credentials: 'include' });
+                if (response.status === 401 || response.status === 403) { // Sprawdzenie autoryzacji
+                    showModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać materiały. Przekierowuję do strony logowania...');
+                    setTimeout(() => { window.location.href = '/login.html'; }, 3000);
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`Błąd HTTP: ${response.status} ${response.statusText}`);
+                }
+                const materials = await response.json();
+                
+                loaderContainer.style.display = 'none'; 
+
+                if (materials.length === 0) {
+                    noMaterialsMessage.classList.remove('hidden');
+                } else {
+                    materials.forEach(material => {
+                        const materialCard = `
+                            <div class="card scroll-animate">
+                                <div class="card-image-placeholder" style="background-image: url('${material.cover_image_url || 'https://placehold.co/600x400/E2E8F0/A0AEC0?text=Brak+Obrazka'}');">
+                                    ${!material.cover_image_url ? '<i class="fas fa-image fa-3x text-gray-400"></i>' : ''}
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${material.title}</h3>
+                                    <p class="text-gray-600 text-sm mb-3 h-20 overflow-hidden">${material.description || 'Brak opisu.'}</p>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${material.category || 'Ogólne'}</span>
+                                        <span class="text-lg font-bold text-gray-700">${material.price > 0 ? material.price.toFixed(2) + ' PLN' : 'Darmowy'}</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary w-full text-sm acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${material.price > 0 ? material.price : 0}">
+                                        ${material.price > 0 ? 'Kup i Pobierz' : 'Pobierz'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        materialsGrid.insertAdjacentHTML('beforeend', materialCard);
+                    });
+                    
+                    // Animacja dla nowo dodanych kart
+                    const newScrollElements = materialsGrid.querySelectorAll('.scroll-animate');
+                    const elementInView = (el, percentageScroll = 100) => {
+                        const elementTop = el.getBoundingClientRect().top;
+                        return ( elementTop <= (window.innerHeight || document.documentElement.clientHeight) * (percentageScroll / 100) );
+                    };
+                    const displayScrollElement = (element) => element.classList.add('appeared');
+                    const handleScrollAnimationForCards = () => {
+                        newScrollElements.forEach((el) => {
+                            if (elementInView(el, 85)) displayScrollElement(el); // Animuj gdy 85% karty jest widoczne
+                        });
+                    };
+                    // Wywołaj raz po załadowaniu kart, a potem przy scrollu
+                    setTimeout(handleScrollAnimationForCards, 100); // Małe opóźnienie, aby karty były w DOM
+                    window.addEventListener('scroll', handleScrollAnimationForCards);
+                }
+            } catch (error) {
+                console.error('Nie udało się pobrać materiałów:', error);
+                if (loaderContainer) loaderContainer.style.display = 'none';
+                if (errorMessageContainer) errorMessageContainer.classList.remove('hidden');
+            }
+        }
+
+        if (materialsGrid) { // Upewnij się, że element istnieje przed dodaniem listenera
+            materialsGrid.addEventListener('click', async function(event) {
+                if (event.target.classList.contains('acquire-material-btn')) {
+                    const button = event.target;
+                    const materialId = button.dataset.materialId;
+                    const materialTitle = button.dataset.materialTitle;
+                    const materialPrice = parseFloat(button.dataset.price);
+                    
+                    // Sprawdzenie logowania jest już robione przez middleware na serwerze dla tej strony,
+                    // ale dla pewności można by dodać tu `checkUserStatus()` jak w index.html,
+                    // jednak /api/materials/:id/acquire również jest chronione.
+
+                    try {
+                        button.disabled = true;
+                        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...';
+
+                        const acquireResponse = await fetch(`/api/materials/${materialId}/acquire`, { 
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        const acquireData = await acquireResponse.json();
+
+                        if (!acquireResponse.ok) {
+                            throw new Error(acquireData.message || 'Nie udało się dodać materiału do konta.');
+                        }
+                        
+                        showModal('Sukces!', `${acquireData.message} "${materialTitle}". Zostaniesz przekierowany do panelu użytkownika, gdzie znajdziesz swoje materiały.`);
+                        
+                        setTimeout(() => { window.location.href = '/dashboard.html'; }, 4000);
+
+                    } catch (error) {
+                        console.error('Błąd podczas próby nabycia materiału:', error);
+                        showModal('Błąd', `Nie udało się przetworzyć Twojego żądania dla materiału "${materialTitle}". ${error.message}`);
+                        button.disabled = false;
+                        button.textContent = materialPrice > 0 ? 'Kup i Pobierz' : 'Pobierz';
+                    }
+                }
+            });
+        }
+
+        // Logika wylogowania
+        function handleLogout() {
+            fetch('/logout', { method: 'GET', credentials: 'include' })
+                .then(response => {
+                    if (response.ok && response.redirected) {
+                        window.location.href = response.url; 
+                    } else {
+                        window.location.href = '/'; 
+                    }
+                })
+                .catch(error => {
+                    console.error('Błąd podczas wylogowywania:', error);
+                    showModal('Błąd', 'Wystąpił problem podczas wylogowywania.');
+                    window.location.href = '/';
+                });
+        }
+
+        const logoutButtonHeader = document.getElementById('logout-button-header');
+        const logoutButtonMobileGallery = document.getElementById('logout-button-mobile-gallery');
+
+        if (logoutButtonHeader) logoutButtonHeader.addEventListener('click', handleLogout);
+        if (logoutButtonMobileGallery) logoutButtonMobileGallery.addEventListener('click', handleLogout);
+
+        // Obsługa menu mobilnego dla tej strony
+        const mobileMenuButtonGallery = document.getElementById('mobile-menu-button-gallery');
+        const mobileMenuGallery = document.getElementById('mobile-menu-gallery');
+
+        if (mobileMenuButtonGallery && mobileMenuGallery) {
+            mobileMenuButtonGallery.addEventListener('click', () => {
+                mobileMenuGallery.classList.toggle('hidden');
+                const icon = mobileMenuButtonGallery.querySelector('svg');
+                if (mobileMenuGallery.classList.contains('hidden')) {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
+                } else {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+                }
+            });
+            const mobileNavLinksGallery = mobileMenuGallery.querySelectorAll('a, button');
+             mobileNavLinksGallery.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!link.id.startsWith('logout-button')) { // Nie zamykaj dla przycisku wylogowania
+                        mobileMenuGallery.classList.add('hidden');
+                        mobileMenuButtonGallery.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
+                    }
+                });
+            });
+        }
+        
+        // Sprawdzenie statusu użytkownika przy ładowaniu strony (głównie dla pewności i ewentualnego przekierowania)
+        async function verifyUserIsLoggedIn() {
+            try {
+                const response = await fetch('/api/user', { credentials: 'include' });
+                if (!response.ok) {
+                    // Jeśli status to 401 lub 403, serwer powinien już był przekierować,
+                    // ale na wszelki wypadek robimy to też tutaj.
+                    if (response.status === 401 || response.status === 403) {
+                        showModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać tę stronę. Przekierowuję...');
+                        setTimeout(() => { window.location.href = '/login.html?redirect=/material_gallery.html'; }, 2500);
+                        return false;
+                    }
+                    // Inny błąd
+                    throw new Error('Błąd weryfikacji użytkownika');
+                }
+                // Użytkownik jest zalogowany, można kontynuować ładowanie materiałów
+                return true;
+            } catch (error) {
+                console.warn('Problem z weryfikacją statusu użytkownika:', error);
+                showModal('Błąd', 'Wystąpił problem z weryfikacją Twojej sesji. Spróbuj zalogować się ponownie.');
+                setTimeout(() => { window.location.href = '/login.html'; }, 3000);
+                return false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isLoggedIn = await verifyUserIsLoggedIn();
+            if (isLoggedIn) {
+                fetchAndDisplayMaterials();
+            }
+        });
+
+    </script>
+</body>
+</html>

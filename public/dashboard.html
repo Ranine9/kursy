@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Użytkownika - Platforma Kursów Wideo</title>
+    <title>Panel Użytkownika - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -16,11 +17,38 @@
         .btn-primary {
             @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
         }
-        .btn-danger {
-            @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
+        }
+        .btn-success { /* Dodatkowy styl dla przycisku "Pobierz" */
+            @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-400;
         }
         .card {
-            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-shadow hover:shadow-2xl;
+            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-shadow hover:shadow-2xl flex flex-col;
+        }
+        .card-content {
+            @apply p-6 flex-grow;
+        }
+        .card-actions {
+            @apply p-6 pt-0;
+        }
+        .card-image-placeholder {
+            @apply w-full h-48 bg-gray-300 flex items-center justify-center text-gray-500;
+            background-size: cover;
+            background-position: center;
+        }
+        .loader { /* Loader dla ładowania materiałów */
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto; /* Wyśrodkowanie loadera */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -29,47 +57,56 @@
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold text-blue-600">Kursy<span class="text-gray-700">Online</span></a>
-                <nav class="flex items-center space-x-4">
-                    <a href="index.html#courses" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Kursy</a>
-                    <a href="#account-settings" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Moje Konto</a>
-                    <a href="/logout" id="logout-button" class="btn btn-danger text-sm">Wyloguj się</a>
+                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
+                <nav class="hidden md:flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
+                    <a href="/material_gallery.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Wszystkie Materiały</a>
+                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary text-sm">Wyloguj się</button>
                 </nav>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button-dashboard" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Strona Główna</a>
+                <a href="/material_gallery.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Przeglądaj Wszystkie Materiały</a>
+                <a href="#account-settings" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Ustawienia Konta</a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
+                 <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
             </div>
         </div>
     </header>
 
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="mb-10">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span id="username-placeholder" class="text-blue-600">Gościu</span>!</h1>
-            <p class="mt-2 text-lg text-gray-600">Zarządzaj swoimi kursami i ustawieniami konta.</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span id="username-placeholder" class="text-blue-600">Ładowanie...</span>!</h1>
+            <p class="mt-2 text-lg text-gray-600">Zarządzaj swoimi materiałami i ustawieniami konta.</p>
         </div>
 
-        <section id="my-courses" class="mb-12">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Moje Kursy</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="card">
-                    <img src="https://placehold.co/600x400/3B82F6/FFFFFF?text=Kurs+Web+Dev" alt="Miniatura kursu" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Kurs Programowania Webowego</h3>
-                        <p class="text-gray-600 text-sm mb-3">Postęp: <span class="font-semibold text-green-600">75%</span></p>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 75%"></div>
-                        </div>
-                        <a href="#" class="btn btn-primary w-full text-sm">Kontynuuj naukę</a>
-                    </div>
+        <section id="my-materials-section" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800">Twoje Nabyte Materiały</h2>
+                <a href="/material_gallery.html" class="btn btn-primary text-sm">Przeglądaj Więcej Materiałów</a>
+            </div>
+            <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
+                    <div class="loader"></div>
                 </div>
-
-                <div class="card">
-                    <img src="https://placehold.co/600x400/10B981/FFFFFF?text=Kurs+Marketingu" alt="Miniatura kursu" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Marketing Cyfrowy od A do Z</h3>
-                        <p class="text-gray-600 text-sm mb-3">Postęp: <span class="font-semibold text-yellow-500">30%</span></p>
-                         <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                            <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 30%"></div>
-                        </div>
-                        <a href="#" class="btn btn-primary w-full text-sm">Kontynuuj naukę</a>
-                    </div>
+                <div id="no-my-materials-message" class="hidden col-span-full text-center py-10 text-gray-500">
+                    <i class="fas fa-folder-open fa-3x mb-4"></i>
+                    <p class="text-xl">Nie posiadasz jeszcze żadnych materiałów.</p>
+                    <p>Odwiedź <a href="/material_gallery.html" class="text-blue-600 hover:underline">galerię materiałów</a>, aby coś wybrać!</p>
+                </div>
+                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-10 text-red-500">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-4"></i>
+                    <p class="text-xl">Wystąpił błąd podczas ładowania Twoich materiałów.</p>
                 </div>
             </div>
         </section>
@@ -77,9 +114,9 @@
         <section id="account-settings" class="mb-12">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <p class="text-gray-600">Tutaj znajdą się opcje zmiany hasła, adresu email, preferencji powiadomień itp.</p>
+                <p class="text-gray-600">Tutaj w przyszłości znajdą się opcje zmiany hasła, adresu email, preferencji powiadomień itp.</p>
                 <p class="mt-2 text-gray-600">ID Użytkownika: <span id="user-id-placeholder" class="font-mono">ładowanie...</span></p>
-                <button class="mt-4 btn btn-secondary text-sm">Edytuj profil</button>
+                <button class="mt-4 btn btn-secondary text-sm opacity-50 cursor-not-allowed" disabled title="Funkcjonalność w przygotowaniu">Edytuj profil</button>
             </div>
         </section>
 
@@ -87,65 +124,214 @@
 
     <footer class="bg-gray-800 text-gray-300 py-8 text-center mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p>&copy; <span id="currentYearDashboard"></span> KursyOnline. Wszelkie prawa zastrzeżone.</p>
+            <p>&copy; <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
         </div>
     </footer>
+
+    <div id="messageModalDashboard" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+            <div class="text-center">
+                <h3 id="messageModalTitleDashboard" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
+                <p id="messageModalTextDashboard" class="text-gray-600 mb-6"></p>
+                <button id="messageModalCloseBtnDashboard" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
 
+        // Modal
+        const messageModalDashboard = document.getElementById('messageModalDashboard');
+        const messageModalTitleDashboard = document.getElementById('messageModalTitleDashboard');
+        const messageModalTextDashboard = document.getElementById('messageModalTextDashboard');
+        const messageModalCloseBtnDashboard = document.getElementById('messageModalCloseBtnDashboard');
+
+        function showDashboardModal(title, message) {
+            if (messageModalDashboard && messageModalTitleDashboard && messageModalTextDashboard) {
+                messageModalTitleDashboard.textContent = title;
+                messageModalTextDashboard.textContent = message;
+                messageModalDashboard.classList.remove('hidden');
+            }
+        }
+
+        if (messageModalCloseBtnDashboard && messageModalDashboard) {
+            messageModalCloseBtnDashboard.addEventListener('click', () => {
+                messageModalDashboard.classList.add('hidden');
+            });
+        }
+
+
         // Pobieranie i wyświetlanie danych użytkownika
+        const usernamePlaceholder = document.getElementById('username-placeholder');
+        const userIdPlaceholder = document.getElementById('user-id-placeholder');
+
         async function fetchUserData() {
             try {
-                const response = await fetch('/api/user'); // Zapytanie do naszego API endpoint
+                const response = await fetch('/api/user', { credentials: 'include' });
                 if (!response.ok) {
-                    // Jeśli użytkownik nie jest zalogowany (np. sesja wygasła), serwer przekieruje
-                    // lub zwróci błąd. Jeśli jest to błąd 401/403, można przekierować na /login
                     if (response.status === 401 || response.status === 403) {
-                        window.location.href = '/login';
-                        return;
+                        showDashboardModal('Brak dostępu', 'Sesja wygasła lub nie jesteś zalogowany. Przekierowuję do strony logowania...');
+                        setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
+                        return null; // Zwróć null, aby zasygnalizować błąd
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const userData = await response.json();
                 
-                const usernamePlaceholder = document.getElementById('username-placeholder');
-                const userIdPlaceholder = document.getElementById('user-id-placeholder');
-
                 if (userData.username && usernamePlaceholder) {
                     usernamePlaceholder.textContent = userData.username;
                 }
                 if (userData.userId && userIdPlaceholder) {
                     userIdPlaceholder.textContent = userData.userId;
                 }
-
+                return userData; // Zwróć dane użytkownika
             } catch (error) {
                 console.error('Nie udało się pobrać danych użytkownika:', error);
-                const usernamePlaceholder = document.getElementById('username-placeholder');
-                if (usernamePlaceholder) {
-                     usernamePlaceholder.textContent = 'Błąd';
-                }
-                 const userIdPlaceholder = document.getElementById('user-id-placeholder');
-                if (userIdPlaceholder) {
-                    userIdPlaceholder.textContent = 'Błąd';
-                }
-                // Można rozważyć przekierowanie na stronę logowania, jeśli błąd sugeruje brak autoryzacji
-                // window.location.href = '/login';
+                if (usernamePlaceholder) usernamePlaceholder.textContent = 'Błąd';
+                if (userIdPlaceholder) userIdPlaceholder.textContent = 'Błąd';
+                showDashboardModal('Błąd', 'Nie udało się załadować danych użytkownika.');
+                return null; // Zwróć null
             }
         }
 
-        // Wywołaj funkcję po załadowaniu strony
-        document.addEventListener('DOMContentLoaded', fetchUserData);
+        // Pobieranie i wyświetlanie nabytych materiałów
+        const myMaterialsGrid = document.getElementById('my-materials-grid');
+        const myMaterialsLoader = document.getElementById('my-materials-loader');
+        const noMyMaterialsMessage = document.getElementById('no-my-materials-message');
+        const errorMyMaterialsMessage = document.getElementById('error-my-materials-message');
 
-        // Przycisk wylogowania - teraz link kieruje bezpośrednio na /logout na serwerze
-        // const logoutButton = document.getElementById('logout-button');
-        // if (logoutButton) {
-        //     logoutButton.addEventListener('click', (e) => {
-        //         e.preventDefault();
-        //         // Logika wylogowania jest teraz po stronie serwera na ścieżce /logout
-        //         window.location.href = '/logout';
-        //     });
-        // }
+        async function fetchAndDisplayMyMaterials() {
+            if (!myMaterialsGrid || !myMaterialsLoader || !noMyMaterialsMessage || !errorMyMaterialsMessage) {
+                console.error("Brakuje elementów DOM dla 'Moich Materiałów'.");
+                return;
+            }
+
+            myMaterialsLoader.style.display = 'flex';
+            // Usuwamy poprzednie karty, ale zostawiamy loader, jeśli jest w siatce
+            // Można też czyścić siatkę i dodawać loader dynamicznie, jak w material_gallery
+            let child = myMaterialsGrid.lastElementChild; 
+            while (child) {
+                if (child.id !== 'my-materials-loader') { // Nie usuwaj samego loadera
+                    myMaterialsGrid.removeChild(child);
+                }
+                child = myMaterialsGrid.lastElementChild;
+                if (child && child.id === 'my-materials-loader') break; // Zatrzymaj, jeśli doszliśmy do loadera
+            }
+             // Upewnij się, że loader jest dodany, jeśli go nie było
+            if (!myMaterialsGrid.querySelector('#my-materials-loader')) {
+                 myMaterialsGrid.appendChild(myMaterialsLoader);
+            }
+
+
+            noMyMaterialsMessage.classList.add('hidden');
+            errorMyMaterialsMessage.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/my-materials', { credentials: 'include' });
+                 if (!response.ok) { // Obsługa błędów, w tym 401/403 z isAuthenticated
+                    if (response.status === 401 || response.status === 403) {
+                        // To nie powinno się zdarzyć, jeśli fetchUserData() zadziałało, ale dla pewności
+                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów. Spróbuj zalogować się ponownie.');
+                         setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
+                    } else {
+                        throw new Error(`Błąd HTTP: ${response.status}`);
+                    }
+                    myMaterialsLoader.style.display = 'none'; // Ukryj loader w przypadku błędu autoryzacji
+                    return;
+                }
+                const materials = await response.json();
+                myMaterialsLoader.style.display = 'none';
+
+                if (materials.length === 0) {
+                    noMyMaterialsMessage.classList.remove('hidden');
+                } else {
+                    materials.forEach(material => {
+                        const acquiredDate = new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' });
+                        const materialCard = `
+                            <div class="card">
+                                <div class="card-image-placeholder" style="background-image: url('${material.cover_image_url || 'https://placehold.co/600x400/E2E8F0/A0AEC0?text=Brak+Obrazka'}');">
+                                    ${!material.cover_image_url ? '<i class="fas fa-image fa-3x text-gray-400"></i>' : ''}
+                                </div>
+                                <div class="card-content">
+                                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${material.title}</h3>
+                                    <p class="text-gray-600 text-sm mb-1 h-16 overflow-hidden">${material.description || 'Brak opisu.'}</p>
+                                    <p class="text-xs text-gray-500 mb-3">Nabyto: ${acquiredDate}</p>
+                                    <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${material.category || 'Ogólne'}</span>
+                                </div>
+                                <div class="card-actions">
+                                    ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success w-full text-sm" download>Pobierz Materiał</a>` : '<p class="text-sm text-red-500 text-center">Link do pliku niedostępny.</p>'}
+                                </div>
+                            </div>
+                        `;
+                        myMaterialsGrid.insertAdjacentHTML('beforeend', materialCard);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Nie udało się pobrać moich materiałów:', error);
+                myMaterialsLoader.style.display = 'none';
+                errorMyMaterialsMessage.classList.remove('hidden');
+            }
+        }
+
+
+        // Logika wylogowania
+        function handleDashboardLogout() {
+            fetch('/logout', { method: 'GET', credentials: 'include' })
+                .then(response => {
+                    if (response.ok && response.redirected) {
+                        window.location.href = response.url; 
+                    } else {
+                        window.location.href = '/'; 
+                    }
+                })
+                .catch(error => {
+                    console.error('Błąd podczas wylogowywania:', error);
+                    showDashboardModal('Błąd', 'Wystąpił problem podczas wylogowywania.');
+                    window.location.href = '/';
+                });
+        }
+
+        const logoutButtonDesktop = document.getElementById('logout-button-dashboard-desktop');
+        const logoutButtonMobile = document.getElementById('logout-button-dashboard-mobile');
+
+        if (logoutButtonDesktop) logoutButtonDesktop.addEventListener('click', handleDashboardLogout);
+        if (logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleDashboardLogout);
+        
+        // Obsługa menu mobilnego dla tej strony
+        const mobileMenuButtonDashboard = document.getElementById('mobile-menu-button-dashboard');
+        const mobileMenuDashboard = document.getElementById('mobile-menu-dashboard');
+
+        if (mobileMenuButtonDashboard && mobileMenuDashboard) {
+            mobileMenuButtonDashboard.addEventListener('click', () => {
+                mobileMenuDashboard.classList.toggle('hidden');
+                 const icon = mobileMenuButtonDashboard.querySelector('svg');
+                if (mobileMenuDashboard.classList.contains('hidden')) {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
+                } else {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+                }
+            });
+            const mobileNavLinksDashboard = mobileMenuDashboard.querySelectorAll('a, button');
+             mobileNavLinksDashboard.forEach(link => {
+                link.addEventListener('click', () => {
+                     if (!link.id.startsWith('logout-button-dashboard')) { // Nie zamykaj dla przycisku wylogowania
+                        mobileMenuDashboard.classList.add('hidden');
+                        mobileMenuButtonDashboard.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
+                    }
+                });
+            });
+        }
+
+
+        // Wywołaj funkcje po załadowaniu strony
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userData = await fetchUserData();
+            if (userData) { // Jeśli dane użytkownika załadowały się poprawnie
+                fetchAndDisplayMyMaterials();
+            }
+        });
     </script>
 
 </body>
