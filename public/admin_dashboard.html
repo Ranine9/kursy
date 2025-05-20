@@ -34,6 +34,7 @@
         .modal-visible {
             display: flex !important;
         }
+        /* Klasy Tailwind dla .modal-content są teraz bezpośrednio w HTML */
         .modal-content {
             position: relative; 
         }
@@ -56,7 +57,8 @@
     <div class="flex h-screen bg-gray-200">
         <aside class="w-64 bg-gray-800 text-gray-100 flex flex-col">
             <div class="px-6 py-4 border-b border-gray-700">
-                <a href="/admin/dashboard" class="text-2xl font-semibold">Admin Platforma<span class="text-blue-400">M</span></a> </div>
+                <a href="/admin/dashboard" class="text-2xl font-semibold">Admin Platforma<span class="text-blue-400">M</span></a>
+            </div>
             <nav class="flex-1 px-4 py-4 space-y-2">
                 <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 sidebar-link-active">
                     <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i> Panel Główny
@@ -64,7 +66,9 @@
                 <a href="#user-management" id="nav-users" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
                     <i class="fas fa-users w-6 text-center mr-3"></i> Użytkownicy
                 </a>
-                <a href="#material-management" id="nav-materials" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700"> <i class="fas fa-file-alt w-6 text-center mr-3"></i> Materiały </a>
+                <a href="#material-management" id="nav-materials" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-file-alt w-6 text-center mr-3"></i> Materiały
+                </a>
                 <a href="#settings" id="nav-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700">
                     <i class="fas fa-cog w-6 text-center mr-3"></i> Ustawienia
                 </a>
@@ -92,7 +96,9 @@
                             <p id="stats-total-users" class="text-3xl font-bold text-blue-600">Ładowanie...</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Materiałów</h3> <p id="stats-total-materials" class="text-3xl font-bold text-green-600">Ładowanie...</p> </div>
+                            <h3 class="text-lg font-semibold text-gray-600 mb-2">Liczba Materiałów</h3>
+                            <p id="stats-total-materials" class="text-3xl font-bold text-green-600">Ładowanie...</p>
+                        </div>
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-600 mb-2">Aktywni Admini</h3>
                             <p id="stats-total-admins" class="text-3xl font-bold text-purple-600">Ładowanie...</p>
@@ -101,7 +107,27 @@
                 </section>
 
                 <section id="user-management" class="admin-section hidden">
-                    </section>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
+                    </div>
+                    <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nazwa Użytkownika</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rola</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Rejestracji</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
                 <section id="material-management" class="admin-section hidden">
                      <div class="flex justify-between items-center mb-6">
@@ -132,13 +158,55 @@
                 </section>
 
                 <section id="settings" class="admin-section hidden">
-                    </section>
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Ustawienia Panelu</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <p>Tutaj znajdą się różne opcje konfiguracyjne panelu administracyjnego.</p>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 
     <div id="editUserModal" class="modal-base"> 
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative">
+            <button id="closeEditUserModal" class="modal-close-btn">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+            <h3 class="text-xl font-semibold mb-6 text-gray-800">Edytuj Użytkownika</h3>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editUsername" class="form-label">Nazwa użytkownika</label>
+                        <input type="text" id="editUsername" name="username" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="editUserEmail" class="form-label">Email</label>
+                        <input type="email" id="editUserEmail" name="email" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="editUserRole" class="form-label">Rola</label>
+                        <select id="editUserRole" name="role" class="form-input">
+                            <option value="user">user</option>
+                            <option value="admin">admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="editUserPassword" class="form-label">Nowe hasło (pozostaw puste, jeśli bez zmian)</label>
+                        <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" id="cancelEditUser" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                        Anuluj
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                        Zapisz zmiany
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 
     <div id="materialModal" class="modal-base">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto relative">
@@ -147,7 +215,8 @@
             </button>
             <h3 id="materialModalTitle" class="text-xl font-semibold mb-6 text-gray-800">Dodaj Nowy Materiał</h3>
             <form id="materialForm">
-                <input type="hidden" id="materialId"> <div class="space-y-4">
+                <input type="hidden" id="materialId">
+                <div class="space-y-4">
                     <div>
                         <label for="materialTitle" class="form-label">Tytuł materiału</label>
                         <input type="text" id="materialTitle" name="title" class="form-input" required>
@@ -195,25 +264,29 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // ... (zmienne dla użytkowników i nawigacji bez zmian) ...
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
             const navLinks = document.querySelectorAll('aside nav a');
             const sections = document.querySelectorAll('.admin-section');
             const pageTitle = document.getElementById('page-title');
             
-            // Elementy dla zarządzania użytkownikami
             const userTableBody = document.getElementById('user-table-body');
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
             const editUserModal = document.getElementById('editUserModal');
-            // ... (reszta zmiennych dla modala użytkownika)
-
-            // ZMIENIONE/NOWE: Elementy dla zarządzania materiałami
-            const materialTableBody = document.getElementById('material-table-body'); // Zmieniono z courseTableBody
-            const statsTotalMaterials = document.getElementById('stats-total-materials'); // Zmieniono z statsTotalCourses
-            const addMaterialBtn = document.getElementById('addMaterialBtn'); // Zmieniono z addCourseBtn
-            const materialModal = document.getElementById('materialModal'); // Zmieniono z courseModal
+            const closeEditUserModalBtn = document.getElementById('closeEditUserModal');
+            const cancelEditUserBtn = document.getElementById('cancelEditUser');
+            const editUserForm = document.getElementById('editUserForm');
+            const editUserIdInput = document.getElementById('editUserId');
+            const editUsernameInput = document.getElementById('editUsername');
+            const editUserEmailInput = document.getElementById('editUserEmail');
+            const editUserRoleInput = document.getElementById('editUserRole');
+            const editUserPasswordInput = document.getElementById('editUserPassword');
+            
+            const materialTableBody = document.getElementById('material-table-body'); 
+            const statsTotalMaterials = document.getElementById('stats-total-materials'); 
+            const addMaterialBtn = document.getElementById('addMaterialBtn'); 
+            const materialModal = document.getElementById('materialModal'); 
             const closeMaterialModalBtn = document.getElementById('closeMaterialModal');
             const cancelMaterialModalBtn = document.getElementById('cancelMaterialModal');
             const materialForm = document.getElementById('materialForm');
@@ -223,38 +296,136 @@
             const materialDescriptionInput = document.getElementById('materialDescription');
             const materialCategoryInput = document.getElementById('materialCategory');
             const materialPriceInput = document.getElementById('materialPrice');
-            const materialFileUrlInput = document.getElementById('materialFileUrl'); // Nowe pole
-            const materialCoverImageUrlInput = document.getElementById('materialCoverImageUrl'); // Nowe pole
+            const materialFileUrlInput = document.getElementById('materialFileUrl'); 
+            const materialCoverImageUrlInput = document.getElementById('materialCoverImageUrl'); 
             const materialStatusInput = document.getElementById('materialStatus');
 
-
             let allUsersData = []; 
-            let allMaterialsData = []; // Zmieniono z allCoursesData
+            let allMaterialsData = []; 
 
-            function formatDate(dateString) { /* ... (bez zmian) ... */ }
-            async function fetchAndDisplayUsers() { /* ... (bez zmian) ... */ }
-            function renderUserTable(users) { /* ... (bez zmian) ... */ }
-            function openEditModal(userId) { /* ... (bez zmian) ... */ }
-            function closeEditModal() { /* ... (bez zmian) ... */ }
-            async function handleDeleteUser(userId, username) { /* ... (bez zmian) ... */ }
-            // ... (listenery dla modala użytkownika i formularza edycji użytkownika - bez zmian)
+            function formatDate(dateString) {
+                if (!dateString) return 'Brak danych';
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                return new Date(dateString).toLocaleDateString('pl-PL', options);
+            }
 
-            // === NOWE/ZMODYFIKOWANE: Funkcje dla Materiałów ===
+            async function fetchAndDisplayUsers() {
+                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
+                try {
+                    if (!userTableBody) { console.warn("userTableBody not found"); return; }
+                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
+                    const response = await fetch('/api/admin/users');
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                             userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
+                        } else { throw new Error(`Błąd HTTP! status: ${response.status}`); }
+                        return;
+                    }
+                    allUsersData = await response.json();
+                    renderUserTable(allUsersData);
+                    if (statsTotalUsers) statsTotalUsers.textContent = allUsersData.length;
+                    if (statsTotalAdmins) statsTotalAdmins.textContent = allUsersData.filter(user => user.role === 'admin').length;
+                } catch (error) {
+                    console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error);
+                    if (userTableBody) userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych.</td></tr>';
+                    if (statsTotalUsers) statsTotalUsers.textContent = 'Błąd';
+                    if (statsTotalAdmins) statsTotalAdmins.textContent = 'Błąd';
+                }
+            }
+
+            function renderUserTable(users) {
+                if (!userTableBody) { console.warn("userTableBody not found for render"); return; }
+                userTableBody.innerHTML = ''; 
+                if (users.length === 0) {
+                    userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Brak zarejestrowanych użytkowników.</td></tr>';
+                    return;
+                }
+                users.forEach(user => {
+                    const rowHTML = `
+                        <tr data-userid="${user.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.role}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button title="Edytuj" class="edit-user-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
+                                <button title="Usuń" class="delete-user-btn text-red-600 hover:text-red-800 action-btn" data-userid="${user.id}" data-username="${user.username}"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    `; 
+                    userTableBody.insertAdjacentHTML('beforeend', rowHTML);
+                });
+                addEventListenersToActionButtons(); 
+            }
+            
+            function openEditModal(userId) { 
+                const user = allUsersData.find(u => u.id === parseInt(userId));
+                if (!user) { alert('Nie znaleziono użytkownika.'); return; }
+                if (editUserIdInput) editUserIdInput.value = user.id;
+                if (editUsernameInput) editUsernameInput.value = user.username;
+                if (editUserEmailInput) editUserEmailInput.value = user.email;
+                if (editUserRoleInput) editUserRoleInput.value = user.role;
+                if (editUserPasswordInput) editUserPasswordInput.value = ''; 
+                if (editUserModal) editUserModal.classList.add('modal-visible'); 
+            }
+            function closeEditModal() { 
+                if (editUserModal) editUserModal.classList.remove('modal-visible'); 
+                if (editUserForm) editUserForm.reset();
+            }
+            async function handleDeleteUser(userId, username) { 
+                if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+                        const responseData = await response.json(); 
+                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        alert(`Użytkownik "${username}" usunięty pomyślnie.`);
+                        fetchAndDisplayUsers(); 
+                    } catch (error) {
+                        alert(`Nie udało się usunąć użytkownika: ${error.message}`);
+                    }
+                }
+            }
+            
+            if(editUserForm) { 
+                editUserForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const userId = editUserIdInput.value;
+                    const updatedUserData = {
+                        username: editUsernameInput.value,
+                        email: editUserEmailInput.value,
+                        role: editUserRoleInput.value,
+                    };
+                    if (editUserPasswordInput.value && editUserPasswordInput.value.trim() !== '') {
+                        updatedUserData.password = editUserPasswordInput.value;
+                    }
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updatedUserData),
+                        });
+                        const responseData = await response.json();
+                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        alert('Dane użytkownika zaktualizowane pomyślnie!');
+                        closeEditModal();
+                        fetchAndDisplayUsers(); 
+                    } catch (error) {
+                        alert(`Nie udało się zaktualizować danych użytkownika: ${error.message}`);
+                    }
+                });
+            }
+            if(closeEditUserModalBtn) closeEditUserModalBtn.addEventListener('click', closeEditModal);
+            if(cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', closeEditModal);
+
             async function fetchAndDisplayMaterials() {
                 console.log("Admin Dashboard JS: fetchAndDisplayMaterials() called");
                 try {
-                    if (!materialTableBody) return;
-                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>'; // Zwiększono colspan
-                    const response = await fetch('/api/admin/materials'); // Zmieniono endpoint
+                    if (!materialTableBody) { console.warn("materialTableBody not found"); return; }
+                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>';
+                    const response = await fetch('/api/admin/materials');
                     if (!response.ok) throw new Error(`Błąd HTTP! status: ${response.status}`);
                     allMaterialsData = await response.json();
-                    console.log("Admin Dashboard JS: Materiały pobrane:", allMaterialsData);
-
-                    if (allMaterialsData.length === 0) {
-                        materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Brak dodanych materiałów.</td></tr>';
-                        if (statsTotalMaterials) statsTotalMaterials.textContent = '0';
-                        return;
-                    }
                     renderMaterialTable(allMaterialsData);
                     if (statsTotalMaterials) statsTotalMaterials.textContent = allMaterialsData.length;
                 } catch (error) {
@@ -265,10 +436,14 @@
             }
 
             function renderMaterialTable(materials) {
-                if (!materialTableBody) return;
+                if (!materialTableBody) { console.warn("materialTableBody not found for render"); return; }
                 materialTableBody.innerHTML = '';
+                if (materials.length === 0) {
+                    materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Brak dodanych materiałów.</td></tr>';
+                    return;
+                }
                 materials.forEach(material => {
-                    const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline">${material.file_url.substring(0,30)}...</a>` : '-';
+                    const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline" title="${material.file_url}">${material.file_url.length > 30 ? material.file_url.substring(0,27) + '...' : material.file_url}</a>` : '-';
                     const row = `
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.id}</td>
@@ -293,13 +468,11 @@
                     `;
                     materialTableBody.insertAdjacentHTML('beforeend', row);
                 });
-                // TODO: Dodać addEventListenersToActionButtons dla materiałów
+                addEventListenersToActionButtons(); 
             }
 
             function openMaterialModal(material = null) {
-                console.log("Admin Dashboard JS: openMaterialModal() called, material:", material);
                 if (!materialForm || !materialModalTitle || !materialIdInput || !materialTitleInput || !materialDescriptionInput || !materialCategoryInput || !materialPriceInput || !materialFileUrlInput || !materialCoverImageUrlInput || !materialStatusInput || !materialModal) return;
-                
                 materialForm.reset();
                 if (material) {
                     materialModalTitle.textContent = 'Edytuj Materiał';
@@ -323,9 +496,7 @@
                 if (materialForm) materialForm.reset();
             }
 
-            if (addMaterialBtn) {
-                addMaterialBtn.addEventListener('click', () => openMaterialModal());
-            }
+            if (addMaterialBtn) addMaterialBtn.addEventListener('click', () => openMaterialModal());
             if (closeMaterialModalBtn) closeMaterialModalBtn.addEventListener('click', closeMaterialModal);
             if (cancelMaterialModalBtn) cancelMaterialModalBtn.addEventListener('click', closeMaterialModal);
 
@@ -344,7 +515,7 @@
                     
                     let method = 'POST';
                     let url = '/api/admin/materials';
-                    // TODO: Logika dla edycji (PUT) na podstawie materialIdInput.value
+                    // TODO: Logika edycji PUT
                     // if (materialIdInput.value) {
                     //     method = 'PUT';
                     //     url = `/api/admin/materials/${materialIdInput.value}`;
@@ -352,34 +523,37 @@
 
                     try {
                         const response = await fetch(url, {
-                            method: method,
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(materialData),
+                            method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(materialData),
                         });
                         const responseData = await response.json();
-                        if (!response.ok) {
-                            throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
-                        }
+                        if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
                         alert('Materiał zapisany pomyślnie!');
                         closeMaterialModal();
                         fetchAndDisplayMaterials(); 
-                        // fetchAndDisplayUsers(); // Nie ma potrzeby odświeżać użytkowników tutaj
                     } catch (error) {
-                        console.error('Błąd podczas zapisywania materiału:', error);
                         alert(`Nie udało się zapisać materiału: ${error.message}`);
                     }
                 });
             }
 
-            // --- Ogólna obsługa nawigacji i przycisków akcji ---
             function addEventListenersToActionButtons() { 
-                // Dla użytkowników
-                const editButtons = document.querySelectorAll('.edit-user-btn');
-                editButtons.forEach(button => { /* ... (bez zmian) ... */ });
-                const deleteButtons = document.querySelectorAll('.delete-user-btn');
-                deleteButtons.forEach(button => { /* ... (bez zmian) ... */ });
-
-                // TODO: Dodać listenery dla przycisków edycji/usuwania materiałów
+                const editUserButtons = document.querySelectorAll('.edit-user-btn');
+                editUserButtons.forEach(button => {
+                    if (!button.hasAttribute('data-listener-attached-edit')) { 
+                        button.addEventListener('click', function() { openEditModal(this.dataset.userid); });
+                        button.setAttribute('data-listener-attached-edit', 'true');
+                    }
+                });
+                const deleteUserButtons = document.querySelectorAll('.delete-user-btn');
+                deleteUserButtons.forEach(button => {
+                    if (!button.hasAttribute('data-listener-attached-delete')) { 
+                        button.addEventListener('click', function() { handleDeleteUser(this.dataset.userid, this.dataset.username); });
+                        button.setAttribute('data-listener-attached-delete', 'true');
+                    }
+                });
+                // TODO: Listenery dla przycisków materiałów (edycja/usuwanie)
+                // Na razie tylko logujemy, że funkcja jest wywoływana
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (w tym dla materiałów, jeśli istnieją)");
             }
             
             function showSection(targetId) {
@@ -395,11 +569,11 @@
 
                 if (targetId === 'user-management') {
                     fetchAndDisplayUsers();
-                } else if (targetId === 'material-management') { // Zmieniono z course-management
-                    fetchAndDisplayMaterials(); // Wywołaj nową funkcję
+                } else if (targetId === 'material-management') { 
+                    fetchAndDisplayMaterials(); 
                 } else if (targetId === 'dashboard-main') {
                     fetchAndDisplayUsers();
-                    fetchAndDisplayMaterials(); // Aktualizuj też statystyki materiałów
+                    fetchAndDisplayMaterials(); 
                 }
             }
 
@@ -407,7 +581,6 @@
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
-                    console.log("Admin Dashboard JS: Link nawigacyjny kliknięty, targetId:", targetId);
                     showSection(targetId);
                 });
             });
