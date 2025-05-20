@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administracyjny 2.0 - Platforma Materiałów</title>
+    <title>Panel Administracyjny - Platforma Materiałów</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -17,7 +18,7 @@
             color: white;
         }
         .modal-overlay { /* Używane dla tła modala */
-            background-color: rgba(0, 0, 0, 0.75);
+            background-color: rgba(0, 0, 0, 0.5); /* Zmniejszona intensywność tła */
             display: none; /* Domyślnie ukryte */
             position: fixed;
             top: 0;
@@ -43,19 +44,30 @@
             to { transform: rotate(360deg); }
         }
         .action-button { @apply p-1.5 text-gray-500 hover:text-gray-700 transition-colors; }
+
+        /* Dodatkowe style dla inputów w formularzach, jeśli potrzebne */
+        .form-input {
+            @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        }
+        .form-textarea {
+             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700;
+        }
     </style>
 </head>
 <body class="text-gray-800 antialiased">
     <div class="flex h-screen bg-gray-100">
         <aside class="w-64 bg-gray-800 text-gray-300 flex flex-col flex-shrink-0">
             <div class="h-20 flex items-center justify-center px-6 border-b border-gray-700">
-                <a href="/admin/dashboard.html" class="flex items-center space-x-3">
+                <a href="/admin_dashboard.html" class="flex items-center space-x-3">
                     <i class="fas fa-shield-halved text-blue-400 text-3xl"></i>
                     <span class="text-xl font-semibold text-white">Admin<span class="text-blue-400">Panel</span></span>
                 </a>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2 app-sidebar"> 
-                <div class="sidebar-nav"> 
+            <nav class="flex-1 px-4 py-6 space-y-2 app-sidebar">
+                <div class="sidebar-nav">
                     <a href="#dashboard-main" id="nav-dashboard" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150 sidebar-link-active">
                         <i class="fas fa-chart-pie w-5 mr-3 text-center"></i> Panel Główny
                     </a>
@@ -71,7 +83,7 @@
                 </div>
             </nav>
             <div class="px-4 py-4 border-t border-gray-700">
-                <a href="/logout" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
+                <a href="/logout" id="admin-logout-button" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150">
                     <i class="fas fa-sign-out-alt w-5 mr-3 text-center"></i> Wyloguj się
                 </a>
             </div>
@@ -81,8 +93,8 @@
             <header class="bg-white shadow h-20 flex items-center justify-between px-8">
                 <h1 id="page-title" class="text-2xl font-semibold text-gray-700">Panel Główny</h1>
                 <div class="flex items-center space-x-4">
-                    <span id="admin-username-display" class="text-sm text-gray-600">Witaj, Admin!</span>
-                </div>
+                    <span id="admin-username-display" class="text-sm text-gray-600">Witaj, Ładowanie...</span>
+                    </div>
             </header>
 
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-8 bg-gray-100">
@@ -122,7 +134,7 @@
                 <section id="user-management" class="admin-content-section hidden mt-8">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-800">Zarządzanie Użytkownikami</h2>
-                    </div>
+                        </div>
                     <div class="bg-white shadow-xl rounded-xl overflow-x-auto">
                         <table class="min-w-full">
                             <thead class="bg-gray-50">
@@ -171,41 +183,176 @@
                 </section>
 
                 <section id="settings" class="admin-content-section hidden mt-8">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Ustawienia</h2>
-                    <div class="bg-white p-8 rounded-xl shadow-lg">
-                        <p class="text-gray-600">Ta sekcja jest w przygotowaniu.</p>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Ustawienia Platformy</h2>
+                
+                    <div x-data="{ activeTab: 'general' }" class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="mb-6 border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <button @click="activeTab = 'general'"
+                                        :class="{ 'border-blue-500 text-blue-600': activeTab === 'general', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'general' }"
+                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none">
+                                    Ogólne
+                                </button>
+                                <button @click="activeTab = 'users'"
+                                        :class="{ 'border-blue-500 text-blue-600': activeTab === 'users', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'users' }"
+                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none">
+                                    Użytkownicy
+                                </button>
+                                <button @click="activeTab = 'materials'"
+                                        :class="{ 'border-blue-500 text-blue-600': activeTab === 'materials', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'materials' }"
+                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none">
+                                    Materiały
+                                </button>
+                                <button @click="activeTab = 'email'"
+                                        :class="{ 'border-blue-500 text-blue-600': activeTab === 'email', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'email' }"
+                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none">
+                                    Powiadomienia Email
+                                </button>
+                                <button @click="activeTab = 'security'"
+                                        :class="{ 'border-blue-500 text-blue-600': activeTab === 'security', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'security' }"
+                                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none">
+                                    Bezpieczeństwo
+                                </button>
+                            </nav>
+                        </div>
+                
+                        <form id="adminSettingsForm">
+                            <div x-show="activeTab === 'general'" class="space-y-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Ustawienia Ogólne</h3>
+                                <div>
+                                    <label for="siteName" class="form-label">Nazwa Witryny</label>
+                                    <input type="text" name="siteName" id="siteName" class="form-input">
+                                </div>
+                                <div>
+                                    <label for="adminEmail" class="form-label">Główny Email Administratora (do powiadomień systemowych)</label>
+                                    <input type="email" name="adminEmail" id="adminEmail" class="form-input">
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="maintenanceMode" name="maintenanceMode" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <label for="maintenanceMode" class="ml-2 block text-sm text-gray-900">Włącz tryb konserwacji</label>
+                                </div>
+                                <div>
+                                    <label for="maintenanceMessage" class="form-label">Wiadomość trybu konserwacji (opcjonalnie)</label>
+                                    <textarea name="maintenanceMessage" id="maintenanceMessage" rows="3" class="form-textarea"></textarea>
+                                </div>
+                                 <div>
+                                    <label for="itemsPerPageAdmin" class="form-label">Liczba elementów na stronę w tabelach (Panel Admina)</label>
+                                    <input type="number" name="itemsPerPageAdmin" id="itemsPerPageAdmin" value="10" min="5" max="50" class="form-input w-1/4">
+                                </div>
+                            </div>
+                
+                            <div x-show="activeTab === 'users'" class="space-y-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Ustawienia Użytkowników</h3>
+                                <div class="flex items-center">
+                                    <input id="allowRegistration" name="allowRegistration" type="checkbox" checked class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <label for="allowRegistration" class="ml-2 block text-sm text-gray-900">Zezwól na rejestrację nowych użytkowników</label>
+                                </div>
+                                <div>
+                                    <label for="defaultUserRole" class="form-label">Domyślna rola dla nowych użytkowników</label>
+                                    <select name="defaultUserRole" id="defaultUserRole" class="form-input">
+                                        <option value="user">Użytkownik (user)</option>
+                                        </select>
+                                    <p class="mt-1 text-xs text-gray-500">Obecnie backend przypisuje 'user'. Zmiana tutaj wymagałaby modyfikacji logiki w `server.js`.</p>
+                                </div>
+                            </div>
+                
+                            <div x-show="activeTab === 'materials'" class="space-y-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Ustawienia Materiałów</h3>
+                                <div>
+                                    <label for="defaultMaterialStatus" class="form-label">Domyślny status dla nowo dodawanych materiałów</label>
+                                    <select name="defaultMaterialStatus" id="defaultMaterialStatus" class="form-input">
+                                        <option value="draft">Szkic (draft)</option>
+                                        <option value="published">Opublikowany (published)</option>
+                                    </select>
+                                </div>
+                            </div>
+                
+                            <div x-show="activeTab === 'email'" class="space-y-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Konfiguracja Wysyłki Email (SMTP)</h3>
+                                <p class="text-sm text-gray-600">Te ustawienia są pobierane ze zmiennych środowiskowych serwera. Zmiany tutaj wymagałyby modyfikacji `server.js` lub innego mechanizmu konfiguracji.</p>
+                                <div>
+                                    <label class="form-label">Host SMTP</label>
+                                    <input type="text" id="smtpHost" name="smtpHost" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="Odczyt z serwera">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="form-label">Port SMTP</label>
+                                        <input type="number" id="smtpPort" name="smtpPort" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="Odczyt z serwera">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Szyfrowanie</label>
+                                        <input type="text" id="smtpSecure" name="smtpSecure" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="Odczyt z serwera (np. SSL/TLS)">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label">Użytkownik SMTP (Login)</label>
+                                    <input type="text" id="smtpUser" name="smtpUser" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="Odczyt z serwera">
+                                </div>
+                                <div>
+                                    <label class="form-label">Hasło SMTP (lub Klucz API)</label>
+                                    <input type="password" id="smtpPass" name="smtpPass" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="******** (Odczyt z serwera)">
+                                </div>
+                                <div>
+                                    <label class="form-label">Adres Email Nadawcy ('Od')</label>
+                                    <input type="email" id="smtpSender" name="smtpSender" readonly class="form-input bg-gray-100 cursor-not-allowed" placeholder="Odczyt z serwera">
+                                </div>
+                                <button type="button" id="testSmtpButton" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                                    Testuj Wysyłkę Email (do Admina)
+                                </button>
+                            </div>
+                            
+                            <div x-show="activeTab === 'security'" class="space-y-6">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Ustawienia Bezpieczeństwa</h3>
+                                <div>
+                                    <label for="failedLoginAttempts" class="form-label">Maksymalna liczba nieudanych prób logowania</label>
+                                    <input type="number" name="failedLoginAttempts" id="failedLoginAttempts" value="5" min="3" class="form-input w-1/4">
+                                </div>
+                                 <div>
+                                    <label for="lockoutDuration" class="form-label">Czas blokady konta po nieudanych próbach (minuty)</label>
+                                    <input type="number" name="lockoutDuration" id="lockoutDuration" value="15" min="5" class="form-input w-1/4">
+                                </div>
+                                <p class="text-sm text-gray-500">Funkcjonalność 2FA oraz szczegółowy dziennik zdarzeń wymagałyby dodatkowej implementacji backendowej.</p>
+                            </div>
+                
+                            <div class="pt-8 mt-8 border-t border-gray-200">
+                                <button type="submit" id="saveAdminSettingsButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md">
+                                    Zapisz Ustawienia
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </section>
+
             </main>
         </div>
     </div>
 
     <div id="editUserModal" class="modal-overlay hidden items-center justify-center p-4">
-        <div class="modal-box max-w-lg bg-white rounded-lg shadow-xl p-0">
+        <div class="modal-box max-w-lg bg-white rounded-lg shadow-xl p-0 w-full">
             <div class="flex justify-between items-center px-6 py-4 border-b">
                 <h3 class="text-lg font-semibold text-gray-800">Edytuj Użytkownika</h3>
-                <button id="closeEditUserModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+                <button id="closeEditUserModal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <form id="editUserForm" class="p-6 space-y-4">
                 <input type="hidden" id="editUserId">
                 <div>
-                    <label for="editUsername" class="block text-sm font-medium text-gray-700">Nazwa użytkownika</label>
-                    <input type="text" id="editUsername" name="username" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" required>
+                    <label for="editUsername" class="form-label">Nazwa użytkownika</label>
+                    <input type="text" id="editUsername" name="username" class="form-input" required>
                 </div>
                 <div>
-                    <label for="editUserEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="editUserEmail" name="email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" required>
+                    <label for="editUserEmail" class="form-label">Email</label>
+                    <input type="email" id="editUserEmail" name="email" class="form-input" required>
                 </div>
                 <div>
-                    <label for="editUserRole" class="block text-sm font-medium text-gray-700">Rola</label>
-                    <select id="editUserRole" name="role" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2">
+                    <label for="editUserRole" class="form-label">Rola</label>
+                    <select id="editUserRole" name="role" class="form-input">
                         <option value="user">Użytkownik</option>
                         <option value="admin">Administrator</option>
                     </select>
                 </div>
                 <div>
-                    <label for="editUserPassword" class="block text-sm font-medium text-gray-700">Nowe hasło (opcjonalnie)</label>
-                    <input type="password" id="editUserPassword" name="password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2" placeholder="Min. 6 znaków">
+                    <label for="editUserPassword" class="form-label">Nowe hasło (opcjonalnie)</label>
+                    <input type="password" id="editUserPassword" name="password" class="form-input" placeholder="Min. 6 znaków">
                 </div>
                 <div class="pt-4 flex justify-end space-x-3">
                     <button type="button" id="cancelEditUser" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">Anuluj</button>
@@ -216,10 +363,10 @@
     </div>
 
     <div id="materialModal" class="modal-overlay hidden items-center justify-center p-4">
-        <div class="modal-box max-w-2xl bg-white rounded-lg shadow-xl p-0">
+        <div class="modal-box max-w-2xl bg-white rounded-lg shadow-xl p-0 w-full">
             <div class="flex justify-between items-center px-6 py-4 border-b">
                 <h3 id="materialModalTitle" class="text-lg font-semibold text-gray-800">Dodaj Nowy Materiał</h3>
-                <button id="closeMaterialModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+                <button id="closeMaterialModal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <form id="materialForm" class="p-6 space-y-4">
                 <input type="hidden" id="materialId">
@@ -262,14 +409,14 @@
                     <button type="button" id="cancelMaterialModal" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">Anuluj</button>
                     <button type="submit" id="saveMaterialButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center">
                         <span class="btn-text-save">Zapisz Materiał</span>
-                        <span class="btn-loader-save hidden ml-2"><span class="spinner w-4 h-4 border-white"></span></span>
+                        <span class="btn-loader-save hidden ml-2"><span class="spinner w-4 h-4 border-2 border-white"></span></span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
     
-    <div id="toast-notification" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl text-sm hidden transition-opacity duration-300">
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl text-sm hidden transition-all duration-300 opacity-0 transform translate-y-10">
         <span id="toast-message"></span>
     </div>
 
@@ -277,11 +424,14 @@
         document.addEventListener('DOMContentLoaded', function () {
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
+            // Elementy DOM
             const navLinks = document.querySelectorAll('aside nav a'); 
             const sections = document.querySelectorAll('.admin-content-section'); 
             const pageTitle = document.getElementById('page-title');
             const adminUsernameDisplay = document.getElementById('admin-username-display');
+            const adminLogoutButton = document.getElementById('admin-logout-button');
             
+            // Elementy DOM dla zarządzania użytkownikami
             const userTableBody = document.getElementById('user-table-body');
             const statsTotalUsers = document.getElementById('stats-total-users');
             const statsTotalAdmins = document.getElementById('stats-total-admins');
@@ -295,6 +445,7 @@
             const editUserRoleInput = document.getElementById('editUserRole');
             const editUserPasswordInput = document.getElementById('editUserPassword');
             
+            // Elementy DOM dla zarządzania materiałami
             const materialTableBody = document.getElementById('material-table-body'); 
             const statsTotalMaterials = document.getElementById('stats-total-materials'); 
             const addMaterialBtn = document.getElementById('addMaterialBtn'); 
@@ -316,42 +467,53 @@
             const saveMaterialButtonText = saveMaterialButton ? saveMaterialButton.querySelector('.btn-text-save') : null; 
             const saveMaterialButtonLoader = saveMaterialButton ? saveMaterialButton.querySelector('.btn-loader-save') : null;
 
+            // Elementy DOM dla ustawień
+            const adminSettingsForm = document.getElementById('adminSettingsForm');
+            const saveAdminSettingsButton = document.getElementById('saveAdminSettingsButton');
+            const testSmtpButton = document.getElementById('testSmtpButton');
+            const navSettingsLink = document.getElementById('nav-settings');
+            let settingsLoaded = false;
+
+
+            // Toast
             const toastNotification = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
 
+            // Globalne dane
             let allUsersData = []; 
             let allMaterialsData = []; 
 
+            // --- Funkcje Pomocnicze ---
             function showToast(message, type = 'success') {
                 if (!toastNotification || !toastMessage) return;
                 toastMessage.textContent = message;
-                toastNotification.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-blue-600');
-                if (type === 'error') {
-                    toastNotification.classList.add('bg-red-600');
-                } else if (type === 'info') {
-                    toastNotification.classList.add('bg-blue-600');
-                } else {
-                    toastNotification.classList.add('bg-green-600');
-                }
-                toastNotification.classList.remove('opacity-0');
-                toastNotification.classList.add('opacity-100');
+                toastNotification.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-blue-600', 'opacity-0', 'translate-y-10');
+                
+                if (type === 'error') toastNotification.classList.add('bg-red-600');
+                else if (type === 'info') toastNotification.classList.add('bg-blue-600');
+                else toastNotification.classList.add('bg-green-600');
+                
+                toastNotification.classList.add('opacity-100', 'transform-none'); // Pokazuje toast
 
                 setTimeout(() => {
-                    toastNotification.classList.remove('opacity-100');
-                    toastNotification.classList.add('opacity-0');
-                    setTimeout(() => {
-                        toastNotification.classList.add('hidden');
-                    }, 300); 
+                    toastNotification.classList.remove('opacity-100', 'transform-none');
+                    toastNotification.classList.add('opacity-0', 'translate-y-10'); // Ukrywa toast
+                    setTimeout(() => toastNotification.classList.add('hidden'), 300); 
                 }, 3000); 
             }
 
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
                 const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-                return new Date(dateString).toLocaleDateString('pl-PL', options);
+                try {
+                    return new Date(dateString).toLocaleDateString('pl-PL', options);
+                } catch (e) {
+                    return 'Nieprawidłowa data';
+                }
             }
 
-            async function fetchAdminData() {
+            // --- Funkcje Główne ---
+            async function fetchAdminUserData() { // Zmieniono nazwę, aby uniknąć konfliktu
                 try {
                     const response = await fetch('/api/user', {credentials: 'include'});
                     if (response.ok) {
@@ -359,21 +521,32 @@
                         if (adminUsernameDisplay && userData.username) {
                             adminUsernameDisplay.textContent = `Witaj, ${userData.username}!`;
                         }
+                         // Zapisz email admina do użycia przy testowaniu SMTP
+                        if (document.getElementById('adminEmail') && userData.email && !document.getElementById('adminEmail').value) {
+                           // Można by tu ustawić, ale lepiej pobierać z /api/admin/settings
+                        }
+                    } else {
+                         if (adminUsernameDisplay) adminUsernameDisplay.textContent = 'Witaj, Admin!';
+                         console.warn("Nie udało się pobrać danych admina z /api/user:", response.status);
+                         if (response.status === 401 || response.status === 403) {
+                            showToast('Sesja wygasła. Przekierowuję do logowania...', 'error');
+                            setTimeout(() => window.location.href = '/login.html?redirect=/admin_dashboard.html', 2000);
+                         }
                     }
                 } catch (error) {
-                    console.warn("Nie udało się pobrać danych admina:", error);
+                    console.warn("Błąd podczas pobierania danych admina:", error);
+                    if (adminUsernameDisplay) adminUsernameDisplay.textContent = 'Witaj, Admin!';
                 }
             }
 
             async function fetchAndDisplayUsers() {
-                console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
                 if (!userTableBody) { console.warn("userTableBody not found, skipping user fetch."); return; }
                 userTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>`;
                 try {
                     const response = await fetch('/api/admin/users', {credentials: 'include'});
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({message: `Błąd HTTP: ${response.status}`}));
-                        throw new Error(errorData.message); 
+                        throw new Error(errorData.message || `Błąd HTTP: ${response.status}`); 
                     }
                     allUsersData = await response.json();
                     renderUserTable(allUsersData);
@@ -396,13 +569,13 @@
                 }
                 users.forEach(user => {
                     const rowHTML = `
-                        <tr class="hover:bg-gray-50" data-userid="${user.id}">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150" data-userid="${user.id}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
-                                    ${user.role}
+                                    ${user.role === 'admin' ? 'Administrator' : 'Użytkownik'}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
@@ -427,10 +600,12 @@
                 if (editUserPasswordInput) editUserPasswordInput.value = ''; 
                 if (editUserModal) editUserModal.classList.add('modal-visible'); 
             }
+
             function closeEditModal() { 
                 if (editUserModal) editUserModal.classList.remove('modal-visible'); 
                 if (editUserForm) editUserForm.reset();
             }
+
             async function handleDeleteUser(userId, username) { 
                 if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
                     try {
@@ -448,6 +623,11 @@
             if(editUserForm) { 
                 editUserForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    const submitButton = editUserForm.querySelector('button[type="submit"]');
+                    const originalButtonText = submitButton.innerHTML;
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zapisywanie...';
+
                     const userId = editUserIdInput.value;
                     const updatedUserData = {
                         username: editUsernameInput.value,
@@ -471,6 +651,9 @@
                         fetchAndDisplayUsers(); 
                     } catch (error) {
                         showToast(`Błąd aktualizacji: ${error.message}`, 'error');
+                    } finally {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
                     }
                 });
             }
@@ -478,14 +661,13 @@
             if(cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', closeEditModal);
 
             async function fetchAndDisplayMaterials() {
-                console.log("Admin Dashboard JS: fetchAndDisplayMaterials() called");
                 if (!materialTableBody) { console.warn("materialTableBody not found, skipping material fetch."); return; }
                 materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
                 try {
                     const response = await fetch('/api/admin/materials', {credentials: 'include'});
                      if (!response.ok) {
                         const errorData = await response.json().catch(() => ({message: `Błąd HTTP: ${response.status}`}));
-                        throw new Error(errorData.message); 
+                        throw new Error(errorData.message || `Błąd HTTP: ${response.status}`); 
                     }
                     allMaterialsData = await response.json();
                     renderMaterialTable(allMaterialsData);
@@ -507,7 +689,7 @@
                 materials.forEach(material => {
                     const fileUrlDisplay = material.file_url ? `<a href="${material.file_url}" target="_blank" class="text-blue-600 hover:underline" title="${material.file_url}">${material.file_url.length > 25 ? material.file_url.substring(0,22) + '...' : material.file_url}</a>` : '-';
                     const row = `
-                        <tr class="hover:bg-gray-50" data-materialid="${material.id}">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150" data-materialid="${material.id}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.title}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${material.category || '-'}</td>
@@ -517,7 +699,7 @@
                                     ${material.status === 'published' ? 'bg-green-100 text-green-800' : 
                                       material.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
                                       'bg-red-100 text-red-800'}"> 
-                                    ${material.status}
+                                    ${material.status === 'published' ? 'Opublikowany' : material.status === 'draft' ? 'Szkic' : 'Zarchiwizowany'}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fileUrlDisplay}</td>
@@ -556,6 +738,7 @@
                 } else {
                     materialModalTitle.textContent = 'Dodaj Nowy Materiał';
                     if(materialIdInput) materialIdInput.value = '';
+                     if(materialStatusInput) materialStatusInput.value = 'draft'; // Domyślny status dla nowego
                 }
                 if(materialModal) materialModal.classList.add('modal-visible');
             }
@@ -580,7 +763,7 @@
                     }
                 });
                 coverImagePreview.onerror = function() {
-                    this.src = 'https://placehold.co/200x100/E2E8F0/A0AEC0?text=Błąd+URL';
+                    this.src = 'https://placehold.co/200x100/E2E8F0/A0AEC0?text=B%C5%82%C4%85d+URL'; // Błąd URL
                     this.classList.remove('hidden'); 
                 };
             }
@@ -657,6 +840,144 @@
                 }
             }
             
+            // --- Logika dla sekcji Ustawień ---
+            async function loadAdminSettings() {
+                console.log("Admin Dashboard JS: loadAdminSettings() called");
+                try {
+                    const response = await fetch('/api/admin/settings', { credentials: 'include' });
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'Nie udało się pobrać ustawień.'}));
+                        throw new Error(errorData.message);
+                    }
+                    const settings = await response.json();
+            
+                    // Wypełnij formularz pobranymi ustawieniami
+                    const siteNameEl = document.getElementById('siteName');
+                    if (siteNameEl && settings.siteName !== undefined) siteNameEl.value = settings.siteName;
+                    
+                    const adminEmailEl = document.getElementById('adminEmail');
+                    if (adminEmailEl && settings.adminEmail !== undefined) adminEmailEl.value = settings.adminEmail;
+                    
+                    const maintenanceModeEl = document.getElementById('maintenanceMode');
+                    if (maintenanceModeEl) maintenanceModeEl.checked = settings.maintenanceMode || false;
+                    
+                    const maintenanceMessageEl = document.getElementById('maintenanceMessage');
+                    if (maintenanceMessageEl && settings.maintenanceMessage !== undefined) maintenanceMessageEl.value = settings.maintenanceMessage;
+
+                    const itemsPerPageAdminEl = document.getElementById('itemsPerPageAdmin');
+                    if (itemsPerPageAdminEl && settings.itemsPerPageAdmin !== undefined) itemsPerPageAdminEl.value = settings.itemsPerPageAdmin;
+            
+                    const allowRegistrationEl = document.getElementById('allowRegistration');
+                    if (allowRegistrationEl) allowRegistrationEl.checked = settings.allowRegistration !== undefined ? settings.allowRegistration : true;
+                    
+                    const defaultUserRoleEl = document.getElementById('defaultUserRole');
+                    if (defaultUserRoleEl && settings.defaultUserRole) defaultUserRoleEl.value = settings.defaultUserRole;
+                    
+                    const defaultMaterialStatusEl = document.getElementById('defaultMaterialStatus');
+                    if (defaultMaterialStatusEl && settings.defaultMaterialStatus) defaultMaterialStatusEl.value = settings.defaultMaterialStatus;
+            
+                    // SMTP (pola readonly, ale można wyświetlić pobrane z serwera wartości)
+                    const smtpHostEl = document.getElementById('smtpHost');
+                    if (smtpHostEl && settings.smtpHost) smtpHostEl.value = settings.smtpHost;
+                    
+                    const smtpPortEl = document.getElementById('smtpPort');
+                    if (smtpPortEl && settings.smtpPort) smtpPortEl.value = settings.smtpPort;
+
+                    const smtpSecureEl = document.getElementById('smtpSecure');
+                    if (smtpSecureEl && settings.smtpSecure !== undefined) smtpSecureEl.value = settings.smtpSecure ? 'Tak (SSL/TLS)' : 'Nie (STARTTLS lub brak)';
+                    
+                    const smtpUserEl = document.getElementById('smtpUser');
+                    if (smtpUserEl && settings.smtpUser) smtpUserEl.value = settings.smtpUser;
+                    
+                    const smtpPassEl = document.getElementById('smtpPass');
+                    if (smtpPassEl && settings.smtpPassConfigured) smtpPassEl.placeholder = "******** (Skonfigurowane)";
+                    else if (smtpPassEl) smtpPassEl.placeholder = "Nie skonfigurowane";
+
+                    const smtpSenderEl = document.getElementById('smtpSender');
+                    if (smtpSenderEl && settings.smtpSender) smtpSenderEl.value = settings.smtpSender;
+            
+                    const failedLoginAttemptsEl = document.getElementById('failedLoginAttempts');
+                    if (failedLoginAttemptsEl && settings.failedLoginAttempts !== undefined) failedLoginAttemptsEl.value = settings.failedLoginAttempts;
+
+                    const lockoutDurationEl = document.getElementById('lockoutDuration');
+                    if (lockoutDurationEl && settings.lockoutDuration !== undefined) lockoutDurationEl.value = settings.lockoutDuration;
+                    
+                    showToast('Ustawienia załadowane.', 'info');
+                } catch (error) {
+                    console.error("Błąd ładowania ustawień admina:", error);
+                    showToast(error.message || 'Błąd ładowania ustawień.', 'error');
+                }
+            }
+            
+            if (adminSettingsForm && saveAdminSettingsButton) {
+                adminSettingsForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const originalButtonText = saveAdminSettingsButton.textContent;
+                    saveAdminSettingsButton.disabled = true;
+                    saveAdminSettingsButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zapisywanie...';
+            
+                    const formData = new FormData(adminSettingsForm);
+                    const settingsData = {};
+                    formData.forEach((value, key) => {
+                        const element = adminSettingsForm.elements[key];
+                        if (element) { // Sprawdź czy element istnieje
+                           if (element.type === 'checkbox') {
+                                settingsData[key] = element.checked;
+                            } else if (element.type === 'number') {
+                                settingsData[key] = parseFloat(value) || 0; // Użyj parseFloat dla liczb
+                            } else {
+                                settingsData[key] = value;
+                            }
+                        }
+                    });
+                    
+                    // Usuń pola SMTP, które są readonly i nie powinny być wysyłane do zapisu
+                    delete settingsData.smtpHost;
+                    delete settingsData.smtpPort;
+                    delete settingsData.smtpSecure;
+                    delete settingsData.smtpUser;
+                    delete settingsData.smtpPass;
+                    delete settingsData.smtpSender;
+            
+                    try {
+                        const response = await fetch('/api/admin/settings', {
+                            method: 'POST', // lub PUT
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(settingsData),
+                            credentials: 'include'
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message || 'Nie udało się zapisać ustawień.');
+                        showToast(result.message || 'Ustawienia zapisane pomyślnie!', 'success');
+                    } catch (error) {
+                        showToast(error.message || 'Błąd zapisu ustawień.', 'error');
+                    } finally {
+                        saveAdminSettingsButton.disabled = false;
+                        saveAdminSettingsButton.textContent = originalButtonText;
+                    }
+                });
+            }
+            
+            if (testSmtpButton) {
+                testSmtpButton.addEventListener('click', async () => {
+                    const originalButtonText = testSmtpButton.textContent;
+                    testSmtpButton.disabled = true;
+                    testSmtpButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Wysyłanie...';
+                    try {
+                        const response = await fetch('/api/admin/settings/test-smtp', { method: 'POST', credentials: 'include' });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message || 'Nie udało się wysłać testowego emaila.');
+                        showToast(result.message || 'Testowy email wysłany pomyślnie!', 'success');
+                    } catch (error) {
+                        showToast(error.message || 'Błąd wysyłania testowego emaila.', 'error');
+                    } finally {
+                        testSmtpButton.disabled = false;
+                        testSmtpButton.textContent = originalButtonText;
+                    }
+                });
+            }
+
+            // --- Nawigacja i Inicjalizacja ---
             function addEventListenersToActionButtons() { 
                 document.querySelectorAll('.edit-user-btn').forEach(button => {
                     button.removeEventListener('click', openEditModalHandler); 
@@ -693,15 +1014,28 @@
                 navLinks.forEach(link => {
                     link.classList.toggle('sidebar-link-active', link.getAttribute('href') === '#' + targetId);
                 });
+                
                 const activeLink = document.querySelector('aside nav a[href="#' + targetId + '"]'); 
-                if (activeLink && pageTitle) pageTitle.textContent = activeLink.textContent.trim().replace(/^[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+/, '');
+                if (activeLink && pageTitle) {
+                    // Pobierz tekst bez ikony
+                    const linkText = Array.from(activeLink.childNodes)
+                                      .filter(node => node.nodeType === Node.TEXT_NODE)
+                                      .map(node => node.textContent.trim())
+                                      .join('');
+                    pageTitle.textContent = linkText || 'Panel Administracyjny';
+                }
 
 
                 if (targetId === 'user-management') fetchAndDisplayUsers();
                 else if (targetId === 'material-management') fetchAndDisplayMaterials(); 
                 else if (targetId === 'dashboard-main') {
-                    fetchAndDisplayUsers(); 
-                    fetchAndDisplayMaterials(); 
+                    // Dane dla dashboardu są ładowane przez fetchAndDisplayUsers i fetchAndDisplayMaterials
+                    // Można dodać dodatkowe specyficzne dla dashboardu ładowanie, jeśli potrzebne
+                    if (statsTotalUsers.textContent === 'Ładowanie...') fetchAndDisplayUsers();
+                    if (statsTotalMaterials.textContent === 'Ładowanie...') fetchAndDisplayMaterials();
+                } else if (targetId === 'settings' && !settingsLoaded) {
+                    loadAdminSettings();
+                    settingsLoaded = true;
                 }
             }
 
@@ -710,14 +1044,37 @@
                     event.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     showSection(targetId);
+                    // Zapisz aktywną zakładkę w localStorage
+                    localStorage.setItem('adminActiveTab', targetId);
                 });
             });
             
-            fetchAdminData(); 
-            if (document.getElementById('dashboard-main')) {
+            if (adminLogoutButton) {
+                adminLogoutButton.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const response = await fetch('/logout', { method: 'GET', credentials: 'include' });
+                        if (response.ok && response.redirected) {
+                            window.location.href = response.url;
+                        } else {
+                            window.location.href = '/';
+                        }
+                    } catch (error) {
+                        console.error("Błąd wylogowania admina:", error);
+                        window.location.href = '/';
+                    }
+                });
+            }
+
+            // Inicjalizacja
+            fetchAdminUserData(); 
+            const savedTab = localStorage.getItem('adminActiveTab');
+            if (savedTab && document.getElementById(savedTab)) {
+                showSection(savedTab);
+            } else if (document.getElementById('dashboard-main')) {
                  showSection('dashboard-main');
             } else {
-                console.warn("Admin Dashboard JS: Nie znaleziono sekcji 'dashboard-main' przy inicjalizacji.");
+                console.warn("Admin Dashboard JS: Nie znaleziono sekcji 'dashboard-main' ani zapisanej zakładki przy inicjalizacji.");
             }
         });
     </script>
