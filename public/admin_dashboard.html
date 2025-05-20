@@ -54,8 +54,8 @@
                     <span class="text-xl font-semibold text-white">Admin<span class="text-blue-400">Panel</span></span>
                 </a>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2 app-sidebar"> {/* Dodano klasę app-sidebar dla JS */}
-                <div class="sidebar-nav"> {/* Dodano div dla spójności z selektorem JS */}
+            <nav class="flex-1 px-4 py-6 space-y-2 app-sidebar"> 
+                <div class="sidebar-nav"> 
                     <a href="#dashboard-main" id="nav-dashboard" class="flex items-center px-4 py-2.5 text-sm rounded-md hover:bg-gray-700 transition-colors duration-150 sidebar-link-active">
                         <i class="fas fa-chart-pie w-5 mr-3 text-center"></i> Panel Główny
                     </a>
@@ -135,7 +135,6 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
-                            {/* UPEWNIJ SIĘ, ŻE TO ID JEST TUTAJ */}
                             <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
                                 <tr><td colspan="6" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
@@ -164,7 +163,6 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akcje</th>
                                 </tr>
                             </thead>
-                            {/* UPEWNIJ SIĘ, ŻE TO ID JEST TUTAJ */}
                             <tbody id="material-table-body" class="bg-white divide-y divide-gray-200">
                                 <tr><td colspan="8" class="text-center py-10 text-gray-500">Ładowanie... <i class="fas fa-spinner fa-spin ml-2"></i></td></tr>
                             </tbody>
@@ -275,15 +273,12 @@
         <span id="toast-message"></span>
     </div>
 
-
     <script>
-        // Pełny kod JavaScript z ostatniej wersji (admin_dashboard_materials_v1),
-        // z poprawionymi selektorami i upewnieniem się, że ID tabel są poprawne.
         document.addEventListener('DOMContentLoaded', function () {
             console.log("Admin Dashboard JS: DOMContentLoaded");
 
-            const navLinks = document.querySelectorAll('aside nav a'); // Poprawiony selektor, jeśli trzeba
-            const sections = document.querySelectorAll('.admin-content-section'); // Używamy tej klasy dla sekcji
+            const navLinks = document.querySelectorAll('aside nav a'); 
+            const sections = document.querySelectorAll('.admin-content-section'); 
             const pageTitle = document.getElementById('page-title');
             const adminUsernameDisplay = document.getElementById('admin-username-display');
             
@@ -336,7 +331,7 @@
                 } else if (type === 'info') {
                     toastNotification.classList.add('bg-blue-600');
                 } else {
-                    toastNotification.classList.add('bg-green-600'); // Domyślnie sukces
+                    toastNotification.classList.add('bg-green-600');
                 }
                 toastNotification.classList.remove('opacity-0');
                 toastNotification.classList.add('opacity-100');
@@ -346,10 +341,9 @@
                     toastNotification.classList.add('opacity-0');
                     setTimeout(() => {
                         toastNotification.classList.add('hidden');
-                    }, 300); // Czas trwania przejścia opacity
-                }, 3000); // Czas wyświetlania toasta
+                    }, 300); 
+                }, 3000); 
             }
-
 
             function formatDate(dateString) {
                 if (!dateString) return 'Brak danych';
@@ -370,7 +364,6 @@
                     console.warn("Nie udało się pobrać danych admina:", error);
                 }
             }
-
 
             async function fetchAndDisplayUsers() {
                 console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
@@ -700,7 +693,7 @@
                 navLinks.forEach(link => {
                     link.classList.toggle('sidebar-link-active', link.getAttribute('href') === '#' + targetId);
                 });
-                const activeLink = document.querySelector('aside nav a[href="#' + targetId + '"]'); // Poprawiony selektor
+                const activeLink = document.querySelector('aside nav a[href="#' + targetId + '"]'); 
                 if (activeLink && pageTitle) pageTitle.textContent = activeLink.textContent.trim().replace(/^[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+/, '');
 
 
@@ -720,7 +713,7 @@
                 });
             });
             
-            fetchAdminData(); // Pobierz dane admina do wyświetlenia w headerze
+            fetchAdminData(); 
             if (document.getElementById('dashboard-main')) {
                  showSection('dashboard-main');
             } else {
