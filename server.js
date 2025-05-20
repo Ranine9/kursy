@@ -12,11 +12,13 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); // Ważne dla poprawnego działania secure cookies za reverse proxy
 
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
+    // W środowisku produkcyjnym można rozważyć zakończenie procesu, jeśli baza jest krytyczna
+    // process.exit(1); 
 }
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -27,7 +29,7 @@ pool.connect((err, client, release) => {
     if (err) return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
     if (client) {
         client.query('SELECT NOW()', (err, result) => {
-            if (release) release();
+            if (release) release(); // Upewnij się, że release jest zdefiniowane przed wywołaniem
             if (err) return console.error('Błąd podczas wykonywania zapytania testowego do bazy', err.stack);
             console.log('Pomyślnie połączono z PostgreSQL. Serwer czasu bazy danych:', result.rows[0].now);
         });
@@ -51,8 +53,6 @@ async function initializeDatabase() {
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
     `;
-
-    // NOWA TABELA: materials
     const createMaterialsTableQuery = `
         CREATE TABLE IF NOT EXISTS materials (
             id SERIAL PRIMARY KEY,
@@ -60,14 +60,21 @@ async function initializeDatabase() {
             description TEXT,
             category VARCHAR(100),
             price NUMERIC(10, 2) DEFAULT 0.00,
-            file_url VARCHAR(1024), -- Link do pliku
-            cover_image_url VARCHAR(1024), -- Link do obrazka okładki
-            status VARCHAR(50) DEFAULT 'draft' NOT NULL, -- np. draft, published, archived
+            file_url VARCHAR(1024), 
+            cover_image_url VARCHAR(1024), 
+            status VARCHAR(50) DEFAULT 'draft' NOT NULL, 
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
-    // Trigger do automatycznej aktualizacji updated_at
+    const createUserMaterialsTableQuery = `
+        CREATE TABLE IF NOT EXISTS user_materials (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+            acquired_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, material_id)
+        );
+    `;
     const createUpdatedAtTriggerFunction = `
         CREATE OR REPLACE FUNCTION trigger_set_timestamp()
         RETURNS TRIGGER AS $$
@@ -84,9 +91,7 @@ async function initializeDatabase() {
         FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
     `;
-
     const addAdminUserIfNeeded = async () => {
-        // ... (bez zmian)
         try {
             const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
             const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
@@ -110,7 +115,6 @@ async function initializeDatabase() {
             console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message);
         }
     };
-
     const createSessionTableQuery = `
         CREATE TABLE IF NOT EXISTS "session" (
             "sid" varchar NOT NULL COLLATE "default",
@@ -127,12 +131,15 @@ async function initializeDatabase() {
         console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
         await addAdminUserIfNeeded();
         
-        await pool.query(createMaterialsTableQuery); // Tworzenie tabeli materiałów
+        await pool.query(createMaterialsTableQuery);
         console.log('Tabela "materials" sprawdzona/utworzona pomyślnie.');
         
         await pool.query(createUpdatedAtTriggerFunction);
-        await pool.query(applyUpdatedAtTriggerToMaterials); // Zastosuj trigger do tabeli materials
+        await pool.query(applyUpdatedAtTriggerToMaterials);
         console.log('Trigger "updated_at" dla tabeli "materials" sprawdzony/utworzony pomyślnie.');
+
+        await pool.query(createUserMaterialsTableQuery);
+        console.log('Tabela "user_materials" sprawdzona/utworzona.');
 
         await pool.query(createSessionTableQuery);
         console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
@@ -144,7 +151,6 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
-// ... (bez zmian)
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -158,7 +164,6 @@ console.log("  EMAIL_PORT:", emailPort);
 console.log("  EMAIL_USER (Login SMTP):", emailUser ? emailUser.substring(0, 5) + "***" : "NIEUSTAWIONY");
 console.log("  EMAIL_PASS (Klucz API SMTP):", emailPass ? "USTAWIONE (długość: " + emailPass.length + ")" : "NIEUSTAWIONE");
 console.log("  EMAIL_SENDER_ADDRESS (Adres 'Od'):", emailSenderAddress || "NIEUSTAWIONY (użyje EMAIL_USER lub domyślnego)");
-
 
 if (emailHost && emailUser && emailPass) {
     let transportOptions = {
@@ -211,11 +216,11 @@ if (emailHost && emailUser && emailPass) {
 async function sendRegistrationEmail(userEmail, username) {
     const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com';
     const mailOptions = {
-        from: `"Platforma KursyOnline" <${fromAddress}>`, // Nazwa Twojej platformy
+        from: `"Platforma Materiałów" <${fromAddress}>`, // Zmieniono nazwę
         to: userEmail,
-        subject: 'Witaj na Platformie! Potwierdzenie rejestracji', // Zmieniono temat
-        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie!\n\nPozdrawiamy,\nZespół Platformy`, // Zmieniono treść
-        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, // Zmieniono treść
+        subject: 'Witaj na Platformie! Potwierdzenie rejestracji',
+        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie z materiałami!\n\nPozdrawiamy,\nZespół Platformy`, // Zmieniono treść
+        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie z materiałami!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, // Zmieniono treść
     };
     try {
         console.log(`Próba wysłania e-maila rejestracyjnego DO: ${userEmail} OD: ${fromAddress} (login SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'})`);
@@ -230,7 +235,6 @@ async function sendRegistrationEmail(userEmail, username) {
 }
 
 // --- Konfiguracja aplikacji Express ---
-// ... (bodyParser, sessionStore, app.use(session(...)), static, middleware logujący żądania - bez zmian)
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -254,7 +258,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 1000 * 60 * 60 * 24, // 1 dzień
         httpOnly: true,
         sameSite: 'lax'
     }
@@ -262,6 +266,7 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware do logowania każdego żądania i stanu sesji
 app.use((req, res, next) => {
     console.log(`-----------------------------------------------------`);
     console.log(`Przychodzące żądanie: ${req.method} ${req.url}`);
@@ -272,9 +277,7 @@ app.use((req, res, next) => {
     next();
 });
 
-
 // --- Middleware autoryzacyjne ---
-// ... (isAuthenticated i isAdmin bez zmian)
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.userId) {
         return next();
@@ -303,7 +306,6 @@ async function isAdmin(req, res, next) {
 }
 
 // --- Definicje ścieżek (Routes) ---
-// ... (ścieżki /, /register, /login, /dashboard, /api/user, /logout - bez zmian)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -442,7 +444,6 @@ app.get('/admin/dashboard', isAuthenticated, isAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
-// API dla użytkowników (bez zmian)
 app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT id, username, email, role, created_at FROM users ORDER BY id ASC');
@@ -454,11 +455,8 @@ app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
-    // ... (kod aktualizacji użytkownika bez zmian) ...
     const userId = parseInt(req.params.id); 
     const { username, email, role, password } = req.body; 
-
-    console.log(`Admin próbuje zaktualizować użytkownika ID: ${userId} z danymi:`, req.body);
 
     if (!username || !email || !role) {
         return res.status(400).json({ message: 'Nazwa użytkownika, email i rola są wymagane.' });
@@ -483,7 +481,6 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
             }
             const salt = await bcrypt.genSalt(10);
             hashedPassword = await bcrypt.hash(password, salt);
-            console.log(`Aktualizacja hasła dla użytkownika ID: ${userId}`);
         }
 
         const updateFields = [];
@@ -492,34 +489,23 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
 
         updateFields.push(`username = $${queryParamIndex++}`);
         values.push(username);
-
         updateFields.push(`email = $${queryParamIndex++}`);
         values.push(email);
-
         updateFields.push(`role = $${queryParamIndex++}`);
         values.push(role);
-
         if (hashedPassword) {
             updateFields.push(`password_hash = $${queryParamIndex++}`);
             values.push(hashedPassword);
         }
-
         values.push(userId); 
 
         const updateUserQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${queryParamIndex} RETURNING id, username, email, role`;
-        
-        console.log("Wykonywane zapytanie SQL:", updateUserQuery);
-        console.log("Wartości dla zapytania:", values.slice(0, -1)); 
-
         const result = await pool.query(updateUserQuery, values);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
         }
-
-        console.log('Użytkownik zaktualizowany pomyślnie:', result.rows[0]);
         res.json({ message: 'Dane użytkownika zaktualizowane pomyślnie.', user: result.rows[0] });
-
     } catch (error) {
         console.error(`Błąd podczas aktualizacji użytkownika ID: ${userId}:`, error);
         if (error.code === '23505') { 
@@ -530,36 +516,25 @@ app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
-    // ... (kod usuwania użytkownika bez zmian) ...
     const userIdToDelete = parseInt(req.params.id);
     const adminUserId = req.session.userId; 
 
-    console.log(`Admin (ID: ${adminUserId}) próbuje usunąć użytkownika ID: ${userIdToDelete}`);
-
     if (userIdToDelete === adminUserId) {
-        console.log("Odmowa: Admin nie może usunąć samego siebie.");
         return res.status(403).json({ message: 'Administrator nie może usunąć własnego konta.' });
     }
-
     try {
         const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, username', [userIdToDelete]);
-
         if (result.rowCount === 0) {
-            console.log(`Nie znaleziono użytkownika ID: ${userIdToDelete} do usunięcia.`);
             return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
         }
-
-        console.log('Użytkownik usunięty pomyślnie:', result.rows[0]);
         res.json({ message: `Użytkownik "${result.rows[0].username}" (ID: ${result.rows[0].id}) został usunięty.` });
-
     } catch (error) {
         console.error(`Błąd podczas usuwania użytkownika ID: ${userIdToDelete}:`, error);
         res.status(500).json({ message: 'Błąd serwera podczas usuwania użytkownika.' });
     }
 });
 
-// === NOWE API Endpoints dla Materiałów ===
-// Pobieranie wszystkich materiałów (dla admina)
+// API Endpoints dla materiałów (admin)
 app.get('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM materials ORDER BY created_at DESC');
@@ -570,35 +545,21 @@ app.get('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// Tworzenie nowego materiału (dla admina)
 app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     const { title, description, category, price, file_url, cover_image_url, status } = req.body;
-    // W przyszłości author_id można by pobierać z sesji admina, jeśli admini też mogą być autorami
-    // const author_id = req.session.userId; 
-
     if (!title) {
         return res.status(400).json({ message: 'Tytuł materiału jest wymagany.' });
     }
     if (!file_url) {
         return res.status(400).json({ message: 'Link do pliku (file_url) jest wymagany.' });
     }
-
     try {
         const insertMaterialQuery = `
             INSERT INTO materials (title, description, category, price, file_url, cover_image_url, status) 
             VALUES ($1, $2, $3, $4, $5, $6, $7) 
-            RETURNING *`; // Zwracamy cały nowo utworzony obiekt materiału
-        const values = [
-            title, 
-            description || null, 
-            category || null, 
-            price ? parseFloat(price) : 0.00, // Upewnij się, że cena jest liczbą
-            file_url,
-            cover_image_url || null,
-            status || 'draft'
-        ];
+            RETURNING *`;
+        const values = [ title, description || null, category || null, price ? parseFloat(price) : 0.00, file_url, cover_image_url || null, status || 'draft' ];
         const result = await pool.query(insertMaterialQuery, values);
-        console.log('Nowy materiał dodany do bazy:', result.rows[0]);
         res.status(201).json({ message: 'Materiał dodany pomyślnie.', material: result.rows[0] });
     } catch (error) {
         console.error("Błąd podczas tworzenia nowego materiału:", error);
@@ -606,33 +567,75 @@ app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// === PUBLICZNE API Endpoints dla Materiałów ===
+app.get('/api/materials', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT id, title, description, category, price, cover_image_url, status FROM materials WHERE status = 'published' ORDER BY created_at DESC");
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Błąd podczas pobierania opublikowanych materiałów:", error);
+        res.status(500).json({ error: 'Błąd serwera podczas pobierania materiałów.' });
+    }
+});
+
+app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => {
+    const materialId = parseInt(req.params.id);
+    const userId = req.session.userId;
+    if (isNaN(materialId)) {
+        return res.status(400).json({ message: 'Nieprawidłowe ID materiału.' });
+    }
+    try {
+        const materialCheck = await pool.query("SELECT id, price FROM materials WHERE id = $1 AND status = 'published'", [materialId]);
+        if (materialCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'Materiał nie został znaleziony lub nie jest dostępny.' });
+        }
+        // const materialPrice = parseFloat(materialCheck.rows[0].price); // Na razie pomijamy płatności
+        const existingAcquisition = await pool.query( 'SELECT * FROM user_materials WHERE user_id = $1 AND material_id = $2', [userId, materialId] );
+        if (existingAcquisition.rows.length > 0) {
+            return res.status(409).json({ message: 'Już posiadasz ten materiał.' });
+        }
+        await pool.query( 'INSERT INTO user_materials (user_id, material_id) VALUES ($1, $2)', [userId, materialId] );
+        res.status(201).json({ message: 'Materiał został pomyślnie dodany do Twojego konta.' });
+    } catch (error) {
+        console.error(`Błąd podczas nabywania materiału ID: ${materialId} przez użytkownika ID: ${userId}:`, error);
+        res.status(500).json({ message: 'Błąd serwera podczas próby nabycia materiału.' });
+    }
+});
+
+app.get('/api/my-materials', isAuthenticated, async (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const query = `
+            SELECT m.id, m.title, m.description, m.category, m.cover_image_url, m.file_url, um.acquired_at
+            FROM materials m
+            JOIN user_materials um ON m.id = um.material_id
+            WHERE um.user_id = $1
+            ORDER BY um.acquired_at DESC;
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(`Błąd podczas pobierania materiałów dla użytkownika ID: ${userId}:`, error);
+        res.status(500).json({ error: 'Błąd serwera podczas pobierania Twoich materiałów.' });
+    }
+});
 
 // --- Uruchomienie serwera ---
 app.listen(PORT, () => {
     console.log(`Serwer uruchomiony na porcie ${PORT}`);
-    // ... (reszta logów startowych bez zmian)
-    if (!process.env.DATABASE_URL) {
-        console.warn('OSTRZEŻENIE: Zmienna środowiskowa DATABASE_URL nie jest ustawiona.');
-    }
-    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!') {
-        console.warn('OSTRZEŻENIE: Zmienna środowiskowa SESSION_SECRET nie jest ustawiona lub używa wartości domyślnej!');
-    }
-    if (process.env.NODE_ENV !== 'production') {
-        console.warn('OSTRZEŻENIE: Aplikacja działa w trybie deweloperskim.');
-    } else {
-        console.log('Aplikacja działa w trybie produkcyjnym.');
-    }
-    if (!emailHost || !emailUser || !emailPass) { 
-        console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP (EMAIL_HOST, EMAIL_USER, EMAIL_PASS). Wysyłka maili będzie symulowana.");
-    }
-    if (!emailSenderAddress && (emailHost && emailUser && emailPass)) {
-        console.warn("OSTRZEŻENIE: Zmienna EMAIL_SENDER_ADDRESS nie jest ustawiona. Jako adres 'Od' zostanie użyty login SMTP (EMAIL_USER), co może powodować problemy z dostarczalnością lub błędy, jeśli nie jest to zweryfikowany nadawca w Brevo.");
-    }
+    if (!process.env.DATABASE_URL) console.warn('OSTRZEŻENIE: DATABASE_URL nie jest ustawiona.');
+    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'bardzo-tajny-sekret-do-zmiany-w-produkcji!') console.warn('OSTRZEŻENIE: SESSION_SECRET nie jest ustawiona lub używa wartości domyślnej!');
+    if (process.env.NODE_ENV !== 'production') console.warn('OSTRZEŻENIE: Aplikacja działa w trybie deweloperskim.');
+    else console.log('Aplikacja działa w trybie produkcyjnym.');
+    if (!emailHost || !emailUser || !emailPass) console.warn("OSTRZEŻENIE: Brak pełnej konfiguracji SMTP. Wysyłka maili będzie symulowana.");
+    if (!emailSenderAddress && (emailHost && emailUser && emailPass)) console.warn("OSTRZEŻENIE: EMAIL_SENDER_ADDRESS nie jest ustawiona.");
     console.log('---');
     console.log('Ustawiono "trust proxy" na 1.');
     console.log('Magazyn sesji skonfigurowany do używania PostgreSQL.');
     console.log('Tabela "session" powinna być tworzona przy starcie serwera.');
     console.log('Pole "role" w tabeli "users" jest teraz dodawane/sprawdzane przy starcie.');
-    console.log('Tabela "materials" jest teraz tworzona przy starcie serwera.'); // Zmieniono z courses na materials
+    console.log('Tabela "materials" jest teraz tworzona przy starcie serwera.');
+    console.log('Tabela "user_materials" jest teraz tworzona przy starcie serwera.');
+    console.log('Dodano publiczne API dla materiałów i API do zarządzania "Moje Materiały".');
     console.log('---');
 });
