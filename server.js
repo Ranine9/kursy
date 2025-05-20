@@ -17,8 +17,6 @@ app.set('trust proxy', 1); // Ważne dla poprawnego działania secure cookies za
 // --- Konfiguracja Połączenia z Bazą Danych PostgreSQL ---
 if (!process.env.DATABASE_URL) {
     console.error('FATAL ERROR: Zmienna środowiskowa DATABASE_URL nie jest ustawiona!');
-    // W środowisku produkcyjnym można rozważyć zakończenie procesu, jeśli baza jest krytyczna
-    // process.exit(1); 
 }
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -29,9 +27,13 @@ pool.connect((err, client, release) => {
     if (err) return console.error('Błąd połączenia z bazą danych PostgreSQL!', err.stack);
     if (client) {
         client.query('SELECT NOW()', (err, result) => {
-            if (release) release(); // Upewnij się, że release jest zdefiniowane przed wywołaniem
+            if (release) release(); 
             if (err) return console.error('Błąd podczas wykonywania zapytania testowego do bazy', err.stack);
-            console.log('Pomyślnie połączono z PostgreSQL. Serwer czasu bazy danych:', result.rows[0].now);
+            if (result && result.rows && result.rows.length > 0) {
+                console.log('Pomyślnie połączono z PostgreSQL. Serwer czasu bazy danych:', result.rows[0].now);
+            } else {
+                console.log('Pomyślnie połączono z PostgreSQL, ale zapytanie testowe nie zwróciło oczekiwanych danych.');
+            }
         });
     } else {
         console.error('Nie udało się uzyskać klienta z puli połączeń PostgreSQL.');
@@ -39,118 +41,149 @@ pool.connect((err, client, release) => {
 });
 
 async function initializeDatabase() {
-    const createUserTableQuery = `
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(255) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) DEFAULT 'user' NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
-    const alterUserTableQuery = `
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
-    `;
-    const createMaterialsTableQuery = `
-        CREATE TABLE IF NOT EXISTS materials (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            description TEXT,
-            category VARCHAR(100),
-            price NUMERIC(10, 2) DEFAULT 0.00,
-            file_url VARCHAR(1024), 
-            cover_image_url VARCHAR(1024), 
-            status VARCHAR(50) DEFAULT 'draft' NOT NULL, 
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
-    const createUserMaterialsTableQuery = `
-        CREATE TABLE IF NOT EXISTS user_materials (
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-            acquired_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, material_id)
-        );
-    `;
-    const createUpdatedAtTriggerFunction = `
-        CREATE OR REPLACE FUNCTION trigger_set_timestamp()
-        RETURNS TRIGGER AS $$
-        BEGIN
-          NEW.updated_at = NOW();
-          RETURN NEW;
-        END;
-        $$ LANGUAGE plpgsql;
-    `;
-    const applyUpdatedAtTriggerToMaterials = `
-        DROP TRIGGER IF EXISTS set_timestamp_materials ON materials; 
-        CREATE TRIGGER set_timestamp_materials
-        BEFORE UPDATE ON materials
-        FOR EACH ROW
-        EXECUTE PROCEDURE trigger_set_timestamp();
-    `;
-    const addAdminUserIfNeeded = async () => {
-        try {
-            const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-            const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
-            
-            const res = await pool.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
-            if (res.rows.length === 0) {
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash(adminPassword, salt);
-                await pool.query(
-                    'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-                    ['admin', adminEmail, hashedPassword, 'admin']
-                );
-                console.log(`Dodano domyślnego użytkownika admina: ${adminEmail}. Rola: admin.`);
-            } else {
-                if (res.rows[0].role !== 'admin' && res.rows[0].email === adminEmail) {
-                    await pool.query('UPDATE users SET role = $1 WHERE email = $2', ['admin', adminEmail]);
-                    console.log(`Użytkownik ${adminEmail} już istniał, nadano rolę "admin".`);
-                }
-            }
-        } catch (dbError) {
-            console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message);
-        }
-    };
-    const createSessionTableQuery = `
-        CREATE TABLE IF NOT EXISTS "session" (
-            "sid" varchar NOT NULL COLLATE "default",
-            "sess" json NOT NULL,
-            "expire" timestamp(6) NOT NULL,
-            CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
-        );
-        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
-    `;
+    const client = await pool.connect(); // Użyjemy dedykowanego klienta dla transakcji DDL
     try {
-        await pool.query(createUserTableQuery);
-        console.log('Tabela "users" (z polem role) sprawdzona/utworzona pomyślnie przez CREATE TABLE.');
-        await pool.query(alterUserTableQuery);
-        console.log('Kolumna "role" w tabeli "users" dodatkowo sprawdzona/dodana przez ALTER TABLE.');
-        await addAdminUserIfNeeded();
-        
-        await pool.query(createMaterialsTableQuery);
-        console.log('Tabela "materials" sprawdzona/utworzona pomyślnie.');
-        
-        await pool.query(createUpdatedAtTriggerFunction);
-        await pool.query(applyUpdatedAtTriggerToMaterials);
-        console.log('Trigger "updated_at" dla tabeli "materials" sprawdzony/utworzony pomyślnie.');
+        await client.query('BEGIN'); // Rozpocznij transakcję
 
-        await pool.query(createUserMaterialsTableQuery);
+        const createUserTableQuery = `
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                -- Kolumna 'role' zostanie dodana poniżej przez ALTER TABLE, jeśli nie istnieje
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        // Najpierw utwórz tabelę users, jeśli nie istnieje (bez 'role' na tym etapie, aby uniknąć błędów, jeśli tabela już istnieje w starszej formie)
+        await client.query(createUserTableQuery.replace("role VARCHAR(50) DEFAULT 'user' NOT NULL,", ""));
+        console.log('Tabela "users" (wstępna struktura) sprawdzona/utworzona.');
+
+        // Teraz dodaj kolumnę 'role', jeśli nie istnieje
+        const alterUserTableQuery = `
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' NOT NULL;
+        `;
+        await client.query(alterUserTableQuery);
+        console.log('Kolumna "role" w tabeli "users" sprawdzona/dodana.');
+
+        // Sprawdzenie, czy kolumna 'role' faktycznie istnieje
+        const checkRoleColumnQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='users' AND column_name='role';
+        `;
+        const roleColumnCheck = await client.query(checkRoleColumnQuery);
+        if (roleColumnCheck.rows.length > 0) {
+            console.log('Potwierdzenie: Kolumna "role" istnieje w tabeli "users".');
+        } else {
+            console.error('KRYTYCZNY BŁĄD: Kolumna "role" NIE została pomyślnie dodana do tabeli "users"!');
+            // Można rzucić błędem, aby zatrzymać dalszą inicjalizację, jeśli rola jest absolutnie krytyczna
+            // throw new Error('Nie udało się dodać kolumny "role" do tabeli users.');
+        }
+
+
+        const createMaterialsTableQuery = `
+            CREATE TABLE IF NOT EXISTS materials (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                category VARCHAR(100),
+                price NUMERIC(10, 2) DEFAULT 0.00,
+                file_url VARCHAR(1024), 
+                cover_image_url VARCHAR(1024), 
+                status VARCHAR(50) DEFAULT 'draft' NOT NULL, 
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_ CURRENT_TIMESTAMP
+            );
+        `;
+        const createUserMaterialsTableQuery = `
+            CREATE TABLE IF NOT EXISTS user_materials (
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+                acquired_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, material_id)
+            );
+        `;
+        const createUpdatedAtTriggerFunction = `
+            CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+            RETURNS TRIGGER AS $$
+            BEGIN
+            NEW.updated_at = NOW();
+            RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        `;
+        const applyUpdatedAtTriggerToMaterials = `
+            DROP TRIGGER IF EXISTS set_timestamp_materials ON materials; 
+            CREATE TRIGGER set_timestamp_materials
+            BEFORE UPDATE ON materials
+            FOR EACH ROW
+            EXECUTE PROCEDURE trigger_set_timestamp();
+        `;
+        const addAdminUserIfNeeded = async () => {
+            try {
+                const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+                const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
+                
+                const res = await client.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
+                if (res.rows.length === 0) {
+                    const salt = await bcrypt.genSalt(10);
+                    const hashedPassword = await bcrypt.hash(adminPassword, salt);
+                    await client.query(
+                        'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
+                        ['admin', adminEmail, hashedPassword, 'admin']
+                    );
+                    console.log(`Dodano domyślnego użytkownika admina: ${adminEmail}. Rola: admin.`);
+                } else {
+                    if (res.rows[0].role !== 'admin' && res.rows[0].email === adminEmail) {
+                        await client.query('UPDATE users SET role = $1 WHERE email = $2', ['admin', adminEmail]);
+                        console.log(`Użytkownik ${adminEmail} już istniał, nadano rolę "admin".`);
+                    }
+                }
+            } catch (dbError) {
+                console.error("Błąd podczas dodawania/aktualizacji użytkownika admina:", dbError.message);
+            }
+        };
+        const createSessionTableQuery = `
+            CREATE TABLE IF NOT EXISTS "session" (
+                "sid" varchar NOT NULL COLLATE "default",
+                "sess" json NOT NULL,
+                "expire" timestamp(6) NOT NULL,
+                CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+            );
+            CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+        `;
+        
+        await addAdminUserIfNeeded(); // Wywołaj to teraz, gdy kolumna 'role' na pewno jest
+        
+        await client.query(createMaterialsTableQuery);
+        console.log('Tabela "materials" sprawdzona/utworzona.');
+        
+        await client.query(createUpdatedAtTriggerFunction);
+        await client.query(applyUpdatedAtTriggerToMaterials);
+        console.log('Trigger "updated_at" dla "materials" sprawdzony/utworzony.');
+
+        await client.query(createUserMaterialsTableQuery);
         console.log('Tabela "user_materials" sprawdzona/utworzona.');
 
-        await pool.query(createSessionTableQuery);
-        console.log('Tabela "session" sprawdzona/utworzona pomyślnie.');
+        await client.query(createSessionTableQuery);
+        console.log('Tabela "session" sprawdzona/utworzona.');
+
+        await client.query('COMMIT'); // Zatwierdź transakcję
+        console.log('Inicjalizacja bazy danych zakończona pomyślnie.');
 
     } catch (err) {
-        console.error('Błąd podczas inicjalizacji bazy danych:', err);
+        await client.query('ROLLBACK'); // Wycofaj transakcję w razie błędu
+        console.error('Błąd podczas inicjalizacji bazy danych (transakcja wycofana):', err);
+    } finally {
+        client.release(); // Zwolnij klienta z puli
     }
 }
 initializeDatabase();
 
 // --- Konfiguracja Nodemailer ---
+// ... (bez zmian)
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -164,6 +197,7 @@ console.log("  EMAIL_PORT:", emailPort);
 console.log("  EMAIL_USER (Login SMTP):", emailUser ? emailUser.substring(0, 5) + "***" : "NIEUSTAWIONY");
 console.log("  EMAIL_PASS (Klucz API SMTP):", emailPass ? "USTAWIONE (długość: " + emailPass.length + ")" : "NIEUSTAWIONE");
 console.log("  EMAIL_SENDER_ADDRESS (Adres 'Od'):", emailSenderAddress || "NIEUSTAWIONY (użyje EMAIL_USER lub domyślnego)");
+
 
 if (emailHost && emailUser && emailPass) {
     let transportOptions = {
@@ -216,11 +250,11 @@ if (emailHost && emailUser && emailPass) {
 async function sendRegistrationEmail(userEmail, username) {
     const fromAddress = emailSenderAddress || emailUser || 'noreply@example.com';
     const mailOptions = {
-        from: `"Platforma Materiałów" <${fromAddress}>`, // Zmieniono nazwę
+        from: `"Platforma Materiałów" <${fromAddress}>`, 
         to: userEmail,
-        subject: 'Witaj na Platformie! Potwierdzenie rejestracji',
-        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie z materiałami!\n\nPozdrawiamy,\nZespół Platformy`, // Zmieniono treść
-        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie z materiałami!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, // Zmieniono treść
+        subject: 'Witaj na Platformie! Potwierdzenie rejestracji', 
+        text: `Witaj ${username},\n\nDziękujemy za rejestrację na naszej platformie z materiałami!\n\nPozdrawiamy,\nZespół Platformy`, 
+        html: `<p>Witaj <strong>${username}</strong>,</p><p>Dziękujemy za rejestrację na naszej platformie z materiałami!</p><p>Pozdrawiamy,<br>Zespół Platformy</p>`, 
     };
     try {
         console.log(`Próba wysłania e-maila rejestracyjnego DO: ${userEmail} OD: ${fromAddress} (login SMTP: ${emailUser ? emailUser.substring(0,5) + '***' : 'NIEZNANY'})`);
@@ -258,7 +292,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+        maxAge: 1000 * 60 * 60 * 24, 
         httpOnly: true,
         sameSite: 'lax'
     }
