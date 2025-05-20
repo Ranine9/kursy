@@ -502,7 +502,7 @@
             if (materialForm) {
                 materialForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
-                    const materialId = materialIdInput.value; // Pobierz ID materiału (będzie puste dla nowych)
+                    const materialId = materialIdInput.value; 
                     const materialData = {
                         title: materialTitleInput.value,
                         description: materialDescriptionInput.value,
@@ -517,7 +517,7 @@
                     let url = '/api/admin/materials';
                     let successMessage = 'Materiał dodany pomyślnie!';
 
-                    if (materialId) { // Jeśli jest ID, to edytujemy istniejący materiał
+                    if (materialId) { 
                         method = 'PUT';
                         url = `/api/admin/materials/${materialId}`;
                         successMessage = 'Materiał zaktualizowany pomyślnie!';
@@ -538,8 +538,36 @@
                 });
             }
 
+            async function handleDeleteMaterial(materialId, materialTitle) {
+                console.log(`Admin Dashboard JS: handleDeleteMaterial() called for materialId: ${materialId}, title: ${materialTitle}`);
+                if (confirm(`Czy na pewno chcesz usunąć materiał "${materialTitle}" (ID: ${materialId})? Tej operacji nie można cofnąć.`)) {
+                    try {
+                        const response = await fetch(`/api/admin/materials/${materialId}`, {
+                            method: 'DELETE',
+                        });
+                        
+                        let responseData = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            responseData = await response.json();
+                        } else {
+                            responseData.message = await response.text() || (response.ok ? `Materiał "${materialTitle}" usunięty.` : 'Błąd serwera.');
+                        }
+                        
+                        if (!response.ok) {
+                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
+                        }
+                        alert(responseData.message || `Materiał "${materialTitle}" usunięty pomyślnie.`);
+                        fetchAndDisplayMaterials(); 
+                    } catch (error) {
+                        console.error(`Admin Dashboard JS: Błąd podczas usuwania materiału ID ${materialId}:`, error);
+                        alert(`Nie udało się usunąć materiału: ${error.message}`);
+                    }
+                }
+            }
+            
             function addEventListenersToActionButtons() { 
-                // Dla użytkowników
+                // Użytkownicy
                 const editUserButtons = document.querySelectorAll('.edit-user-btn');
                 editUserButtons.forEach(button => {
                     if (!button.hasAttribute('data-listener-attached-edit')) { 
@@ -555,7 +583,7 @@
                     }
                 });
 
-                // Dla materiałów
+                // Materiały
                 const editMaterialButtons = document.querySelectorAll('.edit-material-btn');
                 editMaterialButtons.forEach(button => {
                     if (!button.hasAttribute('data-listener-attached-edit-material')) {
@@ -564,8 +592,6 @@
                             const materialToEdit = allMaterialsData.find(m => m.id === parseInt(materialId));
                             if (materialToEdit) {
                                 openMaterialModal(materialToEdit);
-                            } else {
-                                console.error("Nie znaleziono materiału do edycji o ID:", materialId);
                             }
                         });
                         button.setAttribute('data-listener-attached-edit-material', 'true');
@@ -583,41 +609,7 @@
                         button.setAttribute('data-listener-attached-delete-material', 'true');
                     }
                 });
-                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana (dla użytkowników i materiałów)");
-            }
-
-            async function handleDeleteMaterial(materialId, materialTitle) {
-                console.log(`Admin Dashboard JS: handleDeleteMaterial() called for materialId: ${materialId}, title: ${materialTitle}`);
-                if (confirm(`Czy na pewno chcesz usunąć materiał "${materialTitle}" (ID: ${materialId})? Tej operacji nie można cofnąć.`)) {
-                    try {
-                        const response = await fetch(`/api/admin/materials/${materialId}`, {
-                            method: 'DELETE',
-                        });
-                        
-                        // Sprawdź, czy odpowiedź ma treść przed próbą parsowania JSON
-                        let responseData = {};
-                        const contentType = response.headers.get("content-type");
-                        if (contentType && contentType.indexOf("application/json") !== -1) {
-                            responseData = await response.json();
-                        } else {
-                            // Jeśli nie JSON, użyj tekstu lub pustego obiektu
-                            responseData.message = await response.text() || (response.ok ? `Materiał "${materialTitle}" usunięty.` : 'Błąd serwera.');
-                        }
-                        
-                        console.log("Admin Dashboard JS: Odpowiedź serwera na DELETE materiału:", response.status, responseData);
-
-                        if (!response.ok) {
-                            throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
-                        }
-                        alert(responseData.message || `Materiał "${materialTitle}" usunięty pomyślnie.`);
-                        fetchAndDisplayMaterials(); // Odśwież listę
-                    } catch (error) {
-                        console.error(`Admin Dashboard JS: Błąd podczas usuwania materiału ID ${materialId}:`, error);
-                        alert(`Nie udało się usunąć materiału: ${error.message}`);
-                    }
-                } else {
-                    console.log("Admin Dashboard JS: Anulowano usuwanie materiału ID:", materialId);
-                }
+                console.log("Admin Dashboard JS: addEventListenersToActionButtons wywołana");
             }
             
             function showSection(targetId) {
