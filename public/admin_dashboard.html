@@ -34,11 +34,13 @@
         .modal-visible {
             display: flex !important;
         }
-        .modal-content-user { /* Klasa dla modala użytkownika */
-            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative;
+        .modal-content-user { 
+            @apply p-8 rounded-lg shadow-xl w-full max-w-md mx-auto relative;
+            /* bg-white zostanie dodane bezpośrednio w HTML dla pewności */
         }
-        .modal-content-lg { /* Klasa dla szerszego modala materiałów - powinna mieć białe tło */
-            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; 
+        .modal-content-lg { 
+            @apply p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; 
+            /* bg-white zostanie dodane bezpośrednio w HTML dla pewności */
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -182,7 +184,7 @@
     </div>
 
     <div id="editUserModal" class="modal-base"> 
-        <div class="modal-content-user"> 
+        <div class="modal-content-user bg-white"> {/* Dodano bg-white bezpośrednio */}
             <button id="closeEditUserModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
@@ -223,7 +225,7 @@
     </div>
 
     <div id="materialModal" class="modal-base">
-        <div class="modal-content-lg"> 
+        <div class="modal-content-lg bg-white"> {/* Dodano bg-white bezpośrednio */}
             <button id="closeMaterialModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
