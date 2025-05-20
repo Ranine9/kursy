@@ -94,7 +94,7 @@ async function initializeDatabase() {
                 cover_image_url VARCHAR(1024), 
                 status VARCHAR(50) DEFAULT 'draft' NOT NULL, 
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                updated_ CURRENT_TIMESTAMP
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `;
         const createUserMaterialsTableQuery = `
