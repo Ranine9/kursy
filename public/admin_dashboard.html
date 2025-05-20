@@ -34,8 +34,8 @@
         .modal-visible {
             display: flex !important;
         }
-        .modal-content {
-            position: relative; 
+        .modal-content-lg { /* Nowa klasa dla szerszego modala */
+            @apply bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto relative; /* Zmieniono max-w-md na max-w-2xl */
         }
         .modal-close-btn {
             @apply absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600 transition-colors;
@@ -48,7 +48,19 @@
         }
         .form-textarea {
             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
-            min-height: 80px; 
+            min-height: 100px; 
+        }
+        .form-group {
+            @apply mb-6; /* Zwiększony margines dla lepszego odstępu */
+        }
+        .form-group-title {
+            @apply text-lg font-semibold text-gray-700 mb-3 border-b pb-2;
+        }
+        .form-grid { /* Dla układu dwukolumnowego */
+            @apply grid grid-cols-1 md:grid-cols-2 gap-x-6;
+        }
+        .input-hint {
+            @apply text-xs text-gray-500 mt-1;
         }
     </style>
 </head>
@@ -56,7 +68,7 @@
     <div class="flex h-screen bg-gray-200">
         <aside class="w-64 bg-gray-800 text-gray-100 flex flex-col">
             <div class="px-6 py-4 border-b border-gray-700">
-                <a href="/admin/dashboard" class="text-2xl font-semibold">Admin Platforma<span class="text-blue-400">M</span></a>
+                <a href="/admin/dashboard.html" class="text-2xl font-semibold">Admin Platforma<span class="text-blue-400">M</span></a>
             </div>
             <nav class="flex-1 px-4 py-4 space-y-2">
                 <a href="#dashboard-main" id="nav-dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 sidebar-link-active">
@@ -108,7 +120,7 @@
                 <section id="user-management" class="admin-section hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-700">Zarządzanie Użytkownikami</h2>
-                    </div>
+                        </div>
                     <div class="bg-white shadow-lg rounded-lg table-responsive-wrapper">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -160,6 +172,7 @@
                     <h2 class="text-xl font-semibold mb-4 text-gray-700">Ustawienia Panelu</h2>
                     <div class="bg-white p-6 rounded-lg shadow-lg">
                         <p>Tutaj znajdą się różne opcje konfiguracyjne panelu administracyjnego.</p>
+                         <p class="mt-2">Na przykład: zmiana hasła admina, ustawienia SMTP, itp.</p>
                     </div>
                 </section>
             </div>
@@ -208,53 +221,76 @@
     </div>
 
     <div id="materialModal" class="modal-base">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto relative">
-            <button id="closeMaterialModal" class="modal-close-btn">
+        <div class="modal-content-lg"> <button id="closeMaterialModal" class="modal-close-btn">
                 <i class="fas fa-times fa-lg"></i>
             </button>
-            <h3 id="materialModalTitle" class="text-xl font-semibold mb-6 text-gray-800">Dodaj Nowy Materiał</h3>
-            <form id="materialForm">
+            <h3 id="materialModalTitle" class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3">Dodaj Nowy Materiał</h3>
+            <form id="materialForm" class="space-y-6">
                 <input type="hidden" id="materialId">
-                <div class="space-y-4">
-                    <div>
-                        <label for="materialTitle" class="form-label">Tytuł materiału</label>
-                        <input type="text" id="materialTitle" name="title" class="form-input" required>
+
+                <div class="form-group">
+                    <h4 class="form-group-title">Podstawowe Informacje</h4>
+                    <div class="form-grid">
+                        <div>
+                            <label for="materialTitle" class="form-label">Tytuł materiału <span class="text-red-500">*</span></label>
+                            <input type="text" id="materialTitle" name="title" class="form-input" required placeholder="Np. Kurs Programowania w Pythonie">
+                        </div>
+                        <div>
+                            <label for="materialCategory" class="form-label">Kategoria</label>
+                            <input type="text" id="materialCategory" name="category" class="form-input" placeholder="Np. Programowanie, Marketing, Grafika">
+                        </div>
                     </div>
-                    <div>
-                        <label for="materialDescription" class="form-label">Opis</label>
-                        <textarea id="materialDescription" name="description" class="form-textarea"></textarea>
+                    <div class="mt-4">
+                        <label for="materialDescription" class="form-label">Opis materiału</label>
+                        <textarea id="materialDescription" name="description" class="form-textarea" placeholder="Szczegółowy opis zawartości materiału, korzyści dla użytkownika..."></textarea>
                     </div>
-                    <div>
-                        <label for="materialCategory" class="form-label">Kategoria</label>
-                        <input type="text" id="materialCategory" name="category" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <h4 class="form-group-title">Dostęp i Cena</h4>
+                    <div class="form-grid">
+                        <div>
+                            <label for="materialFileUrl" class="form-label">Link do pliku (URL) <span class="text-red-500">*</span></label>
+                            <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://example.com/plik.pdf" required>
+                            <p class="input-hint">Bezpośredni link do pobrania pliku materiału.</p>
+                        </div>
+                        <div>
+                            <label for="materialPrice" class="form-label">Cena (PLN)</label>
+                            <input type="number" id="materialPrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00 dla darmowego">
+                            <p class="input-hint">Wpisz 0 lub zostaw puste dla materiału darmowego.</p>
+                        </div>
                     </div>
-                    <div>
-                        <label for="materialPrice" class="form-label">Cena (PLN)</label>
-                        <input type="number" id="materialPrice" name="price" class="form-input" step="0.01" min="0" placeholder="0.00">
-                    </div>
-                    <div>
-                        <label for="materialFileUrl" class="form-label">Link do pliku (URL)</label>
-                        <input type="url" id="materialFileUrl" name="file_url" class="form-input" placeholder="https://..." required>
-                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <h4 class="form-group-title">Prezentacja</h4>
                     <div>
                         <label for="materialCoverImageUrl" class="form-label">Link do obrazka okładki (URL)</label>
-                        <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://...">
+                        <input type="url" id="materialCoverImageUrl" name="cover_image_url" class="form-input" placeholder="https://example.com/okladka.jpg">
+                        <p class="input-hint">URL obrazka, który będzie wyświetlany jako miniatura.</p>
+                        <img id="coverImagePreview" src="https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki" alt="Podgląd okładki" class="mt-2 rounded-md max-h-40 object-contain border hidden">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <h4 class="form-group-title">Publikacja</h4>
                     <div>
-                        <label for="materialStatus" class="form-label">Status</label>
-                        <select id="materialStatus" name="status" class="form-input">
-                            <option value="draft">Szkic (Draft)</option>
-                            <option value="published">Opublikowany (Published)</option>
-                            <option value="archived">Zarchiwizowany (Archived)</option>
+                        <label for="materialStatus" class="form-label">Status publikacji <span class="text-red-500">*</span></label>
+                        <select id="materialStatus" name="status" class="form-input" required>
+                            <option value="draft">Szkic (Draft) - niewidoczny dla użytkowników</option>
+                            <option value="published">Opublikowany (Published) - widoczny dla użytkowników</option>
+                            <option value="archived">Zarchiwizowany (Archived) - ukryty, ale zachowany</option>
                         </select>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-end space-x-3">
-                    <button type="button" id="cancelMaterialModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+
+                <div class="mt-8 pt-6 border-t flex justify-end space-x-3">
+                    <button type="button" id="cancelMaterialModal" class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
                         Anuluj
                     </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg">
-                        Zapisz Materiał
+                    <button type="submit" id="saveMaterialButton" class="px-6 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center">
+                        <span class="btn-text">Zapisz Materiał</span>
+                        <span class="btn-loader hidden ml-2"><i class="fas fa-spinner fa-spin"></i></span>
                     </button>
                 </div>
             </form>
@@ -298,6 +334,11 @@
             const materialFileUrlInput = document.getElementById('materialFileUrl'); 
             const materialCoverImageUrlInput = document.getElementById('materialCoverImageUrl'); 
             const materialStatusInput = document.getElementById('materialStatus');
+            const coverImagePreview = document.getElementById('coverImagePreview');
+            const saveMaterialButton = document.getElementById('saveMaterialButton');
+            const saveMaterialButtonText = saveMaterialButton.querySelector('.btn-text');
+            const saveMaterialButtonLoader = saveMaterialButton.querySelector('.btn-loader');
+
 
             let allUsersData = []; 
             let allMaterialsData = []; 
@@ -310,14 +351,17 @@
 
             async function fetchAndDisplayUsers() {
                 console.log("Admin Dashboard JS: fetchAndDisplayUsers() called");
-                if (!userTableBody) { console.warn("userTableBody not found, skipping user fetch."); return; } // Zabezpieczenie
+                if (!userTableBody) { console.warn("userTableBody not found, skipping user fetch."); return; }
                 try {
                     userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Ładowanie danych użytkowników...</td></tr>';
-                    const response = await fetch('/api/admin/users');
+                    const response = await fetch('/api/admin/users', {credentials: 'include'});
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
                              userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia użytkowników.</td></tr>';
-                        } else { throw new Error(`Błąd HTTP! status: ${response.status}`); }
+                        } else { 
+                            const errorData = await response.json().catch(() => ({message: 'Nie udało się odczytać błędu serwera.'}));
+                            throw new Error(errorData.message || `Błąd HTTP! status: ${response.status}`); 
+                        }
                         return;
                     }
                     allUsersData = await response.json();
@@ -326,7 +370,7 @@
                     if (statsTotalAdmins) statsTotalAdmins.textContent = allUsersData.filter(user => user.role === 'admin').length;
                 } catch (error) {
                     console.error('Admin Dashboard JS: Błąd podczas pobierania użytkowników:', error);
-                    if (userTableBody) userTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych.</td></tr>';
+                    if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Wystąpił błąd: ${error.message}</td></tr>`;
                     if (statsTotalUsers) statsTotalUsers.textContent = 'Błąd';
                     if (statsTotalAdmins) statsTotalAdmins.textContent = 'Błąd';
                 }
@@ -345,7 +389,11 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.username}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.email}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.role}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                                    ${user.role}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatDate(user.created_at)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button title="Edytuj" class="edit-user-btn text-blue-600 hover:text-blue-800 mr-2 action-btn" data-userid="${user.id}"><i class="fas fa-edit"></i></button>
@@ -375,7 +423,7 @@
             async function handleDeleteUser(userId, username) { 
                 if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}" (ID: ${userId})? Tej operacji nie można cofnąć.`)) {
                     try {
-                        const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+                        const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
                         const responseData = await response.json(); 
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
                         alert(`Użytkownik "${username}" usunięty pomyślnie.`);
@@ -403,6 +451,7 @@
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(updatedUserData),
+                            credentials: 'include'
                         });
                         const responseData = await response.json();
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP! status: ${response.status}`);
@@ -419,17 +468,25 @@
 
             async function fetchAndDisplayMaterials() {
                 console.log("Admin Dashboard JS: fetchAndDisplayMaterials() called");
-                if (!materialTableBody) { console.warn("materialTableBody not found, skipping material fetch."); return; } // Zabezpieczenie
+                if (!materialTableBody) { console.warn("materialTableBody not found, skipping material fetch."); return; }
                 try {
                     materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Ładowanie danych materiałów...</td></tr>';
-                    const response = await fetch('/api/admin/materials');
-                    if (!response.ok) throw new Error(`Błąd HTTP! status: ${response.status}`);
+                    const response = await fetch('/api/admin/materials', {credentials: 'include'});
+                     if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                             materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Brak uprawnień do wyświetlenia materiałów.</td></tr>';
+                        } else { 
+                            const errorData = await response.json().catch(() => ({message: 'Nie udało się odczytać błędu serwera.'}));
+                            throw new Error(errorData.message || `Błąd HTTP! status: ${response.status}`); 
+                        }
+                        return;
+                    }
                     allMaterialsData = await response.json();
                     renderMaterialTable(allMaterialsData);
                     if (statsTotalMaterials) statsTotalMaterials.textContent = allMaterialsData.length;
                 } catch (error) {
                     console.error('Admin Dashboard JS: Błąd podczas pobierania materiałów:', error);
-                    if (materialTableBody) materialTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Wystąpił błąd podczas ładowania danych materiałów.</td></tr>';
+                    if (materialTableBody) materialTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Wystąpił błąd: ${error.message}</td></tr>`;
                     if (statsTotalMaterials) statsTotalMaterials.textContent = 'Błąd';
                 }
             }
@@ -453,8 +510,7 @@
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     ${material.status === 'published' ? 'bg-green-100 text-green-800' : 
                                       material.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                                      'bg-gray-100 text-gray-800'}">
-                                    ${material.status}
+                                      'bg-red-100 text-red-800'}"> ${material.status}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fileUrlDisplay}</td>
@@ -471,8 +527,11 @@
             }
 
             function openMaterialModal(material = null) {
-                if (!materialForm || !materialModalTitle || !materialIdInput || !materialTitleInput || !materialDescriptionInput || !materialCategoryInput || !materialPriceInput || !materialFileUrlInput || !materialCoverImageUrlInput || !materialStatusInput || !materialModal) return;
+                if (!materialForm || !materialModalTitle || !materialIdInput || !materialTitleInput || !materialDescriptionInput || !materialCategoryInput || !materialPriceInput || !materialFileUrlInput || !materialCoverImageUrlInput || !materialStatusInput || !materialModal || !coverImagePreview) return;
                 materialForm.reset();
+                coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki'; // Reset podglądu
+                coverImagePreview.classList.add('hidden');
+
                 if (material) {
                     materialModalTitle.textContent = 'Edytuj Materiał';
                     materialIdInput.value = material.id;
@@ -483,6 +542,10 @@
                     materialFileUrlInput.value = material.file_url || '';
                     materialCoverImageUrlInput.value = material.cover_image_url || '';
                     materialStatusInput.value = material.status;
+                    if (material.cover_image_url) {
+                        coverImagePreview.src = material.cover_image_url;
+                        coverImagePreview.classList.remove('hidden');
+                    }
                 } else {
                     materialModalTitle.textContent = 'Dodaj Nowy Materiał';
                     materialIdInput.value = '';
@@ -493,7 +556,29 @@
             function closeMaterialModal() {
                 if (materialModal) materialModal.classList.remove('modal-visible');
                 if (materialForm) materialForm.reset();
+                if (coverImagePreview) {
+                    coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki';
+                    coverImagePreview.classList.add('hidden');
+                }
             }
+            
+            if (materialCoverImageUrlInput && coverImagePreview) {
+                materialCoverImageUrlInput.addEventListener('input', function() {
+                    if (this.value && this.value.trim() !== '') {
+                        coverImagePreview.src = this.value;
+                        coverImagePreview.classList.remove('hidden');
+                    } else {
+                        coverImagePreview.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Podgląd+Okładki';
+                        coverImagePreview.classList.add('hidden');
+                    }
+                });
+                coverImagePreview.onerror = function() {
+                    // Jeśli URL jest nieprawidłowy lub obrazek się nie załaduje, pokaż placeholder
+                    this.src = 'https://placehold.co/300x200/E2E8F0/A0AEC0?text=Błąd+URL+Okładki';
+                    this.classList.remove('hidden'); // Upewnij się, że jest widoczny
+                };
+            }
+
 
             if (addMaterialBtn) addMaterialBtn.addEventListener('click', () => openMaterialModal());
             if (closeMaterialModalBtn) closeMaterialModalBtn.addEventListener('click', closeMaterialModal);
@@ -502,6 +587,11 @@
             if (materialForm) {
                 materialForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    
+                    saveMaterialButtonText.classList.add('hidden');
+                    saveMaterialButtonLoader.classList.remove('hidden');
+                    saveMaterialButton.disabled = true;
+
                     const materialId = materialIdInput.value; 
                     const materialData = {
                         title: materialTitleInput.value,
@@ -525,7 +615,10 @@
 
                     try {
                         const response = await fetch(url, {
-                            method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(materialData),
+                            method: method, 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify(materialData),
+                            credentials: 'include'
                         });
                         const responseData = await response.json();
                         if (!response.ok) throw new Error(responseData.message || `Błąd HTTP: ${response.status}`);
@@ -534,6 +627,10 @@
                         fetchAndDisplayMaterials(); 
                     } catch (error) {
                         alert(`Nie udało się zapisać materiału: ${error.message}`);
+                    } finally {
+                        saveMaterialButtonText.classList.remove('hidden');
+                        saveMaterialButtonLoader.classList.add('hidden');
+                        saveMaterialButton.disabled = false;
                     }
                 });
             }
@@ -544,6 +641,7 @@
                     try {
                         const response = await fetch(`/api/admin/materials/${materialId}`, {
                             method: 'DELETE',
+                            credentials: 'include'
                         });
                         
                         let responseData = { message: `Materiał "${materialTitle}" usunięty pomyślnie.` }; 
@@ -569,7 +667,6 @@
             }
             
             function addEventListenersToActionButtons() { 
-                // Użytkownicy
                 const editUserButtons = document.querySelectorAll('.edit-user-btn');
                 editUserButtons.forEach(button => {
                     if (!button.hasAttribute('data-listener-attached-edit')) { 
@@ -585,7 +682,6 @@
                     }
                 });
 
-                // Materiały
                 const editMaterialButtons = document.querySelectorAll('.edit-material-btn');
                 editMaterialButtons.forEach(button => {
                     if (!button.hasAttribute('data-listener-attached-edit-material')) {
@@ -632,8 +728,8 @@
                 } else if (targetId === 'material-management') { 
                     fetchAndDisplayMaterials(); 
                 } else if (targetId === 'dashboard-main') {
-                    fetchAndDisplayUsers();
-                    fetchAndDisplayMaterials(); 
+                    fetchAndDisplayUsers(); // Statystyki użytkowników
+                    fetchAndDisplayMaterials(); // Statystyki materiałów
                 }
             }
 
