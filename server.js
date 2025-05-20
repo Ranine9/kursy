@@ -202,17 +202,23 @@ async function initializeDatabase() {
         await addAdminUserIfNeeded();
         
         // Tabela sesji (dla connect-pg-simple)
-        const createSessionTableQuery = `
+        const createSessionTableSQL = `
             CREATE TABLE IF NOT EXISTS "session" (
-                "sid" varchar NOT NULL COLLATE "default",
-                "sess" json NOT NULL,
-                "expire" timestamp(6) NOT NULL
-            ) WITH (OIDS=FALSE);
-            ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+                "sid" VARCHAR NOT NULL,
+                "sess" JSON NOT NULL,
+                "expire" TIMESTAMP(6) NOT NULL,
+                CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+            );
+        `;
+        await client.query(createSessionTableSQL);
+        console.log('Tabela "session" (z kluczem głównym zdefiniowanym inline) sprawdzona/utworzona.');
+
+        const createSessionIndexSQL = `
             CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
         `;
-        await client.query(createSessionTableQuery);
-        console.log('Tabela "session" sprawdzona/utworzona.');
+        await client.query(createSessionIndexSQL);
+        console.log('Indeks "IDX_session_expire" dla tabeli "session" sprawdzony/utworzony.');
+
 
         await client.query('COMMIT');
         console.log('Transakcja inicjalizacji bazy danych ZATWIERDZONA (COMMIT).');
