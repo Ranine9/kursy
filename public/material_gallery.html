@@ -5,191 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galeria Materiałów - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --sidebar-bg: #1f2937; /* gray-800 */
-            --main-bg: #111827; /* gray-900 */
-            --panel-bg: #1f2937; /* gray-800 */
-            --card-bg: #374151; /* gray-700 */
-            --text-primary: #f3f4f6; /* gray-100 */
-            --text-secondary: #9ca3af; /* gray-400 */
-            --text-muted: #6b7280; /* gray-500 */
-            --accent-violet: #8b5cf6; /* violet-500 */
-            --accent-violet-light: #a78bfa; /* violet-400 */
-            --accent-violet-dark: #7c3aed; /* violet-600 */
-            --accent-gradient-from: var(--accent-violet);
-            --accent-gradient-to: #a855f7; /* purple-500 */
-            --border-color: #374151; /* gray-700 */
-            --border-color-light: #4b5563; /* gray-600 */
-            --shadow-color: rgba(167, 139, 250, 0.15); 
-            --shadow-color-strong: rgba(167, 139, 250, 0.25);
-
-            /* Styles for unified header/footer/modal (dark theme adaptation) */
-            --header-bg: #1f2937; /* gray-800 for dark theme header */
-            --header-text: #e5e7eb; /* gray-200 for dark theme header text */
-            --header-text-hover: #c7d2fe; /* indigo-200 for dark theme hover */
-            --header-brand-text: #a78bfa; /* violet-400 */
-            --header-brand-span-text: #f3f4f6; /* gray-100 */
-            
-            --footer-bg: #111827; /* gray-900 for dark theme footer */
-            --footer-text: #9ca3af; /* gray-400 */
-            --footer-text-hover: #a78bfa; /* violet-400 */
-            --footer-border: #374151; /* gray-700 */
-
-            --modal-bg: #1f2937; /* gray-800 */
-            --modal-text: #e5e7eb; /* gray-200 */
-            --modal-title-text: #f3f4f6; /* gray-100 */
-            --modal-btn-primary-bg: var(--accent-violet);
-            --modal-btn-primary-text: white;
-            --modal-btn-primary-hover-bg: var(--accent-violet-dark);
-            --modal-btn-secondary-bg: #4b5563; /* gray-600 */
-            --modal-btn-secondary-text: #e5e7eb; /* gray-200 */
-            --modal-btn-secondary-hover-bg: #6b7280; /* gray-500 */
-        }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--sidebar-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-violet-light); }
-
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--main-bg);
-            color: var(--text-primary);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            background-color: #f9fafb; /* bg-gray-50 - jasne tło */
+            color: #1f2937; /* text-gray-800 */
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
-        .main-content-gallery {
+        .main-content-area {
             flex-grow: 1;
         }
-        /* Unified button styles (can be in a global CSS if used across all files) */
+        /* Unified button styles */
         .btn {
             @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
         }
-        .btn-accent { /* For dark theme primary actions */
-            @apply bg-[var(--accent-violet)] text-white hover:bg-[var(--accent-violet-dark)] focus:ring-[var(--accent-violet-light)];
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
         }
-        .btn-dark-secondary { /* For dark theme secondary actions */
-            @apply bg-gray-700 text-gray-200 hover:bg-gray-600 focus:ring-gray-500;
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
         }
-        .btn-sm { @apply px-4 py-2 text-sm; }
-
-
-        /* Nowoczesne style dla kart materiałów w galerii - zachowane */
-        .material-card-gallery { 
-            @apply bg-[var(--panel-bg)] rounded-2xl shadow-xl border border-[var(--border-color)]
-                   flex flex-col overflow-hidden
-                   transition-all duration-300 ease-out hover:shadow-[var(--shadow-color-strong)] hover:border-violet-500/60 transform hover:-translate-y-2 h-full;
-        }
-        .material-card-gallery-image-area {
-            @apply w-full h-52 bg-gray-700 relative overflow-hidden group;
-        }
-        .material-card-gallery-image-area img {
-            @apply w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110;
-        }
-        .material-card-gallery-icon-overlay { 
-            @apply absolute inset-0 bg-gradient-to-br from-violet-600/70 to-purple-700/70 flex items-center justify-center;
-        }
-        .material-card-gallery-icon-overlay i { @apply text-white text-6xl opacity-50; }
-        
-        .material-card-gallery-content { @apply p-5 flex flex-col flex-grow; }
-        .material-card-gallery-header { @apply flex justify-between items-start mb-1.5; }
-        .material-card-gallery-title { @apply text-xl font-bold text-gray-50 mb-1 leading-tight group-hover:text-violet-300; }
-        .material-card-gallery-category { @apply text-xs font-semibold text-violet-300 bg-violet-700/60 px-3 py-1 rounded-full inline-block whitespace-nowrap; }
-        .material-card-gallery-description { 
-            @apply text-sm text-gray-400 mb-3 leading-relaxed flex-grow; 
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
-            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem;
-        }
-        .material-card-gallery-price-section { @apply text-xl font-bold text-gray-100 mb-3; }
-        .material-card-gallery-price-original { @apply text-sm text-gray-500 line-through ml-2; }
-        
-        .material-card-gallery-footer { @apply mt-auto pt-4; }
-        .material-card-gallery-action-button { 
-             @apply btn btn-accent btn-sm w-full; /* Using new .btn-accent */
+        .btn-sm {
+            @apply px-4 py-2 text-sm;
         }
 
+        /* Material Card Styling (New Light Theme) */
+        .material-card {
+            @apply bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 flex flex-col h-full;
+        }
+        .material-card-image-wrapper {
+            @apply aspect-[16/10] bg-gray-100 relative overflow-hidden; /* Adjusted aspect ratio */
+        }
+        .material-card-image-wrapper img {
+            @apply w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105;
+        }
+        .material-card-icon-overlay { /* Fallback icon if no image */
+            @apply absolute inset-0 bg-gray-200 flex items-center justify-center;
+            display: none; /* Hidden by default, shown by JS if image fails or not present */
+        }
+        .material-card-icon-overlay i {
+            @apply text-gray-400 text-5xl;
+        }
+        .material-card-badges {
+            @apply absolute top-3 right-3 flex flex-col items-end space-y-1;
+        }
+        .badge {
+            @apply text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm;
+        }
+        .badge-deal {
+            @apply bg-red-500 text-white;
+        }
+        .badge-featured {
+            @apply bg-yellow-400 text-yellow-800;
+        }
+        .material-card-content {
+            @apply p-5 flex flex-col flex-grow;
+        }
+        .material-card-title {
+            @apply text-lg font-semibold text-gray-800 mb-1 leading-tight hover:text-blue-600;
+        }
+        .material-card-category {
+            @apply text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full inline-block mb-2;
+        }
+        .material-card-description {
+            @apply text-sm text-gray-600 mb-3 leading-relaxed flex-grow;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; min-height: 3.75rem; /* approx 3 lines */
+        }
+        .material-card-price {
+            @apply text-lg font-bold text-gray-800 mb-3;
+        }
+        .material-card-price-original {
+            @apply text-sm text-gray-400 line-through ml-2;
+        }
+        .material-card-actions {
+            @apply mt-auto pt-4 border-t border-gray-200; /* Push to bottom */
+        }
 
-        .loader { border: 5px solid #374151; border-top: 5px solid var(--accent-violet); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 40px auto; }
+        /* Filter and Sort Controls */
+        .filter-controls-wrapper {
+            @apply bg-white p-6 rounded-xl shadow-md mb-10 border border-gray-200;
+        }
+        .form-input-filter, .form-select-filter {
+            @apply block w-full text-sm px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 placeholder-gray-400 transition-shadow hover:shadow-md;
+        }
+        .form-label-filter {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+
+        /* Loader and Messages */
+        .loader-container { @apply col-span-full flex justify-center items-center py-16; }
+        .loader { 
+            border: 5px solid #e5e7eb; /* gray-200 */
+            border-top: 5px solid #3b82f6; /* blue-500 */
+            border-radius: 50%; width: 50px; height: 50px; 
+            animation: spin 1s linear infinite; margin: 40px auto; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .page-title-gallery { 
-            @apply text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-sky-400;
-        }
-        .page-subtitle-gallery {
-             @apply mt-3 text-xl text-gray-400 max-w-2xl mx-auto;
-        }
-        .filter-select, .filter-input {
-            @apply block w-full sm:w-auto text-sm px-4 py-3 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-gray-700 text-gray-200 placeholder-gray-400 transition-shadow hover:shadow-md;
-        }
-        .badge-gallery { @apply absolute top-3 right-3 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md; }
-        .badge-deal-gallery { @apply bg-red-500; }
-        .badge-featured-gallery { @apply bg-yellow-500 text-yellow-900 left-3 right-auto; }
+        .message-container { @apply col-span-full text-center py-16 text-gray-500; }
+        .message-container i { @apply text-5xl mb-4 text-gray-400; }
+        .message-container p { @apply text-xl; }
+        .message-container .subtext { @apply text-base mt-1; }
 
-        /* Unified modal style (dark theme adaptation) */
-        #messageModal {
-            background-color: rgba(17, 24, 39, 0.8); /* bg-gray-900 with opacity for backdrop */
-        }
-        #messageModal > div { /* The modal box itself */
-            background-color: var(--modal-bg);
-            color: var(--modal-text);
-            border: 1px solid var(--border-color);
-        }
-        #messageModalTitle {
-            color: var(--modal-title-text);
-        }
-        #messageModalText {
-             color: var(--text-secondary);
-        }
-        #messageModalCloseBtn, #messageModalLoginBtn { /* General modal button styling */
-            @apply btn focus:ring-offset-[var(--modal-bg)];
-        }
-        #messageModalCloseBtn { /* Specific for primary action */
-             background-color: var(--modal-btn-primary-bg);
-             color: var(--modal-btn-primary-text);
-        }
-        #messageModalCloseBtn:hover {
-            background-color: var(--modal-btn-primary-hover-bg);
-        }
-         #messageModalLoginBtn { /* Specific for secondary action */
-            background-color: var(--modal-btn-secondary-bg);
-            color: var(--modal-btn-secondary-text);
-        }
-        #messageModalLoginBtn:hover {
-             background-color: var(--modal-btn-secondary-hover-bg);
-        }
+        /* Unified Modal Styles (from index.html) */
+        #messageModal { z-index: 1000; }
+        #messageModalCloseBtn, #messageModalLoginBtn { @apply btn; }
+        #messageModalCloseBtn { @apply btn-primary; }
+        #messageModalLoginBtn { @apply btn-secondary; }
 
     </style>
 </head>
 <body>
 
-    <header class="sticky top-0 z-50 shadow-lg" style="background-color: var(--header-bg);">
+    <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold" style="color: var(--header-brand-text);">
-                    Materiały<span style="color: var(--header-brand-span-text);">PRO</span>
-                </a>
-
+                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
                 <nav class="hidden md:flex space-x-4 items-center">
-                    <a href="index.html" class="px-3 py-2 rounded-md text-sm font-medium transition-colors" style="color: var(--header-text); hover:color: var(--header-text-hover);">Strona Główna</a>
-                    <a href="/dashboard.html" id="dashboard-link-header" class="px-3 py-2 rounded-md text-sm font-medium transition-colors" style="color: var(--header-text); hover:color: var(--header-text-hover);">Panel Użytkownika</a>
-                    <button id="cart-button-header" class="relative px-3 py-2 rounded-md text-sm font-medium transition-colors" style="color: var(--header-text); hover:color: var(--header-text-hover);">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
+                    <a href="/dashboard.html" id="dashboard-link-header" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Panel Użytkownika</a>
+                    <button id="cart-button-header" class="relative text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center" style="display: none;">0</span>
                     </button>
-                    <button id="logout-button-header" class="btn btn-dark-secondary btn-sm">Wyloguj</button>
+                    <span id="header-username-display" class="text-gray-700 text-sm font-medium hidden"></span>
+                    <button id="logout-button-header" class="btn btn-secondary btn-sm hidden">Wyloguj</button>
                 </nav>
-
                 <div class="md:hidden flex items-center">
-                     <button id="cart-button-mobile-header" class="relative p-2 mr-1 rounded-md" style="color: var(--header-text); hover:color: var(--header-text-hover);">
+                     <button id="cart-button-mobile-header" class="relative text-gray-600 hover:text-blue-600 p-2 mr-1 rounded-md">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-badge-mobile" class="absolute -top-0 -right-0 bg-red-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center" style="display: none;">0</span>
                     </button>
-                    <button id="mobile-menu-button" class="focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-md p-2" style="color: var(--header-text); hover:color: var(--header-text-hover);">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -197,39 +148,41 @@
                 </div>
             </div>
         </div>
-
-        <div id="mobile-menu" class="md:hidden hidden" style="background-color: var(--header-bg); border-top: 1px solid var(--border-color);">
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium transition-colors" style="color: var(--header-text); hover:background-color: var(--border-color); hover:color: var(--header-text-hover);">Strona Główna</a>
-                <a href="/dashboard.html" id="dashboard-link-mobile" class="block px-3 py-2 rounded-md text-base font-medium transition-colors" style="color: var(--header-text); hover:background-color: var(--border-color); hover:color: var(--header-text-hover);">Panel Użytkownika</a>
+                <a href="index.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Strona Główna</a>
+                <a href="/dashboard.html" id="dashboard-link-mobile" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Panel Użytkownika</a>
             </div>
-            <div class="pt-4 pb-3 border-t px-5" style="border-color: var(--border-color-light);">
-                 <button id="logout-button-mobile" class="block w-full text-center btn btn-dark-secondary text-base">Wyloguj</button>
+            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
+                 <span id="mobile-header-username-display" class="block text-center text-gray-700 text-base font-medium mb-2 hidden"></span>
+                 <button id="logout-button-mobile" class="block w-full text-center btn btn-secondary text-base hidden">Wyloguj</button>
             </div>
         </div>
     </header>
 
-    <main class="main-content-gallery container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="mb-12 text-center">
-            <h1 class="page-title-gallery">Galeria Materiałów</h1>
-            <p class="page-subtitle-gallery">Odkryj nasze najnowsze kursy, poradniki i zasoby edukacyjne.</p>
+    <main class="main-content-area container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800">Galeria Materiałów</h1>
+            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Przeglądaj nasze najnowsze kursy, e-booki i inne zasoby.</p>
         </div>
 
-        <div class="mb-10 p-6 bg-gray-800/70 rounded-xl shadow-xl border border-gray-700/60">
+        <!-- Filters and Sorting Section -->
+        <div class="filter-controls-wrapper">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                <div class="md:col-span-1">
-                    <label for="search-input" class="block text-sm font-medium text-gray-300 mb-1.5">Wyszukaj materiał</label>
-                    <input type="text" id="search-input" placeholder="Wpisz tytuł, opis, kategorię..." class="filter-input w-full">
+                <div>
+                    <label for="search-input" class="form-label-filter">Wyszukaj</label>
+                    <input type="text" id="search-input" placeholder="Tytuł, kategoria, opis..." class="form-input-filter w-full">
                 </div>
                 <div>
-                    <label for="category-filter" class="block text-sm font-medium text-gray-300 mb-1.5">Filtruj po kategorii</label>
-                    <select id="category-filter" class="filter-select w-full">
+                    <label for="category-filter" class="form-label-filter">Kategoria</label>
+                    <select id="category-filter" class="form-select-filter w-full">
                         <option value="">Wszystkie Kategorie</option>
+                        {/* Categories will be populated by JS */}
                     </select>
                 </div>
                 <div>
-                    <label for="sort-filter" class="block text-sm font-medium text-gray-300 mb-1.5">Sortuj według</label>
-                    <select id="sort-filter" class="filter-select w-full">
+                    <label for="sort-filter" class="form-label-filter">Sortuj według</label>
+                    <select id="sort-filter" class="form-select-filter w-full">
                         <option value="newest">Najnowsze</option>
                         <option value="price_asc">Cena: Rosnąco</option>
                         <option value="price_desc">Cena: Malejąco</option>
@@ -240,96 +193,85 @@
             </div>
         </div>
         
-        <section id="featured-materials-section" class="mb-16 hidden">
-            <div class="flex items-center mb-6">
-                 <i class="fas fa-star text-yellow-400 text-3xl mr-3"></i>
-                <h2 class="text-3xl font-bold text-gray-100">Polecane dla Ciebie</h2>
+        <!-- Featured Materials Section (Optional - can be removed or restyled) -->
+        <section id="featured-materials-section" class="mb-12 hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6 flex items-center">
+                <i class="fas fa-star text-yellow-500 mr-3"></i>Polecane Materiały
+            </h2>
+            <div id="featured-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+                {/* Featured material cards will be injected here */}
             </div>
-            <div id="featured-materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            </div>
-            <div id="no-featured-materials-message" class="hidden text-center py-10 text-gray-500">
-                <p class="text-lg">Brak polecanych materiałów w tej chwili.</p>
-            </div>
-        </section>
-
-        <section id="deals-materials-section" class="mb-16 hidden">
-             <div class="flex items-center mb-6">
-                <i class="fas fa-tags text-red-400 text-3xl mr-3"></i>
-                <h2 class="text-3xl font-bold text-gray-100">Okazje Cenowe</h2>
-            </div>
-            <div id="deals-materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            </div>
-             <div id="no-deals-materials-message" class="hidden text-center py-10 text-gray-500">
-                <p class="text-lg">Aktualnie brak specjalnych okazji.</p>
+            <div id="no-featured-materials-message" class="message-container hidden">
+                <i class="fas fa-info-circle"></i>
+                <p>Brak polecanych materiałów w tej chwili.</p>
             </div>
         </section>
 
+        <!-- All Materials Section -->
         <section id="all-materials-section">
-            <h2 class="text-3xl font-bold text-gray-100 mb-8" id="all-materials-title">Wszystkie Materiały</h2>
-            <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6" id="all-materials-title">Wszystkie Materiały</h2>
+            <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
+                {/* Material cards will be injected here */}
             </div>
-            <div id="loader-container" class="col-span-full flex justify-center items-center py-16">
-                <div class="loader"></div>
+            <div id="loader-container" class="loader-container hidden"><div class="loader"></div></div>
+            <div id="no-materials-message" class="message-container hidden">
+                <i class="fas fa-box-open"></i>
+                <p>Nie znaleziono materiałów.</p>
+                <p class="subtext">Spróbuj zmienić kryteria wyszukiwania lub wróć później.</p>
             </div>
-            <div id="no-materials-message" class="hidden col-span-full text-center py-20 text-gray-400">
-                <i class="fas fa-box-open fa-5x mb-6 text-gray-600"></i>
-                <p class="text-2xl font-semibold">Nie znaleziono materiałów.</p>
-                <p class="mt-2 text-lg">Spróbuj zmienić kryteria wyszukiwania lub sprawdź ponownie później.</p>
+            <div id="error-loading-message" class="message-container hidden">
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                <p class="text-red-600">Wystąpił błąd podczas ładowania materiałów.</p>
+                <p class="subtext">Spróbuj odświeżyć stronę.</p>
             </div>
-            <div id="error-message" class="hidden col-span-full text-center py-20 text-red-400">
-                 <i class="fas fa-exclamation-triangle fa-5x mb-6"></i>
-                <p class="text-2xl font-semibold">Wystąpił błąd.</p>
-                <p class="text-gray-400">Nie udało się załadować materiałów. Spróbuj odświeżyć stronę.</p>
-            </div>
-            <div class="text-center mt-12">
-                <button id="load-more-button" class="btn btn-accent hidden"> <!-- Changed to btn-accent -->
+            <div class="text-center mt-10">
+                <button id="load-more-button" class="btn btn-primary hidden">
                     <i class="fas fa-sync-alt mr-2"></i>Pokaż więcej
                 </button>
             </div>
         </section>
     </main>
 
-    <footer class="mt-auto py-12 text-center" style="background-color: var(--footer-bg); color: var(--footer-text); border-top: 1px solid var(--footer-border);">
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
-                    <h3 class="text-xl font-semibold mb-4" style="color: var(--header-brand-span-text);">MateriałyPRO</h3>
+                    <h3 class="text-xl font-semibold text-white mb-4">MateriałyPRO</h3>
                     <p class="text-sm">Twoje źródło wartościowych materiałów cyfrowych.</p>
                 </div>
                 <div>
-                    <h4 class="text-lg font-semibold mb-4" style="color: var(--header-brand-span-text);">Szybkie Linki</h4>
+                    <h4 class="text-lg font-semibold text-white mb-4">Szybkie Linki</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="index.html" class="transition-colors" style="hover:color: var(--footer-text-hover);">Strona Główna</a></li>
-                        <li><a href="/dashboard.html" id="footer-dashboard-link" class="transition-colors" style="hover:color: var(--footer-text-hover);">Panel Użytkownika</a></li>
+                        <li><a href="index.html" class="hover:text-blue-400 transition-colors">Strona Główna</a></li>
+                        <li><a href="/dashboard.html" id="footer-dashboard-link" class="hover:text-blue-400 transition-colors" style="display:none;">Panel Użytkownika</a></li>
+                        <li><a href="index.html#about" class="hover:text-blue-400 transition-colors">O Nas</a></li>
+                        <li><a href="index.html#contact" class="hover:text-blue-400 transition-colors">Kontakt</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-lg font-semibold mb-4" style="color: var(--header-brand-span-text);">Znajdź Nas</h4>
-                    <div class="flex space-x-4 justify-center md:justify-start">
-                        <a href="#" class="transition-colors" style="hover:color: white;" aria-label="Facebook"><i class="fab fa-facebook-f fa-lg"></i></a>
-                        <a href="#" class="transition-colors" style="hover:color: white;" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="transition-colors" style="hover:color: white;" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
+                    <h4 class="text-lg font-semibold text-white mb-4">Znajdź Nas</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="mt-8 pt-8 text-sm" style="border-top: 1px solid var(--footer-border);">
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
                 <p>© <span id="currentYearGallery"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
                  <p class="mt-1">
-                    <a href="#" class="transition-colors" style="hover:color: var(--footer-text-hover);">Polityka Prywatności</a> |
-                    <a href="#" class="transition-colors" style="hover:color: var(--footer-text-hover);">Regulamin Usług</a>
+                    <a href="#" class="hover:text-blue-400 transition-colors">Polityka Prywatności</a> |
+                    <a href="#" class="hover:text-blue-400 transition-colors">Regulamin Usług</a>
                 </p>
-                 <p class="text-xs mt-2">Stworzone z <i class="fas fa-heart" style="color: var(--accent-violet);"></i> dla rozwoju.</p>
             </div>
         </div>
     </footer>
 
     <!-- Unified Message Modal -->
-    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4">
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[1000] hidden p-4">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
             <div class="text-center">
-                <div id="messageModalIcon" class="text-5xl mb-4">
-                     {/* Icon will be injected by JS, e.g., <i class="fas fa-check-circle text-green-400"></i> */}
-                </div>
+                 <div id="messageModalIcon" class="text-5xl mb-4"></div>
                 <h3 id="messageModalTitle" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
                 <p id="messageModalText" class="text-gray-600 mb-6"></p>
                 <button id="messageModalCloseBtn" class="btn btn-primary">OK</button>
@@ -337,11 +279,11 @@
             </div>
         </div>
     </div>
-    <!-- Cart Modal (placeholder) -->
-    <div id="cartModalPlaceholder" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4">
+     <!-- Cart Modal Placeholder (using unified modal styling) -->
+    <div id="cartModalPlaceholder" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[1000] hidden p-4">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
             <div class="text-center">
-                 <div class="text-5xl mb-4 text-violet-500"><i class="fas fa-cogs"></i></div>
+                 <div class="text-5xl mb-4 text-blue-500"><i class="fas fa-cogs"></i></div>
                 <h3 class="text-xl font-semibold mb-4 text-gray-800">Koszyk w Budowie</h3>
                 <p class="text-gray-600 mb-6">Funkcjonalność koszyka jest obecnie w trakcie przygotowania. Zapraszamy wkrótce!</p>
                 <button id="closeCartModalPlaceholderBtn" class="btn btn-primary">Rozumiem</button>
@@ -349,14 +291,11 @@
         </div>
     </div>
 
-
     <script>
         const currentYearGalleryEl = document.getElementById('currentYearGallery');
-        if (currentYearGalleryEl) {
-            currentYearGalleryEl.textContent = new Date().getFullYear();
-        }
+        if (currentYearGalleryEl) currentYearGalleryEl.textContent = new Date().getFullYear();
 
-        // --- Unified Modal Logic (from index.html, adapted for dark theme if needed via CSS vars) ---
+        // --- Unified Modal Logic ---
         const messageModal = document.getElementById('messageModal');
         const messageModalTitle = document.getElementById('messageModalTitle');
         const messageModalText = document.getElementById('messageModalText');
@@ -366,212 +305,216 @@
 
         function showGlobalModal(title, message, type = 'info', showLoginBtn = false) {
             if (!messageModal || !messageModalTitle || !messageModalText || !messageModalCloseBtn || !messageModalLoginBtn || !messageModalIcon) {
-                console.error("Brakuje elementów modala!");
-                alert(`${title}\n\n${message}`); // Fallback
-                return;
+                alert(`${title}\n\n${message}`); return;
             }
             messageModalTitle.textContent = title;
             messageModalText.textContent = message;
-
-            let iconHtml = '<i class="fas fa-info-circle" style="color: var(--accent-violet-light);"></i>'; // Default
-            if (type === 'success') iconHtml = '<i class="fas fa-check-circle" style="color: #4ade80;"></i>'; // green-400
-            else if (type === 'error') iconHtml = '<i class="fas fa-times-circle" style="color: #f87171;"></i>'; // red-400
+            let iconHtml = '<i class="fas fa-info-circle text-blue-500"></i>';
+            if (type === 'success') iconHtml = '<i class="fas fa-check-circle text-green-500"></i>';
+            else if (type === 'error') iconHtml = '<i class="fas fa-times-circle text-red-500"></i>';
             messageModalIcon.innerHTML = iconHtml;
-            
             messageModalLoginBtn.classList.toggle('hidden', !showLoginBtn);
             messageModal.classList.remove('hidden');
         }
-
-        if (messageModalCloseBtn) {
-            messageModalCloseBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
-        }
-        if (messageModalLoginBtn) {
-            messageModalLoginBtn.addEventListener('click', () => {
-                window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
-            });
-        }
-        // Close modal on outside click
-        if (messageModal) {
-            messageModal.addEventListener('click', (event) => {
-                if (event.target === messageModal) {
-                    messageModal.classList.add('hidden');
-                }
-            });
-        }
+        if (messageModalCloseBtn) messageModalCloseBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
+        if (messageModalLoginBtn) messageModalLoginBtn.addEventListener('click', () => {
+            window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        });
+        if (messageModal) messageModal.addEventListener('click', (e) => { if (e.target === messageModal) messageModal.classList.add('hidden'); });
         
-        // --- Cart Modal Placeholder Logic ---
+        // --- Cart Modal Placeholder ---
         const cartModalPlaceholder = document.getElementById('cartModalPlaceholder');
         const cartButtonHeader = document.getElementById('cart-button-header');
         const cartButtonMobileHeader = document.getElementById('cart-button-mobile-header');
         const closeCartModalPlaceholderBtn = document.getElementById('closeCartModalPlaceholderBtn');
+        if(cartButtonHeader) cartButtonHeader.addEventListener('click', () => cartModalPlaceholder.classList.remove('hidden'));
+        if(cartButtonMobileHeader) cartButtonMobileHeader.addEventListener('click', () => cartModalPlaceholder.classList.remove('hidden'));
+        if(closeCartModalPlaceholderBtn) closeCartModalPlaceholderBtn.addEventListener('click', () => cartModalPlaceholder.classList.add('hidden'));
+        if(cartModalPlaceholder) cartModalPlaceholder.addEventListener('click', (e) => { if(e.target === cartModalPlaceholder) cartModalPlaceholder.classList.add('hidden');});
 
-        function toggleCartPlaceholder(show) {
-            if (!cartModalPlaceholder) return;
-            cartModalPlaceholder.classList.toggle('hidden', !show);
+        // --- Auth and UI (Header/Footer) Update ---
+        const headerUsernameDisplay = document.getElementById('header-username-display');
+        const mobileHeaderUsernameDisplay = document.getElementById('mobile-header-username-display');
+        const logoutButtonHeader = document.getElementById('logout-button-header');
+        const logoutButtonMobile = document.getElementById('logout-button-mobile');
+        const footerDashboardLink = document.getElementById('footer-dashboard-link');
+        let isUserLoggedInGallery = false;
+
+        async function updateUserAuthUI() {
+            try {
+                const response = await fetch('/api/user', { credentials: 'include' });
+                if (response.ok) {
+                    const userData = await response.json();
+                    if (userData.username) {
+                        isUserLoggedInGallery = true;
+                        if(headerUsernameDisplay) { headerUsernameDisplay.textContent = `Witaj, ${userData.username}!`; headerUsernameDisplay.classList.remove('hidden');}
+                        if(mobileHeaderUsernameDisplay) { mobileHeaderUsernameDisplay.textContent = `Witaj, ${userData.username}!`; mobileHeaderUsernameDisplay.classList.remove('hidden');}
+                        if(logoutButtonHeader) logoutButtonHeader.classList.remove('hidden');
+                        if(logoutButtonMobile) logoutButtonMobile.classList.remove('hidden');
+                        if(footerDashboardLink) footerDashboardLink.style.display = 'inline';
+                        return true;
+                    }
+                }
+                isUserLoggedInGallery = false; // Not logged in or error
+                if(headerUsernameDisplay) headerUsernameDisplay.classList.add('hidden');
+                if(mobileHeaderUsernameDisplay) mobileHeaderUsernameDisplay.classList.add('hidden');
+                if(logoutButtonHeader) logoutButtonHeader.classList.add('hidden');
+                if(logoutButtonMobile) logoutButtonMobile.classList.add('hidden');
+                if(footerDashboardLink) footerDashboardLink.style.display = 'none';
+                return false;
+            } catch (error) {
+                console.warn('Nie udało się sprawdzić statusu użytkownika (galeria):', error);
+                isUserLoggedInGallery = false;
+                return false;
+            }
         }
 
-        if(cartButtonHeader) cartButtonHeader.addEventListener('click', () => toggleCartPlaceholder(true));
-        if(cartButtonMobileHeader) cartButtonMobileHeader.addEventListener('click', () => toggleCartPlaceholder(true));
-        if(closeCartModalPlaceholderBtn) closeCartModalPlaceholderBtn.addEventListener('click', () => toggleCartPlaceholder(false));
-        if(cartModalPlaceholder) cartModalPlaceholder.addEventListener('click', (e) => { if(e.target === cartModalPlaceholder) toggleCartPlaceholder(false); });
+        function handleLogoutGallery() {
+            fetch('/logout', { method: 'GET', credentials: 'include' })
+            .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
+            .catch(error => { showGlobalModal('Błąd', 'Problem z wylogowaniem.', 'error'); window.location.href = '/'; });
+        }
+        if(logoutButtonHeader) logoutButtonHeader.addEventListener('click', handleLogoutGallery);
+        if(logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleLogoutGallery);
 
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                const icon = mobileMenuButton.querySelector('svg');
+                if(icon) icon.innerHTML = mobileMenu.classList.contains('hidden') ? 
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />' : 
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+            });
+        }
 
-        // --- Material Gallery Specific Logic (existing logic to be integrated with new auth) ---
+        // --- Material Gallery Specific Logic ---
         const materialsGrid = document.getElementById('materials-grid');
         const featuredMaterialsGrid = document.getElementById('featured-materials-grid');
-        const dealsMaterialsGrid = document.getElementById('deals-materials-grid');
-        
         const loaderContainer = document.getElementById('loader-container');
         const noMaterialsMessage = document.getElementById('no-materials-message');
-        const errorMessageContainer = document.getElementById('error-message');
+        const errorLoadingMessage = document.getElementById('error-loading-message');
         const noFeaturedMessage = document.getElementById('no-featured-materials-message');
-        const noDealsMessage = document.getElementById('no-deals-materials-message');
         const featuredSection = document.getElementById('featured-materials-section');
-        const dealsSection = document.getElementById('deals-materials-section');
-
+        
         const searchInput = document.getElementById('search-input');
         const categoryFilter = document.getElementById('category-filter');
         const sortFilter = document.getElementById('sort-filter');
         const loadMoreButton = document.getElementById('load-more-button');
         const allMaterialsTitle = document.getElementById('all-materials-title');
 
-        let allFetchedMaterials = [];
-        let displayedMaterials = [];
-        let uniqueCategories = new Set();
-        const ITEMS_PER_PAGE = 8; 
-        let currentPage = 1;
+        let allFetchedMaterialsGallery = [];
+        let displayedMaterialsGallery = [];
+        let uniqueCategoriesGallery = new Set();
+        const ITEMS_PER_PAGE_GALLERY = 8; 
+        let currentPageGallery = 1;
 
-        function createMaterialCard(material) {
+        function createMaterialCardGallery(material) {
             const price = parseFloat(material.price);
             const discountPrice = material.discount_price ? parseFloat(material.discount_price) : null;
             
             let priceHtml = '';
             if (discountPrice && discountPrice < price) {
-                priceHtml = `<span class="text-red-400 font-bold text-xl">${discountPrice.toFixed(2)} PLN</span> 
-                             <span class="text-gray-500 line-through text-sm ml-2">${price.toFixed(2)} PLN</span>`;
+                priceHtml = `<span class="text-red-500 font-bold">${discountPrice.toFixed(2)} PLN</span> 
+                             <span class="material-card-price-original">${price.toFixed(2)} PLN</span>`;
             } else {
-                priceHtml = `<span class="font-bold text-xl">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
+                priceHtml = `<span class="font-bold">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
             }
 
-            let categoryIconClass = 'fa-file-lines';
+            let categoryIconClass = 'fa-file-alt'; // Default icon
             if (material.category) {
                 const catLower = material.category.toLowerCase();
-                if (catLower.includes('kurs')) categoryIconClass = 'fa-chalkboard-user';
-                else if (catLower.includes('video')) categoryIconClass = 'fa-clapperboard';
-                else if (catLower.includes('ebook')) categoryIconClass = 'fa-book-open-reader';
-                else if (catLower.includes('szablon')) categoryIconClass = 'fa-object-group';
-                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-person-chalkboard';
+                if (catLower.includes('kurs') || catLower.includes('video')) categoryIconClass = 'fa-chalkboard-teacher';
+                else if (catLower.includes('ebook')) categoryIconClass = 'fa-book-open';
+                else if (catLower.includes('szablon')) categoryIconClass = 'fa-drafting-compass';
+                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-graduation-cap';
             }
             
-            const imageElement = material.cover_image_url 
-                ? `<img src="${material.cover_image_url}" alt="${material.title}" onerror="this.style.display='none'; this.parentElement.querySelector('.material-card-gallery-icon-overlay').style.display='flex';" class="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110">
-                   <div class="material-card-gallery-icon-overlay" style="display: none;"><i class="fas ${categoryIconClass}"></i></div>`
-                : `<div class="material-card-gallery-icon-overlay"><i class="fas ${categoryIconClass}"></i></div>`;
+            const imageSrc = material.cover_image_url || `https://placehold.co/400x250/E2E8F0/A0AEC0?text=${encodeURIComponent(material.category || 'Materiał')}`;
 
             return `
-                <div class="material-card-gallery group">
-                    <div class="material-card-gallery-image-area">
-                        ${imageElement}
-                        ${discountPrice && discountPrice < price ? '<span class="badge-gallery badge-deal-gallery">OKAZJA!</span>' : ''}
-                        ${material.is_featured ? '<span class="badge-gallery badge-featured-gallery"><i class="fas fa-star fa-xs mr-1"></i>Polecane</span>' : ''}
+                <div class="material-card group">
+                    <div class="material-card-image-wrapper">
+                        <img src="${imageSrc}" alt="${material.title}" 
+                             onerror="this.onerror=null; this.parentElement.querySelector('.material-card-icon-overlay').style.display='flex'; this.style.display='none';">
+                        <div class="material-card-icon-overlay"><i class="fas ${categoryIconClass}"></i></div>
+                        <div class="material-card-badges">
+                            ${discountPrice && discountPrice < price ? '<span class="badge badge-deal">OKAZJA!</span>' : ''}
+                            ${material.is_featured ? '<span class="badge badge-featured"><i class="fas fa-star fa-xs mr-1"></i>Polecane</span>' : ''}
+                        </div>
                     </div>
-                    <div class="material-card-gallery-content">
-                        <div class="material-card-gallery-header">
-                            <h3 class="material-card-gallery-title">${material.title}</h3>
-                            ${material.category ? `<span class="material-card-gallery-category">${material.category}</span>` : ''}
-                        </div>
-                        <p class="material-card-gallery-description">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
-                        <div class="material-card-gallery-price-section">
-                            ${priceHtml}
-                        </div>
-                        <div class="material-card-gallery-footer">
-                            <button class="material-card-gallery-action-button acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${price > 0 ? price : 0}">
+                    <div class="material-card-content">
+                        ${material.category ? `<span class="material-card-category">${material.category}</span>` : ''}
+                        <h3 class="material-card-title">${material.title}</h3>
+                        <p class="material-card-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
+                        <div class="material-card-price">${priceHtml}</div>
+                        <div class="material-card-actions">
+                            <button class="btn btn-primary btn-sm w-full acquire-material-btn-gallery" data-material-id="${material.id}" data-material-title="${material.title}">
                                 <i class="fas fa-shopping-bag mr-2"></i> ${price > 0 ? 'Kup i Pobierz' : 'Pobierz'}
                             </button>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
         }
         
-        async function fetchAndProcessMaterials() {
-            if (!loaderContainer || !noMaterialsMessage || !errorMessageContainer || !materialsGrid || !featuredMaterialsGrid || !dealsMaterialsGrid) return;
-            loaderContainer.style.display = 'flex';
+        async function fetchAndProcessMaterialsGallery() {
+            if (!loaderContainer || !noMaterialsMessage || !errorLoadingMessage || !materialsGrid || !featuredMaterialsGrid) return;
+            loaderContainer.classList.remove('hidden');
             materialsGrid.innerHTML = ''; 
             featuredMaterialsGrid.innerHTML = '';
-            dealsMaterialsGrid.innerHTML = '';
             noMaterialsMessage.classList.add('hidden');
-            errorMessageContainer.classList.add('hidden');
+            errorLoadingMessage.classList.add('hidden');
             if (noFeaturedMessage) noFeaturedMessage.classList.add('hidden');
-            if (noDealsMessage) noDealsMessage.classList.add('hidden');
             if (featuredSection) featuredSection.classList.add('hidden');
-            if (dealsSection) dealsSection.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/materials', { credentials: 'include' });
-                if (response.status === 401 || response.status === 403) { // Handled by initializeGalleryPage now
-                    return; 
-                }
                 if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
                 
-                allFetchedMaterials = await response.json();
+                allFetchedMaterialsGallery = await response.json();
                 
-                uniqueCategories.clear();
-                allFetchedMaterials.forEach(m => { if (m.category) uniqueCategories.add(m.category); });
-                populateCategoryFilter();
-
-                displayFeaturedMaterials();
-                displayDealsMaterials();
-                
-                applyFiltersAndSort(); 
-
+                uniqueCategoriesGallery.clear();
+                allFetchedMaterialsGallery.forEach(m => { if (m.category) uniqueCategoriesGallery.add(m.category); });
+                populateCategoryFilterGallery();
+                displayFeaturedMaterialsGallery();
+                applyFiltersAndSortGallery(); 
             } catch (error) {
-                console.error('Błąd podczas pobierania materiałów:', error);
-                if(errorMessageContainer) errorMessageContainer.classList.remove('hidden');
+                console.error('Błąd podczas pobierania materiałów (galeria):', error);
+                if(errorLoadingMessage) errorLoadingMessage.classList.remove('hidden');
             } finally {
-                if (loaderContainer) loaderContainer.style.display = 'none';
+                if (loaderContainer) loaderContainer.classList.add('hidden');
             }
         }
 
-        function displayFeaturedMaterials() {
+        function displayFeaturedMaterialsGallery() {
             if (!featuredMaterialsGrid || !featuredSection || !noFeaturedMessage) return;
-            const featured = allFetchedMaterials.filter(m => m.is_featured === true).slice(0, 3); 
+            const featured = allFetchedMaterialsGallery.filter(m => m.is_featured === true).slice(0, 3); 
             featuredMaterialsGrid.innerHTML = '';
             if (featured.length > 0) {
-                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
+                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCardGallery(material)));
                 featuredSection.classList.remove('hidden');
                 noFeaturedMessage.classList.add('hidden');
             } else {
-                featuredSection.classList.add('hidden'); // Keep it hidden if no featured items
-            }
-        }
-
-        function displayDealsMaterials() {
-            if (!dealsMaterialsGrid || !dealsSection || !noDealsMessage) return;
-            const deals = allFetchedMaterials.filter(m => m.discount_price && parseFloat(m.discount_price) < parseFloat(m.price)).slice(0,3);
-            dealsMaterialsGrid.innerHTML = '';
-            if (deals.length > 0) {
-                deals.forEach(material => dealsMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
-                dealsSection.classList.remove('hidden');
-                noDealsMessage.classList.add('hidden');
-            } else {
-                dealsSection.classList.add('hidden'); // Keep it hidden
+                featuredSection.classList.add('hidden');
             }
         }
         
-        function populateCategoryFilter() {
+        function populateCategoryFilterGallery() {
             if (!categoryFilter) return;
             const firstOptionHtml = categoryFilter.options[0] ? categoryFilter.options[0].outerHTML : '<option value="">Wszystkie Kategorie</option>';
             categoryFilter.innerHTML = firstOptionHtml; 
-            uniqueCategories.forEach(category => {
+            uniqueCategoriesGallery.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category; option.textContent = category;
                 categoryFilter.appendChild(option);
             });
         }
 
-        function applyFiltersAndSort() {
+        function applyFiltersAndSortGallery() {
             if (!materialsGrid) return;
-            let filtered = [...allFetchedMaterials];
+            let filtered = [...allFetchedMaterialsGallery];
             const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
             const selectedCategory = categoryFilter ? categoryFilter.value : "";
             const sortBy = sortFilter ? sortFilter.value : "newest";
@@ -586,55 +529,52 @@
                 case 'title_desc': filtered.sort((a, b) => b.title.localeCompare(a.title, 'pl', { sensitivity: 'base' })); break;
                 default: filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break;
             }
-            displayedMaterials = filtered;
-            currentPage = 1; 
-            renderMaterialsPage();
-            updateAllMaterialsTitle(selectedCategory);
+            displayedMaterialsGallery = filtered;
+            currentPageGallery = 1; 
+            renderMaterialsPageGallery();
+            updateAllMaterialsTitleGallery(selectedCategory);
         }
         
-        function updateAllMaterialsTitle(category) {
+        function updateAllMaterialsTitleGallery(category) {
             if(allMaterialsTitle) allMaterialsTitle.textContent = category ? `Materiały w Kategorii: ${category}` : 'Wszystkie Materiały';
         }
 
-        function renderMaterialsPage() {
+        function renderMaterialsPageGallery() {
             if (!materialsGrid || !noMaterialsMessage || !loadMoreButton) return;
-            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = startIndex + ITEMS_PER_PAGE;
-            const materialsToDisplay = displayedMaterials.slice(startIndex, endIndex);
+            const startIndex = (currentPageGallery - 1) * ITEMS_PER_PAGE_GALLERY;
+            const endIndex = startIndex + ITEMS_PER_PAGE_GALLERY;
+            const materialsToDisplay = displayedMaterialsGallery.slice(startIndex, endIndex);
 
-            if (currentPage === 1) materialsGrid.innerHTML = '';
+            if (currentPageGallery === 1) materialsGrid.innerHTML = '';
             
-            if (displayedMaterials.length === 0 && currentPage === 1) {
+            if (displayedMaterialsGallery.length === 0 && currentPageGallery === 1) {
                 if(noMaterialsMessage) noMaterialsMessage.classList.remove('hidden');
             } else {
                 if(noMaterialsMessage) noMaterialsMessage.classList.add('hidden');
             }
 
-
             materialsToDisplay.forEach(material => {
-                materialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)); 
+                materialsGrid.insertAdjacentHTML('beforeend', createMaterialCardGallery(material)); 
             });
 
-            if (endIndex < displayedMaterials.length) loadMoreButton.classList.remove('hidden');
+            if (endIndex < displayedMaterialsGallery.length) loadMoreButton.classList.remove('hidden');
             else loadMoreButton.classList.add('hidden');
         }
 
-        if(loadMoreButton) loadMoreButton.addEventListener('click', () => { currentPage++; renderMaterialsPage(); });
+        if(loadMoreButton) loadMoreButton.addEventListener('click', () => { currentPageGallery++; renderMaterialsPageGallery(); });
         
-        function debounce(func, delay) {
+        function debounceGallery(func, delay) {
             let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
         }
-        if(searchInput) searchInput.addEventListener('input', debounce(applyFiltersAndSort, 300));
-        if(categoryFilter) categoryFilter.addEventListener('change', applyFiltersAndSort);
-        if(sortFilter) sortFilter.addEventListener('change', applyFiltersAndSort);
+        if(searchInput) searchInput.addEventListener('input', debounceGallery(applyFiltersAndSortGallery, 300));
+        if(categoryFilter) categoryFilter.addEventListener('change', applyFiltersAndSortGallery);
+        if(sortFilter) sortFilter.addEventListener('change', applyFiltersAndSortGallery);
 
-
-        function handleAcquireMaterial(event) {
-            const buttonToProcess = event.target.closest('.acquire-material-btn');
+        function handleAcquireMaterialGallery(event) {
+            const buttonToProcess = event.target.closest('.acquire-material-btn-gallery');
             if (!buttonToProcess) return;
             
             event.preventDefault(); 
-            
             const materialId = buttonToProcess.dataset.materialId;
             const materialTitle = buttonToProcess.dataset.materialTitle;
             const originalButtonHTML = buttonToProcess.innerHTML;
@@ -646,14 +586,13 @@
                 .then(response => response.json().then(data => ({ status: response.status, body: data })))
                 .then(({ status, body }) => {
                     if (status >= 200 && status < 300) {
-                        showGlobalModal('Sukces!', `${body.message || 'Materiał nabyty!'} "${materialTitle}". Zobaczysz go wkrótce w Panelu Użytkownika.`, 'success');
-                        // setTimeout(() => { window.location.href = '/dashboard.html'; }, 3500); // Opcjonalne przekierowanie
+                        showGlobalModal('Sukces!', `${body.message || 'Materiał nabyty!'} Zobaczysz go wkrótce w Panelu Użytkownika.`, 'success');
                     } else {
                         throw new Error(body.message || `Błąd ${status}`);
                     }
                 })
                 .catch(error => {
-                    showGlobalModal('Błąd', `Nie udało się nabyć materiału "${materialTitle}". ${error.message}`, 'error');
+                    showGlobalModal('Błąd Nabywania', `${error.message}`, 'error');
                 })
                 .finally(() => {
                     buttonToProcess.disabled = false;
@@ -661,66 +600,22 @@
                 });
         }
 
-        if (materialsGrid) materialsGrid.addEventListener('click', handleAcquireMaterial);
-        if (featuredMaterialsGrid) featuredMaterialsGrid.addEventListener('click', handleAcquireMaterial);
-        if (dealsMaterialsGrid) dealsMaterialsGrid.addEventListener('click', handleAcquireMaterial);
-        
-        // --- Auth and UI Update Logic for Gallery Page ---
-        const logoutButtonHeaderEl = document.getElementById('logout-button-header');
-        const logoutButtonMobileEl = document.getElementById('logout-button-mobile');
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
+        if (materialsGrid) materialsGrid.addEventListener('click', handleAcquireMaterialGallery);
+        if (featuredMaterialsGrid) featuredMaterialsGrid.addEventListener('click', handleAcquireMaterialGallery);
+        // No deals grid in this new version yet.
 
-        function handleLogoutGallery() {
-            fetch('/logout', { method: 'GET', credentials: 'include' })
-                .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
-                .catch(error => { showGlobalModal('Błąd', 'Problem z wylogowaniem.', 'error'); window.location.href = '/'; });
-        }
-
-        if (logoutButtonHeaderEl) logoutButtonHeaderEl.addEventListener('click', handleLogoutGallery);
-        if (logoutButtonMobileEl) logoutButtonMobileEl.addEventListener('click', handleLogoutGallery);
-
-        if (mobileMenuButton && mobileMenu) {
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-                const icon = mobileMenuButton.querySelector('svg');
-                if(icon) icon.innerHTML = mobileMenu.classList.contains('hidden') ? 
-                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />' : 
-                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
-            });
-            mobileMenu.querySelectorAll('a, button').forEach(link => {
-                link.addEventListener('click', () => {
-                    if (!link.id.startsWith('logout-button')) { 
-                        mobileMenu.classList.add('hidden');
-                        const icon = mobileMenuButton.querySelector('svg');
-                        if(icon) icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
-                    }
-                });
-            });
-        }
-        
-        async function initializeGalleryPage() {
-            try {
-                const response = await fetch('/api/user', { credentials: 'include' });
-                if (!response.ok) {
-                    if (response.status === 401 || response.status === 403) {
-                        showGlobalModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać materiały. Przekierowuję do strony logowania...', 'error', true);
-                        // Nie przekierowuj od razu, daj użytkownikowi szansę kliknąć przycisk w modalu
-                        // setTimeout(() => { window.location.href = '/login.html?redirect=/material_gallery.html'; }, 3500);
-                        return false; // Wskazuje, że użytkownik nie jest zalogowany
-                    }
-                    throw new Error('Błąd weryfikacji użytkownika');
-                }
-                // Użytkownik zalogowany, kontynuuj ładowanie materiałów
-                await fetchAndProcessMaterials(); // Czekaj na załadowanie materiałów
-                return true; // Wskazuje, że użytkownik jest zalogowany
-            } catch (error) {
-                console.error("Błąd inicjalizacji strony galerii:", error);
-                showGlobalModal('Błąd Krytyczny', 'Wystąpił problem z weryfikacją sesji. Spróbuj odświeżyć stronę lub zalogować się ponownie.', 'error', true);
-                return false; // Błąd, użytkownik może nie być zalogowany
+        async function initializeNewGalleryPage() {
+            const loggedIn = await updateUserAuthUI(); // Updates header/footer auth state
+            if (!loggedIn) {
+                showGlobalModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać materiały.', 'error', true);
+                 // Hide content that requires login
+                if(document.getElementById('all-materials-section')) document.getElementById('all-materials-section').classList.add('hidden');
+                if(document.getElementById('featured-materials-section')) document.getElementById('featured-materials-section').classList.add('hidden');
+                return;
             }
+            await fetchAndProcessMaterialsGallery();
         }
-        document.addEventListener('DOMContentLoaded', initializeGalleryPage);
+        document.addEventListener('DOMContentLoaded', initializeNewGalleryPage);
     </script>
 </body>
 </html>
