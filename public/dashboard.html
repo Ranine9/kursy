@@ -3,300 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Użytkownika - MateriałyPRO (Nowy Design)</title>
-    <script src="https://cdn.tailwindcss.com"></script> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Panel Użytkownika - MateriałyPRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa; /* Light Gray */
-            color: #343a40; /* Dark Gray */
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Tailwind gray-900 - bardzo ciemne tło */
+            color: #d1d5db; /* Tailwind gray-300 - domyślny kolor tekstu */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         :root {
-            --accent-color: #0891b2; /* Cyan-600 */
-            --accent-color-hover: #06b6d4; /* Cyan-500 */
-            --text-primary: #1f2937; /* Gray-800 */
-            --text-secondary: #6b7280; /* Gray-500 */
-            --bg-panel: #ffffff;
-            --border-color: #e5e7eb; /* Gray-200 */
-            --error-color: #ef4444; /* Red-500 */
-            --success-color: #22c55e; /* Green-500 */
+            --brand-purple: #8b5cf6; /* violet-500 */
+            --brand-purple-hover: #7c3aed; /* violet-600 */
+            --brand-gradient-from: #8b5cf6; /* violet-500 */
+            --brand-gradient-to: #a855f7;   /* purple-500 */
+            --text-primary: #f3f4f6; /* gray-100 */
+            --text-secondary: #9ca3af; /* gray-400 */
+            --bg-panel: #1f2937; /* gray-800 */
+            --border-panel: #374151; /* gray-700 */
+            --border-panel-hover: #a78bfa80; /* violet-400 with opacity */
+            --shadow-panel-hover: 0 0 30px 5px rgba(167, 139, 250, 0.2);
         }
-
-        /* General Helper Classes (Tailwind can also be used) */
-        .container-main {
-            @apply container mx-auto px-4 sm:px-6 lg:px-8;
-        }
-
-        /* Buttons */
         .btn {
-            @apply inline-block px-6 py-2.5 text-sm font-semibold rounded-lg shadow-sm transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
+            @apply inline-block px-6 py-3 text-center font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900;
         }
-        .btn-accent {
-            @apply bg-[var(--accent-color)] text-white hover:bg-[var(--accent-color-hover)] focus:ring-[var(--accent-color)];
+        .btn-brand { 
+            @apply bg-gradient-to-r from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] text-white hover:opacity-90 focus:ring-[var(--brand-purple)];
         }
-        .btn-secondary {
-            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
+        .btn-secondary-dark { 
+            @apply bg-gray-700 text-gray-200 hover:bg-gray-600 focus:ring-gray-500;
         }
         .btn-sm {
-            @apply px-5 py-2 text-xs;
-        }
-        .btn-full {
-            @apply w-full;
+            @apply px-5 py-2.5 text-sm;
         }
 
-        /* Header */
-        .app-header {
-            @apply bg-white shadow-md sticky top-0 z-50 border-b border-[var(--border-color)];
+        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (ODWAŻNY DESIGN) === */
+        .material-item-v3 { 
+            @apply bg-[var(--bg-panel)] p-6 rounded-2xl shadow-xl border border-[var(--border-panel)]
+                   flex flex-col md:flex-row items-center md:items-start gap-6 
+                   transition-all duration-300 ease-out hover:shadow-[var(--shadow-panel-hover)] hover:border-[var(--border-panel-hover)] transform hover:-translate-y-2;
         }
-        .app-header .logo {
-            @apply text-3xl font-bold text-[var(--accent-color)];
+        .material-icon-area-v3 { 
+            @apply flex-shrink-0 w-24 h-24 bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] text-white rounded-2xl flex items-center justify-center shadow-2xl mb-4 md:mb-0 transition-all duration-300 group-hover:from-violet-500 group-hover:to-purple-600 group-hover:scale-105 group-hover:shadow-violet-500/50;
         }
-        .app-header .logo span {
-            @apply text-[var(--text-primary)];
+        .material-icon-area-v3 i { 
+            @apply text-5xl opacity-90;
         }
-        .header-nav-link {
-            @apply text-gray-600 hover:text-[var(--accent-color)] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
-        }
-
-        /* Mobile Menu */
-        .mobile-menu {
-            @apply md:hidden hidden bg-white shadow-lg rounded-b-md border-t border-[var(--border-color)];
-        }
-        .mobile-menu-link {
-            @apply block header-nav-link text-base px-4 py-3;
-        }
-
-        /* Page Header */
-        .page-title {
-            @apply text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2;
-        }
-        .page-subtitle {
-            @apply text-lg text-[var(--text-secondary)] mb-10;
-        }
-
-        /* Tabs */
-        .tabs-nav {
-            @apply mb-8 border-b border-[var(--border-color)];
-        }
-        .tab-link {
-            @apply whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-base focus:outline-none transition-colors duration-200;
-        }
-        .tab-link-active {
-            @apply border-[var(--accent-color)] text-[var(--accent-color)];
-        }
-        .tab-link-inactive {
-            @apply border-transparent text-gray-500 hover:text-[var(--accent-color)] hover:border-[var(--accent-color)]/50;
-        }
-
-        /* Section Content */
-        .section-title {
-            @apply text-2xl font-semibold text-[var(--text-primary)] mb-6;
-        }
-
-        /* Material Item (New Design) */
-        .material-card {
-            @apply bg-[var(--bg-panel)] p-5 rounded-xl border border-[var(--border-color)]
-                   flex flex-col sm:flex-row items-start gap-5
-                   transition-all duration-300 ease-out hover:shadow-lg hover:border-[var(--accent-color)]/50;
-        }
-        .material-card-icon-area {
-            @apply flex-shrink-0 w-16 h-16 bg-[var(--accent-color)]/10 text-[var(--accent-color)] rounded-lg flex items-center justify-center mb-3 sm:mb-0;
-        }
-        .material-card-icon-area i {
-            @apply text-3xl;
-        }
-        .material-card-content {
+        .material-content-area-v3 { 
             @apply flex-grow flex flex-col w-full;
         }
-        .material-card-header {
-            @apply flex flex-col md:flex-row justify-between items-start md:items-center mb-1.5;
+        .material-header-v3 {
+            @apply flex flex-col xl:flex-row justify-between items-start xl:items-center mb-2.5;
         }
-        .material-card-title {
-            @apply text-xl font-semibold text-[var(--text-primary)] hover:text-[var(--accent-color)] transition-colors;
+        .material-title-v3 {
+            @apply text-2xl font-extrabold text-[var(--text-primary)] group-hover:text-[var(--brand-purple)] transition-colors;
         }
-        .material-card-category {
-            @apply text-xs font-medium px-2.5 py-1 rounded-full inline-block mt-1 md:mt-0 whitespace-nowrap;
-            /* Dynamic category colors will be applied in JS */
+        .material-category-v3 {
+            @apply text-xs font-semibold text-[var(--brand-purple)] bg-violet-700/40 px-3.5 py-1.5 rounded-lg inline-block mt-2 xl:mt-0 whitespace-nowrap;
         }
-        .material-card-description {
-            @apply text-sm text-[var(--text-secondary)] mb-3 leading-relaxed;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; /* Approx 2 lines */
+        .material-description-v3 {
+            @apply text-base text-[var(--text-secondary)] mb-4 leading-relaxed;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; min-height: 4.5rem; /* Approx 3 lines */
         }
-        .material-card-progress-section { @apply mb-3; }
-        .material-card-progress-bar-container {
-            @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+        .material-progress-section-v3 {
+            @apply mb-4;
         }
-        .material-card-progress-bar {
-            @apply bg-[var(--accent-color)] h-2 rounded-full transition-all duration-500 ease-out;
+        .material-progress-bar-container-v3 { 
+            @apply w-full bg-gray-700 rounded-full h-2.5 overflow-hidden;
         }
-        .material-card-footer {
-            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-3 border-t border-[var(--border-color)];
+        .material-progress-bar-v3 {
+            @apply bg-gradient-to-r from-violet-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out;
         }
-        .material-card-date {
-            @apply text-xs text-gray-400 mb-2 sm:mb-0;
+        .material-footer-v3 {
+            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-4 border-t border-[var(--border-panel)];
         }
-        .material-card-action-button {
-            @apply btn btn-accent btn-sm text-xs px-4 py-1.5;
+        .material-date-v3 {
+            @apply text-sm text-gray-500 mb-3 sm:mb-0;
         }
+        .material-action-button-v3 { 
+            @apply btn btn-brand btn-sm whitespace-nowrap text-base px-8 py-3; 
+        }
+        /* ========================================================== */
 
-        /* Loader */
-        .loader-dots {
-            @apply text-center my-16;
+        .loader {
+            border: 5px solid #374151; /* gray-700 */
+            border-top: 5px solid var(--brand-purple); 
+            border-radius: 50%; width: 60px; height: 60px;
+            animation: spin 1s linear infinite; margin: 50px auto;
         }
-        .loader-dots span {
-            @apply inline-block w-3 h-3 bg-[var(--accent-color)] rounded-full mx-1 animate-bounce;
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .header-link { 
+             @apply text-gray-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
         }
-        .loader-dots span:nth-child(2) { @apply animation-delay-200; }
-        .loader-dots span:nth-child(3) { @apply animation-delay-400; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-        .animation-delay-200 { animation-delay: 0.2s; }
-        .animation-delay-400 { animation-delay: 0.4s; }
-
-
-        /* Forms */
-        .form-section {
-            @apply bg-[var(--bg-panel)] p-6 sm:p-8 rounded-xl border border-[var(--border-color)] shadow-sm;
+        .page-header { 
+            @apply text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-sky-400;
         }
-        .form-block-title {
-            @apply text-xl font-semibold text-[var(--text-primary)] mb-5 pb-3 border-b border-[var(--border-color)] flex items-center;
+        .page-subheader {
+             @apply mt-3 text-xl text-gray-400;
         }
-        .form-block-title i {
-            @apply mr-3 text-[var(--accent-color)] text-lg;
+        .tab-button {
+            @apply whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-base focus:outline-none transition-colors duration-200;
         }
-        .form-label {
-            @apply block text-xs font-medium text-gray-600 mb-1;
+        .tab-button-active {
+            @apply border-violet-500 text-violet-400;
+        }
+        .tab-button-inactive {
+            @apply border-transparent text-gray-500 hover:text-violet-400 hover:border-violet-500/50;
         }
         .form-input {
-            @apply mt-1 block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] focus:border-[var(--accent-color)] sm:text-sm bg-white text-gray-800 placeholder-gray-400;
+            @apply mt-1 block w-full px-4 py-3 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-base bg-gray-700 text-gray-100 placeholder-gray-400;
         }
-        .form-input-readonly {
-             @apply bg-gray-100 cursor-not-allowed text-gray-500;
+        .form-label {
+            @apply block text-sm font-medium text-gray-300 mb-1.5;
         }
-        .form-hint {
-            @apply text-xs text-gray-500 mt-1;
+        .form-section-title {
+             @apply text-2xl font-semibold text-gray-100 mb-5 pb-3 border-b-2 border-gray-700 flex items-center;
         }
-
-        /* Modal */
-        .modal-overlay {
-            @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0;
+        .form-section-title i {
+            @apply mr-3 text-violet-400 text-xl;
         }
-        .modal-box {
-            @apply bg-white p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-200;
-        }
-        .modal-icon { @apply text-4xl mb-3; }
-        .modal-title { @apply text-xl font-semibold mb-2 text-gray-800; }
-        .modal-text { @apply text-gray-600 mb-5 text-sm; }
-
-        /* Footer */
-        .app-footer {
-            @apply bg-gray-100 text-gray-600 py-8 text-center mt-auto border-t border-[var(--border-color)];
-        }
-
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="text-gray-300 flex flex-col min-h-screen">
 
-    <header class="app-header">
-        <div class="container-main">
-            <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="logo">
-                    Materiały<span>PRO</span>
+    <header class="bg-gray-900/80 backdrop-blur-lg shadow-2xl sticky top-0 z-50 border-b border-gray-700/60">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-24">
+                <a href="index.html" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500 transition-opacity hover:opacity-90">
+                    Materiały<span class="text-gray-100">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-2">
-                    <a href="index.html" class="header-nav-link">Strona Główna</a>
-                    <a href="/material_gallery.html" class="header-nav-link">Przeglądaj Materiały</a>
-                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary btn-sm">Wyloguj się</button>
+                <nav class="hidden md:flex items-center space-x-3">
+                    <a href="index.html" class="header-link text-base">Strona Główna</a>
+                    <a href="/material_gallery.html" class="header-link text-base">Przeglądaj Materiały</a>
+                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary-dark btn-sm">Wyloguj się</button>
                 </nav>
                  <div class="md:hidden">
-                    <button id="mobile-menu-button-dashboard" class="text-gray-600 hover:text-[var(--accent-color)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)] rounded-md p-2">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <button id="mobile-menu-button-dashboard" class="text-gray-300 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-md p-2">
+                        <svg class="h-7 w-7" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-         <div id="mobile-menu-dashboard" class="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="index.html" class="mobile-menu-link">Strona Główna</a>
-                <a href="/material_gallery.html" class="mobile-menu-link">Przeglądaj Materiały</a>
-                <a href="#account-settings-section" class="mobile-menu-link nav-account-settings">Ustawienia Konta</a>
+         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-gray-800/95 backdrop-blur-md shadow-xl rounded-b-lg border-t border-gray-700">
+            <div class="px-3 pt-3 pb-4 space-y-2">
+                <a href="index.html" class="block header-link text-lg">Strona Główna</a>
+                <a href="/material_gallery.html" class="block header-link text-lg">Przeglądaj Materiały</a>
+                <a href="#account-settings-section" class="block header-link text-lg nav-account-settings">Ustawienia Konta</a>
             </div>
-            <div class="pt-3 pb-3 border-t border-gray-200 px-4">
-                 <button id="logout-button-dashboard-mobile" class="btn btn-secondary btn-sm btn-full">Wyloguj</button>
+            <div class="pt-4 pb-4 border-t border-gray-700 px-5">
+                 <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary-dark text-base">Wyloguj</button>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow container-main py-10">
-        <div class="mb-12 text-left">
-            <h1 class="page-title">Witaj z powrotem, <span id="username-placeholder" class="text-[var(--accent-color)]">Ładowanie...</span>!</h1>
-            <p class="page-subtitle">Twoje centrum zarządzania materiałami i rozwojem.</p>
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-16 text-center md:text-left">
+            <h1 class="page-header">Witaj z powrotem, <span id="username-placeholder" class="text-violet-400">Ładowanie...</span>!</h1>
+            <p class="page-subheader">Twoje centrum zarządzania materiałami i rozwojem.</p>
         </div>
 
-        <div class="tabs-nav">
-            <nav class="-mb-px flex space-x-6" aria-label="Dashboard Tabs" id="dashboard-tabs">
-                <button data-tab="my-materials" class="tab-link tab-link-active">Moje Materiały</button>
-                <button data-tab="account-settings" class="tab-link tab-link-inactive nav-account-settings">Ustawienia Konta</button>
+        <div class="mb-10 border-b-2 border-gray-700">
+            <nav class="-mb-px flex space-x-8" aria-label="Dashboard Tabs" id="dashboard-tabs">
+                <button data-tab="my-materials" class="tab-button tab-button-active">Moje Materiały</button>
+                <button data-tab="account-settings" class="tab-button tab-button-inactive nav-account-settings">Ustawienia Konta</button>
             </nav>
         </div>
 
         <section id="my-materials-section" class="dashboard-tab-content">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="section-title">Twoje Nabyte Materiały</h2>
-                <a href="/material_gallery.html" class="btn btn-accent">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <h2 class="text-3xl font-bold text-gray-100">Twoje Nabyte Materiały</h2>
+                <a href="/material_gallery.html" class="btn btn-brand btn-sm">
                     <i class="fas fa-layer-group mr-2"></i>Przeglądaj Bibliotekę
                 </a>
             </div>
-            <div id="my-materials-grid" class="space-y-6">
+            <div id="my-materials-grid" class="space-y-8"> 
                 <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-16">
-                    <div class="loader-dots"><span></span><span></span><span></span></div>
+                    <div class="loader"></div>
                 </div>
-                <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
-                    <i class="fas fa-folder-open fa-4x mb-5 text-gray-400"></i>
-                    <p class="text-xl font-semibold">Nie posiadasz jeszcze żadnych materiałów.</p>
-                    <p class="mt-1.5 text-md">Odwiedź <a href="/material_gallery.html" class="text-[var(--accent-color)] hover:text-[var(--accent-color-hover)] font-semibold underline">galerię materiałów</a>, aby rozpocząć!</p>
+                <div id="no-my-materials-message" class="hidden col-span-full text-center py-20 text-gray-400">
+                    <i class="fas fa-folder-open fa-5x mb-6 text-gray-600"></i>
+                    <p class="text-2xl font-semibold">Nie posiadasz jeszcze żadnych materiałów.</p>
+                    <p class="mt-2 text-lg">Odwiedź <a href="/material_gallery.html" class="text-violet-400 hover:text-violet-300 font-semibold underline decoration-violet-500/50 hover:decoration-violet-400">galerię materiałów</a>, aby rozpocząć swoją podróż!</p>
                 </div>
-                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-16 text-[var(--error-color)]">
-                    <i class="fas fa-exclamation-triangle fa-4x mb-5"></i>
-                    <p class="text-xl font-semibold">Wystąpił błąd.</p>
-                     <p class="text-gray-500">Nie udało się załadować Twoich materiałów. Spróbuj odświeżyć stronę.</p>
+                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-20 text-red-400">
+                    <i class="fas fa-exclamation-triangle fa-5x mb-6"></i>
+                    <p class="text-2xl font-semibold">Wystąpił błąd.</p>
+                     <p class="text-gray-400">Nie udało się załadować Twoich materiałów. Spróbuj odświeżyć stronę.</p>
                 </div>
             </div>
         </section>
 
         <section id="account-settings-section" class="dashboard-tab-content hidden">
-             <h2 class="section-title">Ustawienia Konta</h2>
-            <div class="form-section">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-10">
+             <h2 class="text-3xl font-bold text-gray-100 mb-8">Ustawienia Konta</h2>
+            <div class="bg-gray-800/70 p-6 sm:p-10 rounded-2xl shadow-2xl border border-gray-700/60">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12">
                     <div>
-                        <h3 class="form-block-title">
+                        <h3 class="form-section-title">
                             <i class="fas fa-user-edit"></i>Dane Osobowe
                         </h3>
-                        <form id="profileUpdateForm" class="space-y-5">
+                        <form id="profileUpdateForm" class="space-y-6">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
-                                <input type="text" id="profileUsername" name="username" class="form-input form-input-readonly" readonly disabled>
-                                <p class="form-hint">Nazwy użytkownika nie można zmienić.</p>
+                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-700/50 cursor-not-allowed text-gray-400" readonly disabled>
+                                <p class="text-xs text-gray-500 mt-1.5">Nazwy użytkownika nie można zmienić.</p>
                             </div>
                             <div>
                                 <label for="profileEmail" class="form-label">Adres Email</label>
                                 <input type="email" id="profileEmail" name="email" class="form-input" required>
                             </div>
-                            <button type="submit" id="saveProfileButton" class="btn btn-accent w-full sm:w-auto">
+                            <button type="submit" id="saveProfileButton" class="btn btn-brand w-full sm:w-auto">
                                 <i class="fas fa-save mr-2"></i>Zapisz Zmiany
                             </button>
                         </form>
                     </div>
                     <div>
-                        <h3 class="form-block-title">
+                        <h3 class="form-section-title">
                             <i class="fas fa-key"></i>Zmień Hasło
                         </h3>
-                        <form id="passwordChangeForm" class="space-y-5">
+                        <form id="passwordChangeForm" class="space-y-6">
                             <div>
                                 <label for="currentPassword" class="form-label">Aktualne Hasło</label>
                                 <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
@@ -309,37 +240,37 @@
                                 <label for="confirmNewPassword" class="form-label">Potwierdź Nowe Hasło</label>
                                 <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
                             </div>
-                            <button type="submit" id="changePasswordButton" class="btn btn-accent w-full sm:w-auto">
+                            <button type="submit" id="changePasswordButton" class="btn btn-brand w-full sm:w-auto">
                                 <i class="fas fa-sync-alt mr-2"></i>Zmień Hasło
                             </button>
                         </form>
                     </div>
                 </div>
-                <div class="mt-10 pt-6 border-t border-[var(--border-color)]">
-                     <h3 class="form-block-title">
+                <div class="mt-12 pt-8 border-t-2 border-gray-700">
+                     <h3 class="form-section-title">
                         <i class="fas fa-info-circle"></i>Informacje o Koncie
                     </h3>
-                     <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">ładowanie...</span></p>
-                     <p class="text-gray-600 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">ładowanie...</span></p>
+                     <p class="text-gray-400 text-base">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-700 px-2.5 py-1 rounded-md text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-base mt-2.5">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-700 px-2.5 py-1 rounded-md text-gray-300">ładowanie...</span></p>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="app-footer">
-        <div class="container-main">
+    <footer class="bg-gray-900 text-gray-500 py-12 text-center mt-auto border-t border-gray-700/50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
-             <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-[var(--accent-color)]"></i> dla rozwoju.</p>
+             <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-violet-500"></i> dla rozwoju.</p>
         </div>
     </footer>
 
-    <div id="messageModalDashboard" class="modal-overlay">
-        <div class="modal-box" id="messageModalDashboardBox">
+    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-700" id="messageModalDashboardBox">
             <div class="text-center">
-                <div id="messageModalDashboardIcon" class="modal-icon"></div>
-                <h3 id="messageModalDashboardTitle" class="modal-title">Komunikat</h3>
-                <p id="messageModalDashboardText" class="modal-text"></p>
-                <button id="messageModalDashboardCloseBtn" class="btn btn-accent w-full sm:w-auto">Rozumiem</button>
+                <div id="messageModalDashboardIcon" class="text-5xl mb-4"></div>
+                <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-100">Komunikat</h3>
+                <p id="messageModalDashboardText" class="text-gray-300 mb-6 text-base"></p>
+                <button id="messageModalDashboardCloseBtn" class="btn btn-brand w-full sm:w-auto">Rozumiem</button>
             </div>
         </div>
     </div>
@@ -347,7 +278,6 @@
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
 
-        // --- Stałe DOM ---
         const messageModalDashboard = document.getElementById('messageModalDashboard');
         const messageModalDashboardBox = document.getElementById('messageModalDashboardBox');
         const messageModalDashboardTitle = document.getElementById('messageModalDashboardTitle');
@@ -368,46 +298,31 @@
         const dashboardTabs = document.getElementById('dashboard-tabs');
         const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-        // --- Funkcje Modala ---
         function showDashboardModal(title, message, type = 'info') {
             if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
-            messageModalDashboardTitle.textContent = title;
-            messageModalDashboardText.textContent = message;
-            let iconColorClass = 'text-blue-500'; // Default info
-            if (type === 'success') iconColorClass = 'text-[var(--success-color)]';
-            else if (type === 'error') iconColorClass = 'text-[var(--error-color)]';
-            messageModalDashboardIcon.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'} ${iconColorClass}"></i>`;
-
-            messageModalDashboard.classList.remove('hidden');
-            setTimeout(() => {
-                 messageModalDashboard.classList.remove('opacity-0');
-                 messageModalDashboardBox.classList.remove('opacity-0', 'scale-95');
-                 messageModalDashboardBox.classList.add('opacity-100', 'scale-100');
-            }, 10);
+            messageModalDashboardTitle.textContent = title; messageModalDashboardText.textContent = message;
+            messageModalDashboardIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-400"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-400"></i>' : '<i class="fas fa-info-circle text-blue-400"></i>';
+            messageModalDashboard.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => { messageModalDashboardBox.classList.remove('opacity-0', 'scale-95'); messageModalDashboardBox.classList.add('opacity-100', 'scale-100'); }, 10);
         }
         function hideDashboardModal() {
             if (!messageModalDashboard || !messageModalDashboardBox) return;
-            messageModalDashboardBox.classList.remove('opacity-100', 'scale-100');
-            messageModalDashboardBox.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => {
-                messageModalDashboard.classList.add('opacity-0');
-                setTimeout(() => messageModalDashboard.classList.add('hidden'), 300);
-            }, 300);
+            messageModalDashboardBox.classList.remove('opacity-100', 'scale-100'); messageModalDashboardBox.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => messageModalDashboard.classList.add('hidden', 'opacity-0'), 300);
         }
         if (messageModalDashboardCloseBtn) messageModalDashboardCloseBtn.addEventListener('click', hideDashboardModal);
         if (messageModalDashboard) messageModalDashboard.addEventListener('click', (e) => { if (e.target === messageModalDashboard) hideDashboardModal(); });
 
-        // --- Dane użytkownika ---
         async function fetchUserData() {
             try {
                 const response = await fetch('/api/user', { credentials: 'include' });
                 if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        showDashboardModal('Brak dostępu', 'Sesja wygasła lub brak uprawnień. Przekierowuję do logowania...', 'error');
+                        showDashboardModal('Brak dostępu', 'Sesja wygasła. Przekierowuję...', 'error');
                         setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
                         return null;
                     }
-                    throw new Error(`Błąd HTTP: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const userData = await response.json();
                 if (usernamePlaceholder && userData.username) usernamePlaceholder.textContent = userData.username;
@@ -420,69 +335,69 @@
             } catch (error) {
                 console.error('Nie udało się pobrać danych użytkownika:', error);
                 if (usernamePlaceholder) usernamePlaceholder.textContent = 'Błąd';
-                showDashboardModal('Błąd', `Nie udało się załadować danych użytkownika. ${error.message}`, 'error');
+                showDashboardModal('Błąd', 'Nie udało się załadować danych użytkownika.', 'error');
                 return null;
             }
         }
 
-        // --- Tworzenie panelu materiału (NOWY DESIGN) ---
         function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
             
-            let categoryIconClass = 'fa-file-alt'; // Domyślna ikona
-            let categoryStyle = { bg: 'bg-gray-100', text: 'text-gray-600'}; // Domyślne kolory kategorii
+            let categoryIconClass = 'fa-file-lines'; 
+            let categoryColorClasses = { bg: 'bg-gray-700/60', text: 'text-gray-300'}; 
 
             if (material.category) {
                 const catLower = material.category.toLowerCase();
-                if (catLower.includes('kurs')) { categoryIconClass = 'fa-chalkboard-teacher'; categoryStyle = { bg: 'bg-blue-100', text: 'text-blue-700'}; }
-                else if (catLower.includes('video')) { categoryIconClass = 'fa-video'; categoryStyle = { bg: 'bg-sky-100', text: 'text-sky-700'};}
-                else if (catLower.includes('ebook') || catLower.includes('książka')) { categoryIconClass = 'fa-book-open'; categoryStyle = { bg: 'bg-emerald-100', text: 'text-emerald-700'}; }
-                else if (catLower.includes('szablon')) { categoryIconClass = 'fa-object-group'; categoryStyle = { bg: 'bg-amber-100', text: 'text-amber-700'}; }
-                else if (catLower.includes('poradnik')) { categoryIconClass = 'fa-compass'; categoryStyle = { bg: 'bg-indigo-100', text: 'text-indigo-700'}; }
-                else if (catLower.includes('audio')) { categoryIconClass = 'fa-headphones'; categoryStyle = { bg: 'bg-rose-100', text: 'text-rose-700'}; }
-                else if (catLower.includes('grafika')) { categoryIconClass = 'fa-image'; categoryStyle = { bg: 'bg-pink-100', text: 'text-pink-700'}; }
-                else if (catLower.includes('kod') || catLower.includes('programowanie')) { categoryIconClass = 'fa-code'; categoryStyle = { bg: 'bg-teal-100', text: 'text-teal-700'}; }
+                if (catLower.includes('kurs')) { categoryIconClass = 'fa-chalkboard-user'; categoryColorClasses = { bg: 'bg-blue-700/60', text: 'text-blue-300'}; }
+                else if (catLower.includes('video')) { categoryIconClass = 'fa-clapperboard'; categoryColorClasses = { bg: 'bg-sky-700/60', text: 'text-sky-300'};}
+                else if (catLower.includes('ebook') || catLower.includes('książka')) { categoryIconClass = 'fa-book-open-reader'; categoryColorClasses = { bg: 'bg-emerald-700/60', text: 'text-emerald-300'}; }
+                else if (catLower.includes('szablon')) { categoryIconClass = 'fa-object-group'; categoryColorClasses = { bg: 'bg-amber-700/60', text: 'text-amber-300'}; }
+                else if (catLower.includes('poradnik')) { categoryIconClass = 'fa-person-chalkboard'; categoryColorClasses = { bg: 'bg-indigo-700/60', text: 'text-indigo-300'}; }
+                else if (catLower.includes('audio')) { categoryIconClass = 'fa-headphones-simple'; categoryColorClasses = { bg: 'bg-rose-700/60', text: 'text-rose-300'}; }
+                else if (catLower.includes('grafika')) { categoryIconClass = 'fa-image'; categoryColorClasses = { bg: 'bg-pink-700/60', text: 'text-pink-300'}; }
+                else if (catLower.includes('kod') || catLower.includes('programowanie')) { categoryIconClass = 'fa-code'; categoryColorClasses = { bg: 'bg-teal-700/60', text: 'text-teal-300'}; }
             }
             
-            const progressPercent = material.progress || 0; // Używamy 0 jeśli brak, można dać losowy dla testów jak wcześniej
+            const progressPercent = material.progress || Math.floor(Math.random() * 71) + 15; 
 
             return `
-                <div class="material-card group">
-                    <div class="material-card-icon-area">
+                <div class="material-item-v3 group">
+                    <div class="material-icon-area-v3">
                         <i class="fas ${categoryIconClass}"></i>
                     </div>
-                    <div class="material-card-content">
-                        <div class="material-card-header">
-                            <h3 class="material-card-title">${material.title || 'Brak tytułu'}</h3>
-                            <span class="material-card-category ${categoryStyle.bg} ${categoryStyle.text}">${material.category || 'Ogólne'}</span>
-                        </div>
-                        <p class="material-card-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
-                        ${ progressPercent > 0 ? `
-                            <div class="material-card-progress-section">
-                                <div class="flex justify-between text-xs text-gray-500 mb-0.5">
-                                    <span>Postęp</span>
-                                    <span>${progressPercent}%</span>
-                                </div>
-                                <div class="material-card-progress-bar-container">
-                                    <div class="material-card-progress-bar" style="width: ${progressPercent}%"></div>
-                                </div>
+                    <div class="material-content-area-v3">
+                        <div class="material-info-dark">
+                            <div class="material-header-v3">
+                                <h3 class="material-title-v3">${material.title}</h3>
+                                <span class="material-category-v3 ${categoryColorClasses.bg} ${categoryColorClasses.text}">${material.category || 'Ogólne'}</span>
                             </div>
-                        ` : ''}
-                        <div class="material-card-footer">
-                            <p class="material-card-date">Nabyto: ${acquiredDate}</p>
-                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-card-action-button" download><i class="fas fa-download fa-fw mr-1.5"></i>Pobierz</a>` : '<p class="text-xs text-red-500 text-center sm:text-right">Link niedostępny</p>'}
+                            <p class="material-description-v3">${material.description ? material.description.substring(0, 130) + (material.description.length > 130 ? '...' : '') : 'Brak opisu.'}</p>
+                            ${ progressPercent > 0 ? `
+                                <div class="material-progress-section-v3">
+                                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                        <span>Postęp</span>
+                                        <span>${progressPercent}%</span>
+                                    </div>
+                                    <div class="material-progress-bar-container-v3">
+                                        <div class="material-progress-bar-v3" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="material-footer-v3">
+                            <p class="material-date-v3">Nabyto: ${acquiredDate}</p>
+                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-v3" download><i class="fas fa-arrow-down-to-line fa-fw mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 text-center sm:text-right">Link niedostępny</p>'}
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- Moje Materiały ---
         async function fetchAndDisplayMyMaterials() {
             if (!myMaterialsGrid || !myMaterialsLoader || !noMyMaterialsMessage || !errorMyMaterialsMessage) return;
-            myMaterialsLoader.style.display = 'flex'; // Upewnijmy się, że loader jest flex dla .loader-dots
-            myMaterialsGrid.innerHTML = '';
-            myMaterialsGrid.appendChild(myMaterialsLoader);
+            myMaterialsLoader.style.display = 'flex';
+            myMaterialsGrid.innerHTML = ''; 
+            myMaterialsGrid.appendChild(myMaterialsLoader); 
             noMyMaterialsMessage.classList.add('hidden');
             errorMyMaterialsMessage.classList.add('hidden');
 
@@ -490,8 +405,8 @@
                 const response = await fetch('/api/my-materials', { credentials: 'include' });
                  if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów. Sesja mogła wygasnąć.', 'error');
-                         setTimeout(() => { if (window.location.pathname !== '/login.html') window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
+                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów.', 'error');
+                         setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
                     } else throw new Error(`Błąd HTTP: ${response.status}`);
                     myMaterialsLoader.style.display = 'none';
                     return;
@@ -508,11 +423,9 @@
                 console.error('Nie udało się pobrać moich materiałów:', error);
                 myMaterialsLoader.style.display = 'none';
                 errorMyMaterialsMessage.classList.remove('hidden');
-                showDashboardModal('Błąd pobierania', `Nie udało się załadować Twoich materiałów. ${error.message}`, 'error');
             }
         }
 
-        // --- Formularz Profilu ---
         if (profileUpdateForm) {
             profileUpdateForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -532,7 +445,7 @@
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji profilu.');
                     showDashboardModal('Sukces', result.message || 'Profil zaktualizowany!', 'success');
-                    await fetchUserData();
+                    await fetchUserData(); 
                 } catch (error) {
                     showDashboardModal('Błąd', error.message, 'error');
                 } finally {
@@ -542,7 +455,6 @@
             });
         }
 
-        // --- Formularz Zmiany Hasła ---
         if (passwordChangeForm) {
             passwordChangeForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -581,27 +493,19 @@
             });
         }
 
-        // --- Obsługa Zakładek ---
         if (dashboardTabs) {
-            const tabButtons = dashboardTabs.querySelectorAll('.tab-link'); // Zmieniono selektor na .tab-link
+            const tabButtons = dashboardTabs.querySelectorAll('.tab-button');
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetTabId = button.dataset.tab;
                     tabButtons.forEach(btn => {
-                        btn.classList.remove('tab-link-active'); // Zmieniono klasę
-                        btn.classList.add('tab-link-inactive'); // Zmieniono klasę
+                        btn.classList.remove('tab-button-active'); btn.classList.add('tab-button-inactive');
                     });
-                    button.classList.remove('tab-link-inactive'); // Zmieniono klasę
-                    button.classList.add('tab-link-active');    // Zmieniono klasę
+                    button.classList.remove('tab-button-inactive'); button.classList.add('tab-button-active');
                     tabContents.forEach(content => {
                         content.classList.toggle('hidden', content.id !== `${targetTabId}-section`);
                     });
                     localStorage.setItem('activeDashboardTab', targetTabId);
-                    // Jeśli zakładka "Ustawienia Konta" jest aktywowana z menu mobilnego, zamknij menu
-                    if (mobileMenuDashboard && !mobileMenuDashboard.classList.contains('hidden') && targetTabId === 'account-settings') {
-                        mobileMenuDashboard.classList.add('hidden');
-                        mobileMenuButtonDashboard.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
-                    }
                 });
             });
         }
@@ -610,78 +514,50 @@
             if (activeTab && dashboardTabs) {
                 const buttonToActivate = dashboardTabs.querySelector(`button[data-tab="${activeTab}"]`);
                 if (buttonToActivate) buttonToActivate.click();
-                else { // Fallback na pierwszą zakładkę, jeśli zapisana nie istnieje
-                    const firstTabButton = dashboardTabs.querySelector('button.tab-link');
-                    if (firstTabButton) firstTabButton.click();
-                }
-            } else if (dashboardTabs) { // Domyślnie aktywuj pierwszą zakładkę
-                const firstTabButton = dashboardTabs.querySelector('button.tab-link');
-                if (firstTabButton) firstTabButton.click();
+                else dashboardTabs.querySelector('button[data-tab="my-materials"]').click();
+            } else if (dashboardTabs) {
+                 dashboardTabs.querySelector('button[data-tab="my-materials"]').click();
             }
         }
 
-        // --- Wylogowanie ---
         function handleDashboardLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
-                .then(response => { 
-                    if (response.ok && response.redirected) {
-                        window.location.href = response.url;
-                    } else if (response.ok) { // Jeśli nie ma przekierowania, ale jest ok
-                        window.location.href = '/login.html'; // Domyślne przekierowanie
-                    } else {
-                         window.location.href = '/login.html'; // Domyślne przekierowanie przy błędzie
-                    }
-                })
-                .catch(error => { 
-                    showDashboardModal('Błąd', 'Problem z wylogowaniem. Spróbuj ponownie.', 'error');
-                    console.error("Logout error:", error);
-                    setTimeout(() => {window.location.href = '/login.html';}, 2000); // Przekieruj mimo wszystko
-                });
+                .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
+                .catch(error => { showDashboardModal('Błąd', 'Problem z wylogowaniem.', 'error'); window.location.href = '/'; });
         }
         const logoutButtonDesktop = document.getElementById('logout-button-dashboard-desktop');
         const logoutButtonMobile = document.getElementById('logout-button-dashboard-mobile');
         if (logoutButtonDesktop) logoutButtonDesktop.addEventListener('click', handleDashboardLogout);
         if (logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleDashboardLogout);
         
-        // --- Menu Mobilne ---
         const mobileMenuButtonDashboard = document.getElementById('mobile-menu-button-dashboard');
         const mobileMenuDashboard = document.getElementById('mobile-menu-dashboard');
         if (mobileMenuButtonDashboard && mobileMenuDashboard) {
             mobileMenuButtonDashboard.addEventListener('click', () => {
-                const isHidden = mobileMenuDashboard.classList.toggle('hidden');
-                const icon = mobileMenuButtonDashboard.querySelector('svg');
-                icon.innerHTML = isHidden ? 
+                mobileMenuDashboard.classList.toggle('hidden');
+                 const icon = mobileMenuButtonDashboard.querySelector('svg');
+                icon.innerHTML = mobileMenuDashboard.classList.contains('hidden') ? 
                     '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />' : 
                     '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
             });
             mobileMenuDashboard.querySelectorAll('a, button').forEach(link => {
                 link.addEventListener('click', (e) => {
-                    if (link.classList.contains('nav-account-settings')) { // Specjalna obsługa dla linku ustawień konta
+                    if (link.classList.contains('nav-account-settings')) {
                         e.preventDefault(); 
                         const settingsTabButton = dashboardTabs.querySelector('button[data-tab="account-settings"]');
-                        if (settingsTabButton) settingsTabButton.click(); // Aktywuj zakładkę
-                        // Menu zamknie się w handlerze zakładek, jeśli trzeba
-                    } else if (!link.id.startsWith('logout-button-dashboard-mobile')) { 
-                        // Zamknij menu dla innych linków (poza wylogowaniem, które przekierowuje)
+                        if (settingsTabButton) settingsTabButton.click();
+                    }
+                    if (!link.id.startsWith('logout-button-dashboard')) { 
                         mobileMenuDashboard.classList.add('hidden');
                         mobileMenuButtonDashboard.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
                     }
-                    // Dla wylogowania nic nie rób tutaj, handleDashboardLogout się tym zajmie
                 });
             });
         }
 
-        // --- Inicjalizacja ---
         document.addEventListener('DOMContentLoaded', async () => {
             const userData = await fetchUserData();
-            if (userData) { // Jeśli dane użytkownika załadowane pomyślnie
-                fetchAndDisplayMyMaterials();
-            } else {
-                // Można dodać logikę ukrywania pewnych sekcji jeśli userData jest null
-                // np. nie próbować ładować materiałów, jeśli nie ma użytkownika
-                myMaterialsLoader.style.display = 'none';
-                // Pokazuj komunikat o błędzie lub przekieruj, co już robi fetchUserData
-            }
+            if (userData) fetchAndDisplayMyMaterials();
             setActiveTabFromStorage(); 
         });
     </script>
