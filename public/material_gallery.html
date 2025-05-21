@@ -5,151 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galeria Materiałów - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --sidebar-bg: #1f2937; /* gray-800 */
+            --main-bg: #111827; /* gray-900 */
+            --panel-bg: #1f2937; /* gray-800 */
+            --card-bg: #374151; /* gray-700 */
+            --text-primary: #f3f4f6; /* gray-100 */
+            --text-secondary: #9ca3af; /* gray-400 */
+            --text-muted: #6b7280; /* gray-500 */
+            --accent-violet: #8b5cf6; /* violet-500 */
+            --accent-violet-light: #a78bfa; /* violet-400 */
+            --accent-violet-dark: #7c3aed; /* violet-600 */
+            --accent-gradient-from: var(--accent-violet);
+            --accent-gradient-to: #a855f7; /* purple-500 */
+            --border-color: #374151; /* gray-700 */
+            --border-color-light: #4b5563; /* gray-600 */
+            --shadow-color: rgba(167, 139, 250, 0.15); 
+            --shadow-color-strong: rgba(167, 139, 250, 0.25);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--sidebar-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-violet-light); }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* gray-100 */
+            background-color: var(--main-bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .btn {
-            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
+            @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-[var(--main-bg)];
         }
-        .btn-primary {
-            @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 shadow-blue-500/30 hover:shadow-lg;
+        .btn-brand { 
+            @apply bg-gradient-to-r from-[var(--accent-gradient-from)] to-[var(--accent-gradient-to)] text-white focus:ring-[var(--accent-violet-light)];
         }
-        .btn-secondary {
-            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 shadow-gray-500/20 hover:shadow-md;
+        .btn-brand:hover {
+            @apply opacity-90 shadow-[0_0_15px_var(--accent-violet-light)];
         }
-        .btn-sm {
-            @apply px-4 py-2 text-sm;
+        .btn-secondary-dark { 
+            @apply bg-gray-700 text-gray-200 hover:bg-gray-600 focus:ring-gray-600;
         }
-        
-        /* Nowy styl dla panelu materiału */
-        .material-panel {
-            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5;
-        }
-        .material-icon-container {
-            @apply flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200;
-        }
-        .material-icon {
-            @apply w-full h-full object-contain; /* Zmieniono z object-cover na object-contain dla ikon */
-        }
-        .material-icon-placeholder {
-            @apply text-3xl text-gray-400;
-        }
-        .material-details {
-            @apply flex-grow;
-        }
-        .material-title {
-            @apply text-lg sm:text-xl font-semibold text-gray-800 mb-1;
-        }
-        .material-category-badge {
-            @apply text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full inline-block mb-2;
-        }
-        .material-description {
-            @apply text-sm text-gray-600 mb-2 leading-relaxed;
-        }
-        .material-price-section {
-            @apply text-gray-800 font-semibold mt-2 text-base sm:text-lg;
-        }
-        .material-actions {
-            @apply mt-4 sm:mt-0 sm:ml-auto flex-shrink-0;
-        }
+        .btn-sm { @apply px-5 py-2.5 text-sm; }
 
-        .loader {
-            border: 5px solid #e2e8f0; /* gray-200 */
-            border-top: 5px solid #3b82f6; /* blue-500 */
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
+        /* Nowoczesne style dla kart materiałów w galerii */
+        .material-card-gallery { 
+            @apply bg-[var(--panel-bg)] rounded-2xl shadow-xl border border-[var(--border-color)]
+                   flex flex-col overflow-hidden
+                   transition-all duration-300 ease-out hover:shadow-[var(--shadow-color-strong)] hover:border-violet-500/60 transform hover:-translate-y-2 h-full;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .material-card-gallery-image-area {
+            @apply w-full h-52 bg-gray-700 relative overflow-hidden group; /* Zmniejszona wysokość obrazka */
+        }
+        .material-card-gallery-image-area img {
+            @apply w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110;
+        }
+        .material-card-gallery-icon-overlay { 
+            @apply absolute inset-0 bg-gradient-to-br from-violet-600/70 to-purple-700/70 flex items-center justify-center;
+        }
+        .material-card-gallery-icon-overlay i { @apply text-white text-6xl opacity-50; }
+        
+        .material-card-gallery-content { @apply p-5 flex flex-col flex-grow; }
+        .material-card-gallery-header { @apply flex justify-between items-start mb-1.5; }
+        .material-card-gallery-title { @apply text-xl font-bold text-gray-50 mb-1 leading-tight group-hover:text-violet-300; }
+        .material-card-gallery-category { @apply text-xs font-semibold text-violet-300 bg-violet-700/60 px-3 py-1 rounded-full inline-block whitespace-nowrap; }
+        .material-card-gallery-description { 
+            @apply text-sm text-gray-400 mb-3 leading-relaxed flex-grow; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
+            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem;
+        }
+        .material-card-gallery-price-section { @apply text-xl font-bold text-gray-100 mb-3; }
+        .material-card-gallery-price-original { @apply text-sm text-gray-500 line-through ml-2; }
+        
+        .material-card-gallery-footer { @apply mt-auto pt-4; }
+        .material-card-gallery-action-button { @apply btn btn-brand btn-sm w-full; }
+
+
+        .loader { border: 5px solid #374151; border-top: 5px solid var(--accent-violet); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .header-link { 
+             @apply text-gray-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
+        }
+        .page-title-gallery { 
+            @apply text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-sky-400;
+        }
+        .page-subtitle-gallery {
+             @apply mt-3 text-xl text-gray-400 max-w-2xl mx-auto;
         }
         .filter-select, .filter-input {
-            @apply block w-full sm:w-auto text-sm px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow hover:shadow-md;
+            @apply block w-full sm:w-auto text-sm px-4 py-3 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-gray-700 text-gray-200 placeholder-gray-400 transition-shadow hover:shadow-md;
         }
-        
-        /* Usunięto style dla horizontal-scroll-container i badge, bo zmieniamy layout */
-        .strikethrough {
-            text-decoration: line-through;
-            color: #6b7280; /* gray-500 */
-        }
-        .section-title {
-            @apply text-3xl font-bold text-gray-800 mb-3;
-        }
-        .header-link {
-             @apply text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
-        }
+        .badge-gallery { @apply absolute top-3 right-3 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md; }
+        .badge-deal-gallery { @apply bg-red-500; }
+        .badge-featured-gallery { @apply bg-yellow-500 text-yellow-900 left-3 right-auto; }
     </style>
 </head>
-<body class="text-gray-800 flex flex-col min-h-screen">
+<body class="text-gray-300 flex flex-col min-h-screen">
 
-    <header class="bg-white shadow-md sticky top-0 z-50">
+    <header class="bg-gray-800/95 backdrop-blur-lg shadow-lg sticky top-0 z-50 border-b border-gray-700/60">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold text-blue-600 transition-opacity hover:opacity-80">
-                    Materiały<span class="text-gray-700">PRO</span>
+            <div class="flex items-center justify-between h-24">
+                <a href="index.html" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500 transition-opacity hover:opacity-90">
+                    Materiały<span class="text-gray-100">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-2">
-                    <a href="index.html" class="header-link">Strona Główna</a>
-                    <a href="/dashboard.html" id="dashboard-link-header" class="header-link">Panel Użytkownika</a>
-                     <button id="cart-button-header" class="relative header-link">
+                <nav class="hidden md:flex items-center space-x-3">
+                    <a href="index.html" class="header-link text-base">Strona Główna</a>
+                    <a href="/dashboard_sidebar_v1.html" id="dashboard-link-header" class="header-link text-base">Panel Użytkownika</a>
+                     <button id="cart-button-header" class="relative header-link text-base">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button id="logout-button-header" class="btn btn-secondary btn-sm">Wyloguj</button>
+                    <button id="logout-button-header" class="btn btn-secondary-dark btn-sm">Wyloguj</button>
                 </nav>
                 <div class="md:hidden flex items-center">
-                     <button id="cart-button-mobile-header" class="relative text-gray-600 hover:text-blue-600 p-2 mr-1 rounded-md">
+                     <button id="cart-button-mobile-header" class="relative text-gray-300 hover:text-violet-400 p-2 mr-1 rounded-md">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-badge-mobile" class="absolute -top-0 -right-0 bg-red-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
-                    <button id="mobile-menu-button-gallery" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <button id="mobile-menu-button-gallery" class="text-gray-300 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-md p-2">
+                        <svg class="h-7 w-7" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-        <div id="mobile-menu-gallery" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index.html" class="block header-link text-base">Strona Główna</a>
-                <a href="/dashboard.html" id="dashboard-link-mobile" class="block header-link text-base">Panel Użytkownika</a>
+        <div id="mobile-menu-gallery" class="md:hidden hidden bg-gray-800/95 backdrop-blur-md shadow-xl rounded-b-lg border-t border-gray-700">
+            <div class="px-3 pt-3 pb-4 space-y-2">
+                <a href="index.html" class="block header-link text-lg">Strona Główna</a>
+                <a href="/dashboard_sidebar_v1.html" id="dashboard-link-mobile" class="block header-link text-lg">Panel Użytkownika</a>
             </div>
-            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
-                 <button id="logout-button-mobile-gallery" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
+            <div class="pt-4 pb-4 border-t border-gray-700 px-5">
+                 <button id="logout-button-mobile-gallery" class="block w-full text-center btn btn-secondary-dark text-base">Wyloguj</button>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="mb-10 text-center">
-            <h1 class="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                Galeria Materiałów
-            </h1>
-            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Odkryj nasze najnowsze kursy, poradniki i zasoby edukacyjne.</p>
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-12 text-center">
+            <h1 class="page-title-gallery">Galeria Materiałów</h1>
+            <p class="page-subtitle-gallery">Odkryj nasze najnowsze kursy, poradniki i zasoby edukacyjne.</p>
         </div>
 
-        <div class="mb-10 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="mb-10 p-6 bg-gray-800/70 rounded-xl shadow-xl border border-gray-700/60">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div class="md:col-span-1">
-                    <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Szukaj</label>
-                    <input type="text" id="search-input" placeholder="Wpisz tytuł, opis..." class="filter-input w-full">
+                    <label for="search-input" class="block text-sm font-medium text-gray-300 mb-1.5">Wyszukaj materiał</label>
+                    <input type="text" id="search-input" placeholder="Wpisz tytuł, opis, kategorię..." class="filter-input w-full">
                 </div>
                 <div>
-                    <label for="category-filter" class="block text-sm font-medium text-gray-700 mb-1">Kategoria</label>
+                    <label for="category-filter" class="block text-sm font-medium text-gray-300 mb-1.5">Filtruj po kategorii</label>
                     <select id="category-filter" class="filter-select w-full">
                         <option value="">Wszystkie Kategorie</option>
                     </select>
                 </div>
                 <div>
-                    <label for="sort-filter" class="block text-sm font-medium text-gray-700 mb-1">Sortuj według</label>
+                    <label for="sort-filter" class="block text-sm font-medium text-gray-300 mb-1.5">Sortuj według</label>
                     <select id="sort-filter" class="filter-select w-full">
                         <option value="newest">Najnowsze</option>
                         <option value="price_asc">Cena: Rosnąco</option>
@@ -161,94 +177,93 @@
             </div>
         </div>
         
-        <section id="featured-materials-section" class="mb-12 hidden">
-            <div class="flex items-center mb-5">
-                 <i class="fas fa-star text-yellow-400 text-2xl mr-3"></i>
-                <h2 class="section-title !mb-0">Polecane dla Ciebie</h2>
+        <section id="featured-materials-section" class="mb-16 hidden">
+            <div class="flex items-center mb-6">
+                 <i class="fas fa-star text-yellow-400 text-3xl mr-3"></i>
+                <h2 class="text-3xl font-bold text-gray-100">Polecane dla Ciebie</h2>
             </div>
-            <div id="featured-materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                </div>
-            <div id="no-featured-materials-message" class="hidden text-center py-6 text-gray-500">
-                <p>Brak polecanych materiałów w tej chwili.</p>
+            <div id="featured-materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+            <div id="no-featured-materials-message" class="hidden text-center py-10 text-gray-500">
+                <p class="text-lg">Brak polecanych materiałów w tej chwili.</p>
             </div>
         </section>
 
-        <section id="deals-materials-section" class="mb-12 hidden">
-             <div class="flex items-center mb-5">
-                <i class="fas fa-tags text-red-500 text-2xl mr-3"></i>
-                <h2 class="section-title !mb-0">Okazje Cenowe</h2>
+        <section id="deals-materials-section" class="mb-16 hidden">
+             <div class="flex items-center mb-6">
+                <i class="fas fa-tags text-red-400 text-3xl mr-3"></i>
+                <h2 class="text-3xl font-bold text-gray-100">Okazje Cenowe</h2>
             </div>
-            <div id="deals-materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                </div>
-             <div id="no-deals-materials-message" class="hidden text-center py-6 text-gray-500">
-                <p>Aktualnie brak specjalnych okazji.</p>
+            <div id="deals-materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+             <div id="no-deals-materials-message" class="hidden text-center py-10 text-gray-500">
+                <p class="text-lg">Aktualnie brak specjalnych okazji.</p>
             </div>
         </section>
 
         <section id="all-materials-section">
-            <h2 class="section-title mb-6" id="all-materials-title">Wszystkie Materiały</h2>
-            <div id="materials-grid" class="space-y-6"> </div>
-            <div id="loader-container" class="col-span-full flex justify-center items-center py-10">
+            <h2 class="text-3xl font-bold text-gray-100 mb-8" id="all-materials-title">Wszystkie Materiały</h2>
+            <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
+            <div id="loader-container" class="col-span-full flex justify-center items-center py-16">
                 <div class="loader"></div>
             </div>
-            <div id="no-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
-                <i class="fas fa-box-open fa-4x mb-4 text-gray-400"></i>
-                <p class="text-xl font-medium">Nie znaleziono materiałów.</p>
-                <p class="text-gray-500">Spróbuj zmienić kryteria wyszukiwania lub sprawdź ponownie później.</p>
+            <div id="no-materials-message" class="hidden col-span-full text-center py-20 text-gray-400">
+                <i class="fas fa-box-open fa-5x mb-6 text-gray-600"></i>
+                <p class="text-2xl font-semibold">Nie znaleziono materiałów.</p>
+                <p class="mt-2 text-lg">Spróbuj zmienić kryteria wyszukiwania lub sprawdź ponownie później.</p>
             </div>
-            <div id="error-message" class="hidden col-span-full text-center py-16 text-red-500">
-                 <i class="fas fa-exclamation-triangle fa-4x mb-4"></i>
-                <p class="text-xl font-medium">Wystąpił błąd.</p>
-                <p class="text-gray-500">Nie udało się załadować materiałów. Spróbuj odświeżyć stronę.</p>
+            <div id="error-message" class="hidden col-span-full text-center py-20 text-red-400">
+                 <i class="fas fa-exclamation-triangle fa-5x mb-6"></i>
+                <p class="text-2xl font-semibold">Wystąpił błąd.</p>
+                <p class="text-gray-400">Nie udało się załadować materiałów. Spróbuj odświeżyć stronę.</p>
             </div>
-            <div class="text-center mt-10">
-                <button id="load-more-button" class="btn btn-primary hidden">
+            <div class="text-center mt-12">
+                <button id="load-more-button" class="btn btn-brand hidden">
                     <i class="fas fa-sync-alt mr-2"></i>Pokaż więcej
                 </button>
             </div>
         </section>
     </main>
 
-    <footer class="bg-gray-900 text-gray-400 py-12 text-center mt-auto">
+    <footer class="bg-gray-900 text-gray-500 py-12 text-center mt-auto border-t border-gray-700/50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; <span id="currentYearGallery"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
-            <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-red-500"></i> dla edukacji.</p>
+            <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-violet-500"></i> dla rozwoju.</p>
         </div>
     </footer>
 
-    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
-        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="messageModalBox">
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-700" id="messageModalBox">
             <div class="text-center">
                 <div id="messageModalIcon" class="text-5xl mb-4"></div>
-                <h3 id="messageModalTitle" class="text-2xl font-semibold mb-3 text-gray-800">Komunikat</h3>
-                <p id="messageModalText" class="text-gray-600 mb-6 text-base"></p>
-                <button id="messageModalCloseBtn" class="btn btn-primary w-full sm:w-auto">Rozumiem</button>
+                <h3 id="messageModalTitle" class="text-2xl font-semibold mb-3 text-gray-100">Komunikat</h3>
+                <p id="messageModalText" class="text-gray-300 mb-6 text-base"></p>
+                <button id="messageModalCloseBtn" class="btn btn-brand w-full sm:w-auto">Rozumiem</button>
             </div>
         </div>
     </div>
 
-    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
-        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="cartModalBox">
-            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-                <h3 class="text-2xl font-semibold text-gray-800"><i class="fas fa-shopping-cart mr-2 text-blue-500"></i>Twój Koszyk</h3>
-                <button id="closeCartModalBtn" class="text-gray-400 hover:text-gray-600 text-3xl leading-none transition-colors">&times;</button>
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-lg mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-700" id="cartModalBox">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
+                <h3 class="text-2xl font-semibold text-gray-100"><i class="fas fa-shopping-cart mr-2 text-violet-400"></i>Twój Koszyk</h3>
+                <button id="closeCartModalBtn" class="text-gray-400 hover:text-gray-200 text-3xl leading-none transition-colors">&times;</button>
             </div>
-            <div id="cartModalContent" class="text-center text-gray-600 py-10">
-                <i class="fas fa-cogs fa-4x mb-5 text-blue-400"></i>
+            <div id="cartModalContent" class="text-center text-gray-400 py-10">
+                <i class="fas fa-cogs fa-4x mb-5 text-violet-400/70"></i>
                 <p class="text-xl font-medium">Funkcjonalność koszyka jest w budowie!</p>
                 <p class="mt-2 text-gray-500">Już wkrótce będziesz mógł dodawać tu materiały i finalizować zakupy.</p>
             </div>
-            <div class="mt-8 pt-4 border-t border-gray-200 text-right">
-                <button id="closeCartModalBtnBottom" class="btn btn-secondary">Zamknij</button>
+            <div class="mt-8 pt-4 border-t border-gray-700 text-right">
+                <button id="closeCartModalBtnBottom" class="btn btn-secondary-dark">Zamknij</button>
             </div>
         </div>
     </div>
-
 
     <script>
         document.getElementById('currentYearGallery').textContent = new Date().getFullYear();
 
-        // --- Elementy DOM (bez zmian) ---
         const messageModal = document.getElementById('messageModal');
         const messageModalBox = document.getElementById('messageModalBox');
         const messageModalTitle = document.getElementById('messageModalTitle');
@@ -284,14 +299,13 @@
         let allFetchedMaterials = [];
         let displayedMaterials = [];
         let uniqueCategories = new Set();
-        const ITEMS_PER_PAGE = 10; // Zwiększono liczbę dla widoku listy
+        const ITEMS_PER_PAGE = 8; 
         let currentPage = 1;
 
-        // --- Funkcje Modala (bez zmian) ---
         function showModal(title, message, type = 'info') {
             if (!messageModal || !messageModalTitle || !messageModalText || !messageModalIcon || !messageModalBox) return;
             messageModalTitle.textContent = title; messageModalText.textContent = message;
-            messageModalIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-500"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-500"></i>' : '<i class="fas fa-info-circle text-blue-500"></i>';
+            messageModalIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-400"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-400"></i>' : '<i class="fas fa-info-circle text-blue-400"></i>';
             messageModal.classList.remove('hidden', 'opacity-0');
             setTimeout(() => { messageModalBox.classList.remove('opacity-0', 'scale-95'); messageModalBox.classList.add('opacity-100', 'scale-100'); }, 10);
         }
@@ -319,63 +333,73 @@
         if(closeCartModalBtnBottom) closeCartModalBtnBottom.addEventListener('click', () => toggleCartModal(false));
         if(cartModal) cartModal.addEventListener('click', (e) => { if(e.target === cartModal) toggleCartModal(false); });
 
-
-        // --- Renderowanie Paneli Materiałów ---
-        function createMaterialPanel(material) { // Zmieniono nazwę funkcji
+        function createMaterialCard(material) {
             const price = parseFloat(material.price);
             const discountPrice = material.discount_price ? parseFloat(material.discount_price) : null;
             
             let priceHtml = '';
             if (discountPrice && discountPrice < price) {
-                priceHtml = `<span class="text-red-500 font-bold text-lg sm:text-xl">${discountPrice.toFixed(2)} PLN</span> 
-                             <span class="strikethrough text-sm ml-2">${price.toFixed(2)} PLN</span>`;
+                priceHtml = `<span class="text-red-400 font-bold text-xl">${discountPrice.toFixed(2)} PLN</span> 
+                             <span class="text-gray-500 line-through text-sm ml-2">${price.toFixed(2)} PLN</span>`;
             } else {
-                priceHtml = `<span class="font-bold text-lg sm:text-xl">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
+                priceHtml = `<span class="font-bold text-xl">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
+            }
+
+            let categoryIconClass = 'fa-file-lines';
+            if (material.category) {
+                const catLower = material.category.toLowerCase();
+                if (catLower.includes('kurs')) categoryIconClass = 'fa-chalkboard-user';
+                else if (catLower.includes('video')) categoryIconClass = 'fa-clapperboard';
+                else if (catLower.includes('ebook')) categoryIconClass = 'fa-book-open-reader';
+                else if (catLower.includes('szablon')) categoryIconClass = 'fa-object-group';
+                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-person-chalkboard';
             }
             
-            // Domyślna ikona, jeśli cover_image_url nie jest dostępny lub nie jest ikoną
-            let iconHtml = `<span class="material-icon-placeholder"><i class="fas fa-photo-video"></i></span>`; // Domyślna ikona Font Awesome
-            if (material.cover_image_url) {
-                 // Jeśli cover_image_url to link do obrazka, użyj go jako małej ikonki.
-                 // Dla lepszego efektu, można by dodać logikę sprawdzania, czy URL prowadzi do małej ikony,
-                 // lub dodać osobne pole w bazie na URL ikony.
-                iconHtml = `<img src="${material.cover_image_url}" alt="Ikona" class="material-icon" onerror="this.parentElement.innerHTML = '<span class=\\'material-icon-placeholder\\'><i class=\\'fas fa-photo-video\\'></i></span>';">`;
-            }
+            const imageElement = material.cover_image_url 
+                ? `<img src="${material.cover_image_url}" alt="${material.title}" onerror="this.style.display='none'; this.parentElement.querySelector('.material-card-gallery-icon-overlay').style.display='flex';" class="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110">
+                   <div class="material-card-gallery-icon-overlay" style="display: none;"><i class="fas ${categoryIconClass}"></i></div>`
+                : `<div class="material-card-gallery-icon-overlay"><i class="fas ${categoryIconClass}"></i></div>`;
 
 
             return `
-                <div class="material-panel group">
-                    <div class="material-icon-container">
-                        ${iconHtml}
+                <div class="material-card-gallery group">
+                    <div class="material-card-gallery-image-area">
+                        ${imageElement}
+                        ${discountPrice && discountPrice < price ? '<span class="badge-gallery badge-deal-gallery">OKAZJA!</span>' : ''}
+                        ${material.is_featured ? '<span class="badge-gallery badge-featured-gallery"><i class="fas fa-star fa-xs mr-1"></i>Polecane</span>' : ''}
                     </div>
-                    <div class="material-details">
-                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
-                            <h3 class="material-title">${material.title}</h3>
-                            ${material.is_featured ? '<span class="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full inline-block mt-1 sm:mt-0 sm:ml-2 self-start"><i class="fas fa-star fa-xs"></i> Polecane</span>' : ''}
+                    <div class="material-card-gallery-content">
+                        <div class="material-card-gallery-header">
+                            <h3 class="material-card-gallery-title">${material.title}</h3>
+                            <span class="material-card-gallery-category">${material.category || 'Ogólne'}</span>
                         </div>
-                        <span class="material-category-badge">${material.category || 'Ogólne'}</span>
-                        <p class="material-description">${material.description ? material.description.substring(0, 150) + (material.description.length > 150 ? '...' : '') : 'Brak opisu.'}</p>
-                    </div>
-                    <div class="material-actions flex flex-col items-start sm:items-end gap-2">
-                        <div class="material-price-section">
+                        <p class="material-card-gallery-description">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
+                        <div class="material-card-gallery-price-section">
                             ${priceHtml}
                         </div>
-                        ${discountPrice && discountPrice < price ? '<span class="text-xs text-red-500 font-medium">OKAZJA!</span>' : ''}
-                        <button class="btn btn-primary btn-sm w-full sm:w-auto acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${price > 0 ? price : 0}">
-                            <i class="fas fa-shopping-bag mr-1.5"></i> ${price > 0 ? 'Kup' : 'Pobierz'}
-                        </button>
+                        <div class="material-card-gallery-footer">
+                            <button class="material-card-gallery-action-button acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${price > 0 ? price : 0}">
+                                <i class="fas fa-shopping-bag mr-2"></i> ${price > 0 ? 'Kup i Pobierz' : 'Pobierz'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
         }
         
-        // --- Logika Pobierania i Wyświetlania Materiałów (dostosowana do paneli) ---
         async function fetchAndProcessMaterials() {
             if (!loaderContainer || !noMaterialsMessage || !errorMessageContainer) return;
             loaderContainer.style.display = 'flex';
-            if (materialsGrid) materialsGrid.innerHTML = ''; 
+            if(materialsGrid) materialsGrid.innerHTML = ''; 
+            if(featuredMaterialsGrid) featuredMaterialsGrid.innerHTML = '';
+            if(dealsMaterialsGrid) dealsMaterialsGrid.innerHTML = '';
             noMaterialsMessage.classList.add('hidden');
             errorMessageContainer.classList.add('hidden');
+            noFeaturedMessage.classList.add('hidden');
+            noDealsMessage.classList.add('hidden');
+            featuredSection.classList.add('hidden');
+            dealsSection.classList.add('hidden');
+
 
             try {
                 const response = await fetch('/api/materials', { credentials: 'include' });
@@ -392,8 +416,8 @@
                 allFetchedMaterials.forEach(m => { if (m.category) uniqueCategories.add(m.category); });
                 populateCategoryFilter();
 
-                displayFeaturedMaterialsAsPanels(); // Zmieniona funkcja
-                displayDealsMaterialsAsPanels();    // Zmieniona funkcja
+                displayFeaturedMaterials();
+                displayDealsMaterials();
                 
                 applyFiltersAndSort(); 
 
@@ -405,12 +429,12 @@
             }
         }
 
-        function displayFeaturedMaterialsAsPanels() {
+        function displayFeaturedMaterials() {
             if (!featuredMaterialsGrid || !featuredSection || !noFeaturedMessage) return;
-            const featured = allFetchedMaterials.filter(m => m.is_featured === true).slice(0, 4); // Max 4 w siatce
+            const featured = allFetchedMaterials.filter(m => m.is_featured === true).slice(0, 3); 
             featuredMaterialsGrid.innerHTML = '';
             if (featured.length > 0) {
-                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)));
+                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
                 featuredSection.classList.remove('hidden');
                 noFeaturedMessage.classList.add('hidden');
             } else {
@@ -418,12 +442,12 @@
             }
         }
 
-        function displayDealsMaterialsAsPanels() {
+        function displayDealsMaterials() {
             if (!dealsMaterialsGrid || !dealsSection || !noDealsMessage) return;
-            const deals = allFetchedMaterials.filter(m => m.discount_price && parseFloat(m.discount_price) < parseFloat(m.price)).slice(0,4); // Max 4 w siatce
+            const deals = allFetchedMaterials.filter(m => m.discount_price && parseFloat(m.discount_price) < parseFloat(m.price)).slice(0,3);
             dealsMaterialsGrid.innerHTML = '';
             if (deals.length > 0) {
-                deals.forEach(material => dealsMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)));
+                deals.forEach(material => dealsMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
                 dealsSection.classList.remove('hidden');
                 noDealsMessage.classList.add('hidden');
             } else {
@@ -431,7 +455,7 @@
             }
         }
         
-        function populateCategoryFilter() { /* Bez zmian */
+        function populateCategoryFilter() {
             if (!categoryFilter) return;
             const firstOption = categoryFilter.options[0];
             categoryFilter.innerHTML = ''; categoryFilter.appendChild(firstOption);
@@ -442,7 +466,7 @@
             });
         }
 
-        function applyFiltersAndSort() { /* Bez zmian w logice filtrowania/sortowania */
+        function applyFiltersAndSort() {
             if (!materialsGrid) return;
             let filtered = [...allFetchedMaterials];
             const searchTerm = searchInput.value.toLowerCase().trim();
@@ -457,7 +481,7 @@
                 case 'price_desc': filtered.sort((a, b) => (parseFloat(b.discount_price || b.price)) - (parseFloat(a.discount_price || a.price))); break;
                 case 'title_asc': filtered.sort((a, b) => a.title.localeCompare(b.title, 'pl', { sensitivity: 'base' })); break;
                 case 'title_desc': filtered.sort((a, b) => b.title.localeCompare(a.title, 'pl', { sensitivity: 'base' })); break;
-                default: filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+                default: filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break;
             }
             displayedMaterials = filtered;
             currentPage = 1; 
@@ -465,11 +489,11 @@
             updateAllMaterialsTitle(selectedCategory);
         }
         
-        function updateAllMaterialsTitle(category) { /* Bez zmian */
+        function updateAllMaterialsTitle(category) {
             if(allMaterialsTitle) allMaterialsTitle.textContent = category ? `Materiały w Kategorii: ${category}` : 'Wszystkie Materiały';
         }
 
-        function renderMaterialsPage() { // Dostosowane do renderowania paneli
+        function renderMaterialsPage() {
             if (!materialsGrid || !noMaterialsMessage || !loadMoreButton) return;
             const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
             const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -480,52 +504,56 @@
             else noMaterialsMessage.classList.add('hidden');
 
             materialsToDisplay.forEach(material => {
-                materialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)); // Używa nowej funkcji
+                materialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)); 
             });
 
             if (endIndex < displayedMaterials.length) loadMoreButton.classList.remove('hidden');
             else loadMoreButton.classList.add('hidden');
         }
 
-        // --- Event Listeners (bez większych zmian w logice, tylko ewentualnie selektory) ---
         if(loadMoreButton) loadMoreButton.addEventListener('click', () => { currentPage++; renderMaterialsPage(); });
         if(searchInput) searchInput.addEventListener('input', debounce(applyFiltersAndSort, 300));
         if(categoryFilter) categoryFilter.addEventListener('change', applyFiltersAndSort);
         if(sortFilter) sortFilter.addEventListener('change', applyFiltersAndSort);
 
-        function debounce(func, delay) { /* Bez zmian */
+        function debounce(func, delay) {
             let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
         }
 
-        if (materialsGrid || featuredMaterialsGrid || dealsMaterialsGrid) { 
-            const allGrids = [materialsGrid, featuredMaterialsGrid, dealsMaterialsGrid].filter(g => g); // Filtruj null/undefined
-            allGrids.forEach(grid => {
-                grid.addEventListener('click', async function(event) {
-                    const buttonToProcess = event.target.closest('.acquire-material-btn'); // Tylko przycisk, link usunięty z obrazka
-                    if (!buttonToProcess) return;
-                    
-                    const materialId = buttonToProcess.dataset.materialId;
-                    const materialTitle = buttonToProcess.dataset.materialTitle;
-                    const originalButtonHTML = buttonToProcess.innerHTML;
-                    
-                    try {
-                        buttonToProcess.disabled = true;
-                        buttonToProcess.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...';
-                        const acquireResponse = await fetch(`/api/materials/${materialId}/acquire`, { method: 'POST', credentials: 'include' });
-                        const acquireData = await acquireResponse.json();
-                        if (!acquireResponse.ok) throw new Error(acquireData.message || 'Nie udało się dodać materiału.');
-                        showModal('Sukces!', `${acquireData.message} "${materialTitle}". Zostaniesz przekierowany do panelu użytkownika.`, 'success');
-                        setTimeout(() => { window.location.href = '/dashboard.html'; }, 3500);
-                    } catch (error) {
-                        showModal('Błąd', `Nie udało się nabyć materiału "${materialTitle}". ${error.message}`, 'error');
-                        buttonToProcess.disabled = false;
-                        buttonToProcess.innerHTML = originalButtonHTML;
+        function handleAcquireMaterial(event) {
+            const buttonToProcess = event.target.closest('.acquire-material-btn');
+            if (!buttonToProcess) return;
+            
+            event.preventDefault(); 
+            
+            const materialId = buttonToProcess.dataset.materialId;
+            const materialTitle = buttonToProcess.dataset.materialTitle;
+            const originalButtonHTML = buttonToProcess.innerHTML;
+            
+            buttonToProcess.disabled = true;
+            buttonToProcess.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...';
+
+            fetch(`/api/materials/${materialId}/acquire`, { method: 'POST', credentials: 'include' })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(({ status, body }) => {
+                    if (status >= 200 && status < 300) {
+                        showModal('Sukces!', `${body.message || 'Materiał nabyty!'} "${materialTitle}". Przekierowuję...`, 'success');
+                        setTimeout(() => { window.location.href = '/dashboard_sidebar_v1.html'; }, 3500); // Upewnij się, że to poprawny URL dashboardu
+                    } else {
+                        throw new Error(body.message || `Błąd ${status}`);
                     }
+                })
+                .catch(error => {
+                    showModal('Błąd', `Nie udało się nabyć materiału "${materialTitle}". ${error.message}`, 'error');
+                    buttonToProcess.disabled = false;
+                    buttonToProcess.innerHTML = originalButtonHTML;
                 });
-            });
         }
+
+        if (materialsGrid) materialsGrid.addEventListener('click', handleAcquireMaterial);
+        if (featuredMaterialsGrid) featuredMaterialsGrid.addEventListener('click', handleAcquireMaterial);
+        if (dealsMaterialsGrid) dealsMaterialsGrid.addEventListener('click', handleAcquireMaterial);
         
-        // Logika wylogowania i menu mobilnego (bez zmian)
         function handleLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
                 .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
@@ -556,7 +584,7 @@
             });
         }
         
-        async function verifyUserIsLoggedInAndInit() { /* Bez zmian */
+        async function verifyUserIsLoggedInAndInit() {
             try {
                 const response = await fetch('/api/user', { credentials: 'include' });
                 if (!response.ok) {
