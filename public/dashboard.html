@@ -5,48 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Użytkownika - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* gray-100 */
+            background-color: #f8f9fa; /* Bardzo jasny szary, prawie biały */
         }
         .btn {
-            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
+            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
         }
         .btn-primary {
-            @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 shadow-blue-500/30 hover:shadow-lg hover:scale-[1.02];
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 hover:scale-[1.03];
         }
         .btn-secondary {
-            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 shadow-gray-500/20 hover:shadow-md hover:scale-[1.02];
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 hover:scale-[1.03];
         }
         .btn-success { 
-            @apply bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-green-500/30 hover:shadow-lg hover:scale-[1.02];
+            @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-500 hover:scale-[1.03];
         }
         .btn-sm {
-            @apply px-4 py-2 text-sm;
+            @apply px-4 py-2 text-sm font-medium;
         }
 
-        /* Ulepszony styl dla panelu materiału w dashboardzie */
+        /* Nowoczesny styl dla panelu materiału */
         .material-panel {
-            /* Usunięto bg-white, kolor będzie dynamiczny */
-            @apply rounded-xl shadow-lg transition-all duration-300 ease-out hover:shadow-xl border border-gray-200/80 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5 transform hover:-translate-y-1;
+            @apply rounded-xl shadow-lg transition-all duration-300 ease-out hover:shadow-xl border border-transparent hover:border-blue-300 p-6 flex flex-col md:flex-row items-start md:items-center gap-x-6 gap-y-4 transform hover:-translate-y-1.5;
+            /* Kolor tła będzie dodawany dynamicznie przez JS */
         }
         
+        .material-icon-placeholder-panel { /* Domyślna ikona, jeśli materiał nie ma swojej */
+            @apply flex-shrink-0 w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center text-2xl mr-0 md:mr-0 mb-3 md:mb-0;
+            /* Kolor ikony będzie dziedziczony lub ustawiany dynamicznie */
+        }
+
         .material-details {
-            @apply flex-grow flex flex-col;
+            @apply flex-grow flex flex-col w-full;
         }
         .material-title {
-            /* Kolor dostosuje się do tła, ale można wymusić ciemniejszy dla kontrastu */
-            @apply text-xl font-semibold text-gray-800 mb-1.5 group-hover:text-blue-700 transition-colors duration-200;
+            @apply text-lg font-semibold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors duration-200;
         }
         .material-category-badge {
-            /* Dostosowanie kolorów badge dla lepszego kontrastu na pastelach */
-            @apply text-xs font-medium text-indigo-800 bg-indigo-200/80 px-3 py-1 rounded-full inline-block mb-2.5;
+            @apply text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block mb-2;
+            /* Kolory badge będą dynamiczne */
         }
         .material-description { 
-            @apply text-sm text-gray-700 mb-3 leading-relaxed flex-grow;
+            @apply text-sm text-gray-600 mb-3 leading-relaxed;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -55,20 +59,35 @@
             min-height: 2.5rem; 
         }
         .material-acquired-date {
-            @apply text-xs text-gray-500 mt-2;
+            @apply text-xs text-gray-500 mt-auto pt-2 border-t border-gray-200/60;
         }
         .material-actions {
-            @apply mt-4 sm:mt-0 sm:ml-6 flex-shrink-0;
+            @apply mt-4 md:mt-0 md:ml-auto flex-shrink-0 w-full md:w-auto;
+        }
+        .material-actions .btn-success {
+            @apply w-full md:w-auto;
         }
 
-        /* Pastelowe tła dla paneli */
-        .pastel-bg-blue { @apply bg-blue-50; }
-        .pastel-bg-green { @apply bg-green-50; }
-        .pastel-bg-yellow { @apply bg-yellow-50; }
-        .pastel-bg-purple { @apply bg-purple-50; }
-        .pastel-bg-pink { @apply bg-pink-50; }
-        .pastel-bg-indigo { @apply bg-indigo-50; }
-        .pastel-bg-teal { @apply bg-teal-50; }
+        /* Pastelowe tła i akcenty */
+        .pastel-bg-sky { @apply bg-sky-100 text-sky-800; }
+        .pastel-bg-sky .material-category-badge { @apply bg-sky-200 text-sky-900; }
+        .pastel-bg-sky .material-icon-placeholder-panel { @apply text-sky-600; }
+
+        .pastel-bg-emerald { @apply bg-emerald-50 text-emerald-800; }
+        .pastel-bg-emerald .material-category-badge { @apply bg-emerald-200 text-emerald-900; }
+        .pastel-bg-emerald .material-icon-placeholder-panel { @apply text-emerald-600; }
+        
+        .pastel-bg-amber { @apply bg-amber-50 text-amber-800; }
+        .pastel-bg-amber .material-category-badge { @apply bg-amber-200 text-amber-900; }
+        .pastel-bg-amber .material-icon-placeholder-panel { @apply text-amber-600; }
+
+        .pastel-bg-violet { @apply bg-violet-50 text-violet-800; }
+        .pastel-bg-violet .material-category-badge { @apply bg-violet-200 text-violet-900; }
+        .pastel-bg-violet .material-icon-placeholder-panel { @apply text-violet-600; }
+
+        .pastel-bg-rose { @apply bg-rose-50 text-rose-800; }
+        .pastel-bg-rose .material-category-badge { @apply bg-rose-200 text-rose-900; }
+        .pastel-bg-rose .material-icon-placeholder-panel { @apply text-rose-600; }
 
 
         .loader {
@@ -158,7 +177,7 @@
                     <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
                 </a>
             </div>
-            <div id="my-materials-grid" class="space-y-5"> 
+            <div id="my-materials-grid" class="space-y-6"> 
                 <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
@@ -176,12 +195,14 @@
         </section>
 
         <section id="account-settings-section" class="dashboard-tab-content hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
+             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
             <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-user-edit mr-2 text-blue-500"></i>Dane Osobowe</h3>
-                        <form id="profileUpdateForm" class="space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
+                            <i class="fas fa-user-edit mr-3 text-blue-500"></i>Dane Osobowe
+                        </h3>
+                        <form id="profileUpdateForm" class="space-y-5">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
                                 <input type="text" id="profileUsername" name="username" class="form-input bg-gray-100 cursor-not-allowed" readonly disabled>
@@ -197,8 +218,10 @@
                         </form>
                     </div>
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-key mr-2 text-blue-500"></i>Zmień Hasło</h3>
-                        <form id="passwordChangeForm" class="space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
+                            <i class="fas fa-key mr-3 text-blue-500"></i>Zmień Hasło
+                        </h3>
+                        <form id="passwordChangeForm" class="space-y-5">
                             <div>
                                 <label for="currentPassword" class="form-label">Aktualne Hasło</label>
                                 <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
@@ -217,10 +240,12 @@
                         </form>
                     </div>
                 </div>
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                     <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>Informacje o Koncie</h3>
-                     <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
-                     <p class="text-gray-600 text-sm mt-1">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
+                <div class="mt-10 pt-6 border-t border-gray-200">
+                     <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
+                        <i class="fas fa-info-circle mr-3 text-blue-500"></i>Informacje o Koncie
+                    </h3>
+                     <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">ładowanie...</span></p>
+                     <p class="text-gray-600 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded text-gray-700">ładowanie...</span></p>
                 </div>
             </div>
         </section>
@@ -267,24 +292,17 @@
         const dashboardTabs = document.getElementById('dashboard-tabs');
         const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-        // Definicja pastelowych kolorów
-        const pastelColors = [
-            'pastel-bg-blue',
-            'pastel-bg-green',
-            'pastel-bg-yellow',
-            'pastel-bg-purple',
-            'pastel-bg-pink',
-            'pastel-bg-indigo',
-            'pastel-bg-teal'
+        const pastelBgClasses = [
+            'pastel-bg-sky', 'pastel-bg-emerald', 'pastel-bg-amber', 
+            'pastel-bg-violet', 'pastel-bg-rose', 'pastel-bg-indigo', 'pastel-bg-teal'
         ];
-        let colorIndex = 0;
+        let currentColorIndex = 0;
 
-        function getNextPastelColor() {
-            const color = pastelColors[colorIndex];
-            colorIndex = (colorIndex + 1) % pastelColors.length;
-            return color;
+        function getNextPastelBgClass() {
+            const colorClass = pastelBgClasses[currentColorIndex];
+            currentColorIndex = (currentColorIndex + 1) % pastelBgClasses.length;
+            return colorClass;
         }
-
 
         function showDashboardModal(title, message, type = 'info') {
             if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
@@ -330,10 +348,25 @@
 
         function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
-            const panelColorClass = getNextPastelColor(); // Pobierz kolejny pastelowy kolor
+            const panelColorClass = getNextPastelBgClass();
+            const defaultIconClass = 'fa-file-alt'; // Domyślna ikona dla materiałów
+            
+            // Próba wyciągnięcia ikony z kategorii (bardzo uproszczone)
+            let categoryIconClass = defaultIconClass;
+            if (material.category) {
+                const catLower = material.category.toLowerCase();
+                if (catLower.includes('kurs') || catLower.includes('video')) categoryIconClass = 'fa-video';
+                else if (catLower.includes('ebook') || catLower.includes('książka')) categoryIconClass = 'fa-book-open';
+                else if (catLower.includes('szablon') || catLower.includes('template')) categoryIconClass = 'fa-palette';
+                else if (catLower.includes('poradnik') || catLower.includes('guide')) categoryIconClass = 'fa-graduation-cap';
+            }
+
 
             return `
                 <div class="material-panel group ${panelColorClass}">
+                    <div class="material-icon-placeholder-panel">
+                        <i class="fas ${categoryIconClass}"></i>
+                    </div>
                     <div class="material-details">
                         <h3 class="material-title">${material.title}</h3>
                         <span class="material-category-badge">${material.category || 'Ogólne'}</span>
@@ -354,7 +387,7 @@
             myMaterialsGrid.appendChild(myMaterialsLoader); 
             noMyMaterialsMessage.classList.add('hidden');
             errorMyMaterialsMessage.classList.add('hidden');
-            colorIndex = 0; // Resetuj indeks kolorów przy każdym ładowaniu
+            currentColorIndex = 0; 
 
             try {
                 const response = await fetch('/api/my-materials', { credentials: 'include' });
