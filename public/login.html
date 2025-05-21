@@ -6,9 +6,15 @@
     <title>Logowanie - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #1f2937; /* text-gray-800 */
         }
         .btn {
             @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -22,20 +28,25 @@
         .error-message {
             @apply text-red-500 text-sm mt-2 text-center;
         }
-        .success-message { /* Dodane dla spójności, jeśli będzie potrzebne */
-            @apply text-green-500 text-sm mt-2 text-center;
+        .main-content {
+            flex-grow: 1;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body>
 
-    <header class="bg-white shadow-sm">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-             <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
+                <div>
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
+                </div>
+            </div>
         </div>
     </header>
 
-    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <main class="main-content flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-xl shadow-xl">
             <div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -87,43 +98,72 @@
                             id="loginButton"
                             class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn btn-primary">
                         <span class="btn-text">Zaloguj się</span>
-                        <span class="btn-loader hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...</span>
+                        <span class="btn-loader hidden items-center"><i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...</span>
                     </button>
                 </div>
             </form>
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-gray-300 py-8 text-center mt-auto">
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p>&copy; <span id="currentYearLogin"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-4">MateriałyPRO</h3>
+                    <p class="text-sm">Twoje źródło wartościowych materiałów cyfrowych.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Szybkie Linki</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="index.html#hero" class="hover:text-blue-400 transition-colors">Start</a></li>
+                        <li><a href="index.html#about" class="hover:text-blue-400 transition-colors">O Nas</a></li>
+                        <li><a href="index.html#contact" class="hover:text-blue-400 transition-colors">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Znajdź Nas</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
+                <p>© <span id="currentYearLogin"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+                 <p class="mt-1">
+                    <a href="#" class="hover:text-blue-400 transition-colors">Polityka Prywatności</a> |
+                    <a href="#" class="hover:text-blue-400 transition-colors">Regulamin Usług</a>
+                </p>
+            </div>
         </div>
     </footer>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
     <script>
-        document.getElementById('currentYearLogin').textContent = new Date().getFullYear();
+        const currentYearLoginEl = document.getElementById('currentYearLogin');
+        if (currentYearLoginEl) {
+            currentYearLoginEl.textContent = new Date().getFullYear();
+        }
 
         const loginForm = document.getElementById('loginForm');
         const loginButton = document.getElementById('loginButton');
-        const loginButtonText = loginButton.querySelector('.btn-text');
-        const loginButtonLoader = loginButton.querySelector('.btn-loader');
+        const loginButtonText = loginButton ? loginButton.querySelector('.btn-text') : null;
+        const loginButtonLoader = loginButton ? loginButton.querySelector('.btn-loader') : null;
         const formErrorMessage = document.getElementById('form-error-message');
 
-        if (loginForm) {
+        if (loginForm && loginButton && loginButtonText && loginButtonLoader && formErrorMessage) {
             loginForm.addEventListener('submit', async function(event) {
-                event.preventDefault(); // Zapobiegaj domyślnej wysyłce formularza
+                event.preventDefault(); 
 
-                // Pokaż loader, ukryj tekst przycisku
                 loginButtonText.classList.add('hidden');
                 loginButtonLoader.classList.remove('hidden');
+                loginButtonLoader.classList.add('flex'); // Dodane dla flex
                 loginButton.disabled = true;
-                formErrorMessage.classList.add('hidden'); // Ukryj poprzednie błędy
+                formErrorMessage.classList.add('hidden'); 
 
                 const formData = new FormData(loginForm);
                 const data = Object.fromEntries(formData.entries());
 
-                // Sprawdzenie, czy parametr redirect jest w URL i dodanie go do danych wysyłanych do serwera
                 const urlParams = new URLSearchParams(window.location.search);
                 const redirectParam = urlParams.get('redirect');
                 
@@ -132,7 +172,6 @@
                     loginApiUrl += `?redirect=${encodeURIComponent(redirectParam)}`;
                 }
 
-
                 try {
                     const response = await fetch(loginApiUrl, {
                         method: 'POST',
@@ -140,21 +179,18 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify(data),
+                        credentials: 'include' // Ważne dla sesji
                     });
 
                     const result = await response.json();
 
                     if (response.ok) {
-                        // Logowanie pomyślne, serwer powinien zwrócić redirectTo
                         if (result.redirectTo) {
                             window.location.href = result.redirectTo;
                         } else {
-                            // Fallback, jeśli serwer nie zwrócił redirectTo
-                            console.warn('Serwer nie zwrócił redirectTo, przekierowuję na /dashboard.html');
                             window.location.href = '/dashboard.html';
                         }
                     } else {
-                        // Błąd logowania
                         formErrorMessage.textContent = result.message || 'Wystąpił nieznany błąd.';
                         formErrorMessage.classList.remove('hidden');
                     }
@@ -163,12 +199,14 @@
                     formErrorMessage.textContent = 'Nie można połączyć się z serwerem. Spróbuj ponownie później.';
                     formErrorMessage.classList.remove('hidden');
                 } finally {
-                    // Ukryj loader, pokaż tekst przycisku
                     loginButtonText.classList.remove('hidden');
                     loginButtonLoader.classList.add('hidden');
+                    loginButtonLoader.classList.remove('flex'); // Dodane dla flex
                     loginButton.disabled = false;
                 }
             });
+        } else {
+            console.error("Nie znaleziono wszystkich wymaganych elementów formularza logowania.");
         }
     </script>
 

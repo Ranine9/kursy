@@ -15,8 +15,9 @@
             scroll-behavior: smooth;
         }
         .nav-link-active {
-            color: #3b82f6; /* Tailwind blue-500 */
-            font-weight: 600;
+            /* Tailwind blue-500 */
+            color: #3b82f6 !important; 
+            font-weight: 600 !important;
         }
         .btn {
             @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -36,7 +37,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-        /* Usunięto style związane z kartami materiałów i loaderem, bo sekcja materiałów została usunięta */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -47,9 +47,9 @@
                 <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
 
                 <nav class="hidden md:flex space-x-6">
-                    <a href="#hero" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors nav-link-active">Start</a>
-                    <a href="#about" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">O nas</a>
-                    <a href="#contact" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Kontakt</a>
+                    <a href="#hero" id="nav-link-hero" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors nav-link-active">Start</a>
+                    <a href="#about" id="nav-link-about" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">O nas</a>
+                    <a href="#contact" id="nav-link-contact" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Kontakt</a>
                     <a href="/material_gallery.html" id="browse-materials-nav" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Materiały</a>
                 </nav>
 
@@ -76,10 +76,10 @@
 
         <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#hero" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Start</a>
+                <a href="#hero" class="mobile-nav-link block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Start</a>
+                <a href="#about" class="mobile-nav-link block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">O nas</a>
+                <a href="#contact" class="mobile-nav-link block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Kontakt</a>
                 <a href="/material_gallery.html" id="browse-materials-nav-mobile" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Przeglądaj Materiały</a>
-                <a href="#about" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">O nas</a>
-                <a href="#contact" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Kontakt</a>
             </div>
             <div class="pt-4 pb-3 border-t border-gray-200">
                 <div id="mobile-auth-links">
@@ -109,7 +109,7 @@
                     Dołącz do nas, aby uzyskać dostęp do e-booków, poradników, szablonów i innych zasobów przygotowanych przez ekspertów.
                 </p>
                 <a href="/material_gallery.html" id="browse-materials-hero-btn" class="btn btn-primary text-lg px-8 py-4 transform hover:scale-105">Zacznij Przeglądać Materiały</a>
-                <p class="mt-4 text-sm text-blue-200">(Wymagane zalogowanie lub rejestracja)</p>
+                <p id="hero-login-required-text" class="mt-4 text-sm text-blue-200 hidden">(Wymagane zalogowanie lub rejestracja)</p>
             </div>
         </section>
 
@@ -246,7 +246,7 @@
                 <div>
                     <h4 class="text-lg font-semibold text-white mb-4">Szybkie Linki</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="/material_gallery.html" class="hover:text-blue-400 transition-colors">Wszystkie Materiały</a></li>
+                        <li><a href="/material_gallery.html" id="footer-browse-materials-link" class="hover:text-blue-400 transition-colors">Wszystkie Materiały</a></li>
                         <li><a href="#about" class="hover:text-blue-400 transition-colors">O Nas</a></li>
                         <li><a href="#contact" class="hover:text-blue-400 transition-colors">Kontakt</a></li>
                         <li><a href="/dashboard.html" id="footer-dashboard-link" class="hover:text-blue-400 transition-colors" style="display:none;">Panel Użytkownika</a></li>
@@ -271,7 +271,7 @@
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
-                <p>&copy; <span id="currentYear"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+                <p>© <span id="currentYear"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
                 <p class="mt-1">
                     <a href="#" class="hover:text-blue-400 transition-colors">Polityka Prywatności</a> |
                     <a href="#" class="hover:text-blue-400 transition-colors">Regulamin Usług</a>
@@ -286,6 +286,7 @@
                 <h3 id="messageModalTitle" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
                 <p id="messageModalText" class="text-gray-600 mb-6"></p>
                 <button id="messageModalCloseBtn" class="btn btn-primary">OK</button>
+                <button id="messageModalLoginBtn" class="btn btn-secondary ml-2 hidden">Zaloguj się</button>
             </div>
         </div>
     </div>
@@ -307,35 +308,46 @@
                 }
             });
 
-            const mobileNavLinks = mobileMenu.querySelectorAll('a'); // Wszystkie linki w menu mobilnym
+            const mobileNavLinks = mobileMenu.querySelectorAll('a.mobile-nav-link, #browse-materials-nav-mobile');
             mobileNavLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    // Nie zamykaj menu, jeśli to przycisk wylogowania, bo on i tak przekieruje
-                    if (!link.id.startsWith('logout-button')) {
-                        mobileMenu.classList.add('hidden');
-                        mobileMenuButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
-                    }
+                link.addEventListener('click', (event) => {
+                    // Dla linków "Przeglądaj materiały" obsługa jest w checkUserStatusAndUpdateUI
+                    if (link.id === 'browse-materials-nav-mobile') return;
+
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
+                    
+                    // Ustawianie aktywnego linku dla menu mobilnego
+                    mobileNavLinks.forEach(nav => nav.classList.remove('nav-link-active'));
+                    event.target.classList.add('nav-link-active');
                 });
             });
         }
         
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        // Ustawianie roku w stopce
+        const currentYearEl = document.getElementById('currentYear');
+        if (currentYearEl) {
+            currentYearEl.textContent = new Date().getFullYear();
+        }
 
         // Animacja pojawiania się elementów przy przewijaniu
         const scrollElements = document.querySelectorAll('.scroll-animate');
         const elementInView = (el, percentageScroll = 100) => {
+            if (!el) return false;
             const elementTop = el.getBoundingClientRect().top;
             return (
                 elementTop <= (window.innerHeight || document.documentElement.clientHeight) * (percentageScroll / 100)
             );
         };
-        const displayScrollElement = (element) => element.classList.add('appeared');
+        const displayScrollElement = (element) => {
+            if(element) element.classList.add('appeared');
+        }
         const handleScrollAnimation = () => {
             scrollElements.forEach((el) => {
                 if (elementInView(el, 75)) displayScrollElement(el);
             });
         };
-        window.addEventListener('load', handleScrollAnimation); // Uruchom po załadowaniu, aby animować elementy już widoczne
+        window.addEventListener('load', handleScrollAnimation);
         window.addEventListener('scroll', handleScrollAnimation);
 
 
@@ -344,11 +356,13 @@
         const messageModalTitle = document.getElementById('messageModalTitle');
         const messageModalText = document.getElementById('messageModalText');
         const messageModalCloseBtn = document.getElementById('messageModalCloseBtn');
+        const messageModalLoginBtn = document.getElementById('messageModalLoginBtn');
 
-        function showModal(title, message) {
-            if (messageModal && messageModalTitle && messageModalText) {
+        function showModal(title, message, showLoginButton = false) {
+            if (messageModal && messageModalTitle && messageModalText && messageModalCloseBtn && messageModalLoginBtn) {
                 messageModalTitle.textContent = title;
                 messageModalText.textContent = message;
+                messageModalLoginBtn.classList.toggle('hidden', !showLoginButton);
                 messageModal.classList.remove('hidden');
             }
         }
@@ -358,16 +372,19 @@
                 messageModal.classList.add('hidden');
             });
         }
+        if (messageModalLoginBtn && messageModal) {
+            messageModalLoginBtn.addEventListener('click', () => {
+                window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.hash);
+            });
+        }
         
         // Formularz kontaktowy
         const contactForm = document.getElementById('contactForm');
         if (contactForm) {
             contactForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-                // Tutaj można dodać logikę wysyłki formularza (np. przez fetch do API)
-                // Na razie tylko wyświetlamy komunikat
                 showModal('Wiadomość Wysłana', 'Dziękujemy za kontakt! Odpowiemy najszybciej jak to możliwe.');
-                contactForm.reset(); // Czyści formularz po wysłaniu
+                contactForm.reset();
             });
         }
 
@@ -382,10 +399,22 @@
         const logoutButtonDesktop = document.getElementById('logout-button-desktop');
         const logoutButtonMobile = document.getElementById('logout-button-mobile');
         const footerDashboardLink = document.getElementById('footer-dashboard-link');
+        
         const browseMaterialsNav = document.getElementById('browse-materials-nav');
         const browseMaterialsNavMobile = document.getElementById('browse-materials-nav-mobile');
         const browseMaterialsHeroBtn = document.getElementById('browse-materials-hero-btn');
+        const footerBrowseMaterialsLink = document.getElementById('footer-browse-materials-link');
+        const heroLoginRequiredText = document.getElementById('hero-login-required-text');
 
+        let isUserLoggedIn = false;
+
+        function handleBrowseMaterialsClick(event) {
+            if (!isUserLoggedIn) {
+                event.preventDefault();
+                showModal('Wymagane Logowanie', 'Aby przeglądać materiały, musisz się najpierw zalogować lub zarejestrować.', true);
+            }
+            // Jeśli zalogowany, link działa normalnie
+        }
 
         async function checkUserStatusAndUpdateUI() {
             try {
@@ -393,6 +422,7 @@
                 if (response.ok) {
                     const userData = await response.json();
                     if (userData.username) {
+                        isUserLoggedIn = true;
                         // Użytkownik zalogowany
                         if (authLinks) authLinks.style.display = 'none';
                         if (userGreeting) userGreeting.style.display = 'flex';
@@ -401,54 +431,52 @@
                         if (mobileAuthLinks) mobileAuthLinks.style.display = 'none';
                         if (mobileUserGreeting) mobileUserGreeting.style.display = 'block'; 
                         if (mobileUsernameDisplay) mobileUsernameDisplay.textContent = `Witaj, ${userData.username}!`;
-                        if (footerDashboardLink) footerDashboardLink.style.display = 'inline'; // Pokaż link do panelu w stopce
+                        if (footerDashboardLink) footerDashboardLink.style.display = 'inline';
+                        if (heroLoginRequiredText) heroLoginRequiredText.classList.add('hidden');
 
                         // Linki "Przeglądaj materiały" powinny działać normalnie
-                        if(browseMaterialsNav) browseMaterialsNav.href = '/material_gallery.html';
-                        if(browseMaterialsNavMobile) browseMaterialsNavMobile.href = '/material_gallery.html';
-                        if(browseMaterialsHeroBtn) browseMaterialsHeroBtn.href = '/material_gallery.html';
-
+                        [browseMaterialsNav, browseMaterialsNavMobile, browseMaterialsHeroBtn, footerBrowseMaterialsLink].forEach(el => {
+                            if(el) {
+                                el.href = '/material_gallery.html';
+                                el.removeEventListener('click', handleBrowseMaterialsClick);
+                            }
+                        });
                         return true; 
                     }
                 }
-                // Użytkownik niezalogowany lub błąd (inny niż 401/403, które powinny przekierować)
+                // Użytkownik niezalogowany lub błąd
+                isUserLoggedIn = false;
                 if (authLinks) authLinks.style.display = 'flex';
                 if (userGreeting) userGreeting.style.display = 'none';
                 if (mobileAuthLinks) mobileAuthLinks.style.display = 'block';
                 if (mobileUserGreeting) mobileUserGreeting.style.display = 'none';
                 if (footerDashboardLink) footerDashboardLink.style.display = 'none';
+                if (heroLoginRequiredText) heroLoginRequiredText.classList.remove('hidden');
 
-                // Jeśli użytkownik nie jest zalogowany, linki "Przeglądaj materiały" powinny kierować do logowania
-                const loginRedirectHandler = (event) => {
-                    event.preventDefault();
-                    showModal('Wymagane Logowanie', 'Aby przeglądać materiały, musisz się najpierw zalogować lub zarejestrować.');
-                    // Opcjonalnie: setTimeout(() => { window.location.href = '/login.html'; }, 3000);
-                };
-
-                if(browseMaterialsNav) {
-                    browseMaterialsNav.href = '/login.html'; // Zmień href
-                    // Można też dodać event listener, jeśli chcemy modal zamiast bezpośredniego przekierowania
-                    // browseMaterialsNav.addEventListener('click', loginRedirectHandler);
-                }
-                if(browseMaterialsNavMobile) {
-                     browseMaterialsNavMobile.href = '/login.html';
-                    // browseMaterialsNavMobile.addEventListener('click', loginRedirectHandler);
-                }
-                if(browseMaterialsHeroBtn) {
-                    browseMaterialsHeroBtn.href = '/login.html';
-                    // browseMaterialsHeroBtn.addEventListener('click', loginRedirectHandler);
-                }
-
-
+                [browseMaterialsNav, browseMaterialsNavMobile, browseMaterialsHeroBtn, footerBrowseMaterialsLink].forEach(el => {
+                    if(el) {
+                        el.href = '#'; // Lub '/login.html' jeśli modal nie jest preferowany
+                        el.addEventListener('click', handleBrowseMaterialsClick);
+                    }
+                });
                 return false; 
 
             } catch (error) {
                 console.warn('Nie udało się sprawdzić statusu użytkownika (może być niezalogowany lub błąd serwera):', error);
+                isUserLoggedIn = false;
                 if (authLinks) authLinks.style.display = 'flex';
                 if (userGreeting) userGreeting.style.display = 'none';
                 if (mobileAuthLinks) mobileAuthLinks.style.display = 'block';
                 if (mobileUserGreeting) mobileUserGreeting.style.display = 'none';
                 if (footerDashboardLink) footerDashboardLink.style.display = 'none';
+                if (heroLoginRequiredText) heroLoginRequiredText.classList.remove('hidden');
+                
+                [browseMaterialsNav, browseMaterialsNavMobile, browseMaterialsHeroBtn, footerBrowseMaterialsLink].forEach(el => {
+                    if(el) {
+                         el.href = '#';
+                         el.addEventListener('click', handleBrowseMaterialsClick);
+                    }
+                });
                 return false; 
             }
         }
@@ -457,31 +485,54 @@
             fetch('/logout', { method: 'GET', credentials: 'include' })
                 .then(response => {
                     if (response.ok && response.redirected) {
-                        window.location.href = response.url; // Przekieruj na stronę wskazaną przez serwer (powinna być '/')
+                        window.location.href = response.url; 
                     } else {
-                        // Jeśli coś poszło nie tak, np. serwer nie przekierował
-                        window.location.href = '/'; // Awaryjne przekierowanie
+                        window.location.href = '/'; 
                     }
                 })
                 .catch(error => {
                     console.error('Błąd podczas wylogowywania:', error);
                     showModal('Błąd', 'Wystąpił problem podczas wylogowywania.');
-                    window.location.href = '/'; // Awaryjne przekierowanie
+                    window.location.href = '/';
                 });
         }
 
-        if (logoutButtonDesktop) {
-            logoutButtonDesktop.addEventListener('click', handleLogout);
-        }
-        if (logoutButtonMobile) {
-            logoutButtonMobile.addEventListener('click', handleLogout);
-        }
+        if (logoutButtonDesktop) logoutButtonDesktop.addEventListener('click', handleLogout);
+        if (logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleLogout);
         
-        // Uruchomienie funkcji po załadowaniu DOM
+        // Aktywny link nawigacji na podstawie scrolla
+        const desktopNavLinks = document.querySelectorAll('nav.hidden.md\\:flex a[href^="#"]');
+        const sections = Array.from(desktopNavLinks).map(link => {
+            const sectionId = link.getAttribute('href').substring(1);
+            return document.getElementById(sectionId);
+        }).filter(section => section !== null);
+
+        function updateActiveNavLink() {
+            let currentSectionId = 'hero'; // Domyślnie
+            const offset = window.innerHeight * 0.4; // 40% wysokości okna
+
+            sections.forEach(section => {
+                if (section) {
+                    const sectionTop = section.getBoundingClientRect().top;
+                    if (sectionTop < offset) {
+                        currentSectionId = section.id;
+                    }
+                }
+            });
+
+            desktopNavLinks.forEach(link => {
+                link.classList.remove('nav-link-active');
+                if (link.getAttribute('href') === `#${currentSectionId}`) {
+                    link.classList.add('nav-link-active');
+                }
+            });
+        }
+        window.addEventListener('scroll', updateActiveNavLink);
+        
         document.addEventListener('DOMContentLoaded', () => {
-            // Nie ma już fetchAndDisplayMaterials() na tej stronie
             checkUserStatusAndUpdateUI();
-            handleScrollAnimation(); // Upewnij się, że animacje są inicjowane
+            handleScrollAnimation();
+            updateActiveNavLink(); // Ustaw na starcie
         });
 
     </script>

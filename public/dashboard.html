@@ -1,26 +1,76 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Użytkownika - Nowy Koncept</title>
+    <title>Panel Użytkownika - MateriałyPRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Jasnoszare tło */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #1f2937; /* text-gray-800 */
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column; /* Changed for header/footer structure */
         }
+        /* Unified button styles */
+        .btn {
+            @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
+        }
+        .btn-danger {
+            @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+        }
+        .form-input {
+             @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+
+        .content-wrapper { /* New wrapper for sidebar and main content */
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden; /* Prevent scrollbars on wrapper */
+        }
+
         .sidebar {
             transition: transform 0.3s ease-in-out;
+            width: 288px; /* w-72 */
+            background-color: #1f2937; /* bg-gray-800 */
+            color: white;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
         }
-        .sidebar-icon {
-            transition: all 0.3s ease;
+        .sidebar-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
         }
-        .sidebar-icon:hover {
-            transform: scale(1.1);
+         .sidebar-nav-link.active i {
+            color: white !important; /* Ensure icon color matches for active link */
         }
+        .sidebar-nav-link i {
+             color: #9ca3af; /* gray-400 default for icons */
+        }
+        .sidebar-nav-link.active .text-indigo-300, /* Overwrite specific icon colors if active */
+        .sidebar-nav-link.active .text-gray-400 {
+            color: white !important;
+        }
+
+
+        .main-dashboard-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Allow main content to scroll */
+        }
+        
         .material-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -28,11 +78,10 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        /* Usunięto .upload-button i style modala, bo modal jest usuwany */
 
         .loader { 
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4f46e5; /* indigo-600 */
+            border: 4px solid #e5e7eb; /* gray-200 */
+            border-top: 4px solid #3b82f6; /* blue-500 */
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -43,131 +92,362 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Unified Modal Styles (from index.html) */
+        #messageModal { /* Ensured z-index is high enough */
+            z-index: 1000;
+        }
+        #messageModal > div {
+            /* Styles for modal box from index.html are generally fine */
+        }
+        #messageModalCloseBtn, #messageModalLoginBtn {
+            @apply btn; /* Applied base btn class */
+        }
+        #messageModalCloseBtn { @apply btn-primary; }
+        #messageModalLoginBtn { @apply btn-secondary; }
+
+        /* Toast notification styling */
+        #toastMessage {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 0.875rem;
+            z-index: 1050;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        #toastMessage.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #toastMessage.success {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+        }
+        #toastMessage.error {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+        }
+        #toastMessage.info {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+        }
+
     </style>
 </head>
-<body class="flex h-screen bg-gray-100">
+<body>
 
-    <aside id="desktopSidebar" class="w-72 bg-gray-800 text-white p-6 space-y-6 hidden md:flex flex-col justify-between shadow-lg">
-        <div>
-            <div class="text-3xl font-bold mb-10 flex items-center text-indigo-400">
-                <i class="fas fa-rocket mr-3 text-4xl"></i>
-                <span>Materiały<span class="text-white">PRO</span></span>
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
+                <nav class="hidden md:flex space-x-6 items-center">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
+                    <a href="/material_gallery.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Materiały</a>
+                    <span id="header-username-display" class="text-gray-700 text-sm font-medium"></span>
+                    <button id="header-logout-button" class="btn btn-secondary btn-sm">Wyloguj</button>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button-dashboard" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <nav class="space-y-2" id="desktopNav">
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link active" data-section="my-materials-section">
-                    <i class="fas fa-folder-open w-6 h-6 sidebar-icon text-indigo-300"></i>
-                    <span>Moje Materiały</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link" data-section="account-settings-section">
-                    <i class="fas fa-cog w-6 h-6 sidebar-icon text-gray-400"></i>
-                    <span>Ustawienia Konta</span>
-                </a>
-                <a href="/material_gallery.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg">
-                    <i class="fas fa-swatchbook w-6 h-6 sidebar-icon text-indigo-300"></i>
-                    <span>Galeria Materiałów</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
-                    <i class="fas fa-share-alt w-6 h-6 sidebar-icon text-indigo-300"></i>
-                    <span>Udostępnione</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
-                    <i class="fas fa-star w-6 h-6 sidebar-icon text-indigo-300"></i>
-                    <span>Ulubione</span>
-                </a>
-            </nav>
         </div>
-        <button id="logoutButtonDesktop" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-700 bg-red-600 text-white transition-colors duration-200 text-lg">
-            <i class="fas fa-sign-out-alt w-6 h-6 sidebar-icon"></i>
-            <span>Wyloguj się</span>
-        </button>
-    </aside>
+        <div id="mobile-menu-dashboard" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Strona Główna</a>
+                <a href="/material_gallery.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Przeglądaj Materiały</a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
+                 <span id="mobile-header-username-display" class="block text-center text-gray-700 text-base font-medium mb-2"></span>
+                 <button id="mobile-header-logout-button" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
+            </div>
+        </div>
+    </header>
 
-    <div id="mobileSidebar" class="fixed inset-0 flex z-40 md:hidden hidden"> {/* Domyślnie ukryty */}
-        <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black opacity-50"></div>
-        <aside class="relative w-72 bg-gray-800 text-white p-6 space-y-6 flex flex-col justify-between shadow-xl">
+    <div class="content-wrapper">
+        <aside id="desktopSidebar" class="sidebar p-6 space-y-6 hidden md:flex flex-col justify-between shadow-lg">
             <div>
                 <div class="text-3xl font-bold mb-10 flex items-center text-indigo-400">
-                    <i class="fas fa-rocket mr-3 text-4xl"></i>
-                    <span>Materiały<span class="text-white">PRO</span></span>
+                    <i class="fas fa-user-circle mr-3 text-4xl"></i>
+                    <span id="sidebar-username-display">Panel</span>
                 </div>
-                <nav class="space-y-2" id="mobileNav">
-                     <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link active" data-section="my-materials-section">
-                        <i class="fas fa-folder-open w-6 h-6 sidebar-icon text-indigo-300"></i>
+                <nav class="space-y-2" id="desktopNav">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link active" data-section="my-materials-section">
+                        <i class="fas fa-folder-open w-6 h-6 text-indigo-300"></i>
                         <span>Moje Materiały</span>
                     </a>
                     <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link" data-section="account-settings-section">
-                        <i class="fas fa-cog w-6 h-6 sidebar-icon text-gray-400"></i>
+                        <i class="fas fa-cog w-6 h-6"></i>
                         <span>Ustawienia Konta</span>
                     </a>
-                     <a href="/material_gallery.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg">
-                        <i class="fas fa-swatchbook w-6 h-6 sidebar-icon text-indigo-300"></i>
-                        <span>Galeria Materiałów</span>
-                    </a>
                     <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
-                        <i class="fas fa-share-alt w-6 h-6 sidebar-icon text-indigo-300"></i>
+                        <i class="fas fa-share-alt w-6 h-6 text-indigo-300"></i>
                         <span>Udostępnione</span>
                     </a>
                     <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
-                        <i class="fas fa-star w-6 h-6 sidebar-icon text-indigo-300"></i>
+                        <i class="fas fa-star w-6 h-6 text-indigo-300"></i>
                         <span>Ulubione</span>
                     </a>
                 </nav>
             </div>
-             <button id="logoutButtonMobile" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-700 bg-red-600 text-white transition-colors duration-200 text-lg">
-                <i class="fas fa-sign-out-alt w-6 h-6 sidebar-icon"></i>
-                <span>Wyloguj się</span>
-            </button>
+            <!-- Logout button removed from sidebar, now in main header -->
         </aside>
+
+        <div id="mobileSidebar" class="fixed inset-0 flex z-40 md:hidden hidden">
+            <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black opacity-50"></div>
+            <aside class="relative sidebar p-6 space-y-6 flex flex-col justify-between shadow-xl">
+                <div>
+                    <div class="text-3xl font-bold mb-10 flex items-center text-indigo-400">
+                        <i class="fas fa-user-circle mr-3 text-4xl"></i>
+                        <span id="mobile-sidebar-username-display">Panel</span>
+                    </div>
+                    <nav class="space-y-2" id="mobileNav">
+                        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link active" data-section="my-materials-section">
+                            <i class="fas fa-folder-open w-6 h-6 text-indigo-300"></i>
+                            <span>Moje Materiały</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg sidebar-nav-link" data-section="account-settings-section">
+                            <i class="fas fa-cog w-6 h-6"></i>
+                            <span>Ustawienia Konta</span>
+                        </a>
+                         <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
+                            <i class="fas fa-share-alt w-6 h-6 text-indigo-300"></i>
+                            <span>Udostępnione</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-lg opacity-50 cursor-not-allowed" title="Funkcjonalność w przygotowaniu">
+                            <i class="fas fa-star w-6 h-6 text-indigo-300"></i>
+                            <span>Ulubione</span>
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+
+        <main class="main-dashboard-content p-4 md:p-8">
+            <header class="flex justify-between items-center mb-8">
+                <div class="flex items-center">
+                    <button id="sidebarMenuButton" class="md:hidden mr-4 text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                    <h1 id="main-section-title" class="text-3xl font-semibold text-gray-800">Moje Materiały</h1>
+                </div>
+                <!-- User avatar and dropdown removed, info is in main header now -->
+            </header>
+
+            <section id="my-materials-section" class="main-content-section">
+                <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Loader/messages will be injected here -->
+                </div>
+                 <div id="my-materials-loader" class="col-span-full hidden"><div class="loader"></div></div>
+                <p id="no-my-materials-message" class="hidden col-span-full text-center text-gray-500 py-10">Nie posiadasz jeszcze żadnych materiałów. <a href="/material_gallery.html" class="text-blue-600 hover:underline">Przeglądaj galerię</a>.</p>
+                <p id="error-my-materials-message" class="hidden col-span-full text-center text-red-500 py-10">Wystąpił błąd podczas ładowania materiałów.</p>
+            </section>
+
+            <section id="account-settings-section" class="main-content-section hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">Zmień Adres Email</h3>
+                        <form id="changeEmailForm" class="space-y-4">
+                            <div>
+                                <label for="currentEmail" class="form-label">Aktualny Email</label>
+                                <input type="email" id="currentEmail" name="currentEmail" class="form-input bg-gray-100" readonly>
+                            </div>
+                            <div>
+                                <label for="newEmail" class="form-label">Nowy Email</label>
+                                <input type="email" id="newEmail" name="newEmail" class="form-input" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary w-full">Zapisz nowy email</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">Zmień Hasło</h3>
+                        <form id="changePasswordForm" class="space-y-4">
+                            <div>
+                                <label for="currentPassword" class="form-label">Aktualne Hasło</label>
+                                <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
+                            </div>
+                            <div>
+                                <label for="newPassword" class="form-label">Nowe Hasło</label>
+                                <input type="password" id="newPassword" name="newPassword" class="form-input" required minlength="6">
+                                <p class="text-xs text-gray-500 mt-1">Minimum 6 znaków.</p>
+                            </div>
+                            <div>
+                                <label for="confirmNewPassword" class="form-label">Potwierdź Nowe Hasło</label>
+                                <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary w-full">Zmień hasło</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg mt-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">Usuń Konto</h3>
+                        <p class="text-gray-600 mb-4">Usunięcie konta jest operacją nieodwracalną i spowoduje utratę dostępu do wszystkich nabytych materiałów oraz danych profilowych.</p>
+                        <button id="deleteAccountButton" class="btn btn-danger">Usuń Moje Konto</button>
+                    </div>
+            </section>
+        </main>
     </div>
 
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center">
-                <button id="menuButton" class="md:hidden mr-4 text-gray-700 hover:text-indigo-600">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-                <h1 id="main-section-title" class="text-3xl font-semibold text-gray-800">Moje Materiały</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button class="text-gray-500 hover:text-gray-700 relative" title="Powiadomienia (wkrótce)">
-                    <i class="fas fa-bell text-xl"></i>
-                </button>
-                <div class="relative">
-                    <img id="userAvatar" src="https://placehold.co/40x40/E2E8F0/A0AEC0?text=U" alt="Awatar użytkownika" class="w-10 h-10 rounded-full cursor-pointer">
-                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
-                        <span id="dropdownUsername" class="block px-4 py-2 text-sm text-gray-500 truncate">Ładowanie...</span>
-                        <hr class="my-1">
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="activateSection('account-settings-section', event)">Profil i Ustawienia</a>
-                        <button id="logoutButtonDropdown" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Wyloguj</button>
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-auto"> <!-- mt-auto ensures it's at bottom if content is short -->
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-4">MateriałyPRO</h3>
+                    <p class="text-sm">Twoje źródło wartościowych materiałów cyfrowych.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Szybkie Linki</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="index.html" class="hover:text-blue-400 transition-colors">Strona Główna</a></li>
+                        <li><a href="/material_gallery.html" class="hover:text-blue-400 transition-colors">Galeria Materiałów</a></li>
+                        <li><a href="index.html#about" class="hover:text-blue-400 transition-colors">O Nas</a></li>
+                        <li><a href="index.html#contact" class="hover:text-blue-400 transition-colors">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">Znajdź Nas</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-        </header>
-
-        <section id="my-materials-section" class="main-content-section">
-            <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <div id="my-materials-loader" class="col-span-full"><div class="loader"></div></div>
-                <p id="no-my-materials-message" class="hidden col-span-full text-center text-gray-500 py-10">Nie posiadasz jeszcze żadnych materiałów.</p>
-                <p id="error-my-materials-message" class="hidden col-span-full text-center text-red-500 py-10">Wystąpił błąd podczas ładowania materiałów.</p>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
+                <p>© <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+                 <p class="mt-1">
+                    <a href="#" class="hover:text-blue-400 transition-colors">Polityka Prywatności</a> |
+                    <a href="#" class="hover:text-blue-400 transition-colors">Regulamin Usług</a>
+                </p>
             </div>
-        </section>
-
-        <section id="account-settings-section" class="main-content-section hidden">
-            <h2 class="text-3xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <p class="text-gray-600">Tutaj w przyszłości znajdą się opcje zmiany hasła, adresu email, preferencji powiadomień itp.</p>
-                <p class="mt-2 text-gray-600">ID Użytkownika: <span id="user-id-placeholder" class="font-mono">ładowanie...</span></p>
-            </div>
-        </section>
-    </main>
-
+        </div>
+    </footer>
     
-    <div id="toastMessage" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-lg hidden transition-opacity duration-300 opacity-0">
+    <!-- Unified Message Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[1000] hidden p-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+            <div class="text-center">
+                 <div id="messageModalIcon" class="text-5xl mb-4"></div>
+                <h3 id="messageModalTitle" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
+                <p id="messageModalText" class="text-gray-600 mb-6"></p>
+                <button id="messageModalCloseBtn" class="btn btn-primary">OK</button>
+                <button id="messageModalConfirmBtn" class="btn btn-danger ml-2 hidden">Potwierdź</button>
+                <button id="messageModalLoginBtn" class="btn btn-secondary ml-2 hidden">Zaloguj się</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastMessage" class="hidden">
         <p id="toastText"></p>
     </div>
 
 <script>
-    const menuButton = document.getElementById('menuButton');
+    const currentYearDashboardEl = document.getElementById('currentYearDashboard');
+    if(currentYearDashboardEl) currentYearDashboardEl.textContent = new Date().getFullYear();
+
+    // --- Unified Modal Logic ---
+    const messageModal = document.getElementById('messageModal');
+    const messageModalTitle = document.getElementById('messageModalTitle');
+    const messageModalText = document.getElementById('messageModalText');
+    const messageModalCloseBtn = document.getElementById('messageModalCloseBtn');
+    const messageModalLoginBtn = document.getElementById('messageModalLoginBtn');
+    const messageModalConfirmBtn = document.getElementById('messageModalConfirmBtn');
+    const messageModalIcon = document.getElementById('messageModalIcon');
+    let confirmActionCallback = null;
+
+
+    function showGlobalModal(title, message, type = 'info', showLoginBtn = false, showConfirmBtn = false, callback = null) {
+        if (!messageModal || !messageModalTitle || !messageModalText || !messageModalCloseBtn || !messageModalLoginBtn || !messageModalConfirmBtn || !messageModalIcon) {
+            console.error("Brakuje elementów modala!");
+            alert(`${title}\n\n${message}`); // Fallback
+            return;
+        }
+        messageModalTitle.textContent = title;
+        messageModalText.textContent = message;
+        confirmActionCallback = callback;
+
+        let iconHtml = '<i class="fas fa-info-circle text-blue-500"></i>'; // Default blue-500
+        if (type === 'success') iconHtml = '<i class="fas fa-check-circle text-green-500"></i>'; // green-500
+        else if (type === 'error') iconHtml = '<i class="fas fa-times-circle text-red-500"></i>';   // red-500
+        else if (type === 'warning') iconHtml = '<i class="fas fa-exclamation-triangle text-yellow-500"></i>'; // yellow-500
+        messageModalIcon.innerHTML = iconHtml;
+        
+        messageModalLoginBtn.classList.toggle('hidden', !showLoginBtn);
+        messageModalConfirmBtn.classList.toggle('hidden', !showConfirmBtn);
+        messageModalCloseBtn.textContent = (showConfirmBtn || showLoginBtn) ? "Anuluj" : "OK";
+
+        messageModal.classList.remove('hidden');
+    }
+
+    if (messageModalCloseBtn) {
+        messageModalCloseBtn.addEventListener('click', () => {
+            messageModal.classList.add('hidden');
+            confirmActionCallback = null;
+        });
+    }
+    if (messageModalLoginBtn) {
+        messageModalLoginBtn.addEventListener('click', () => {
+            window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        });
+    }
+    if (messageModalConfirmBtn) {
+        messageModalConfirmBtn.addEventListener('click', () => {
+            if (typeof confirmActionCallback === 'function') {
+                confirmActionCallback();
+            }
+            messageModal.classList.add('hidden');
+            confirmActionCallback = null;
+        });
+    }
+     if (messageModal) {
+        messageModal.addEventListener('click', (event) => {
+            if (event.target === messageModal) {
+                messageModal.classList.add('hidden');
+                confirmActionCallback = null;
+            }
+        });
+    }
+
+    // --- Toast Notification Logic ---
+    const toastMessageEl = document.getElementById('toastMessage'); // Main div
+    const toastTextEl = document.getElementById('toastText');     // Inner p for text
+
+    function showToast(message, type = 'info', duration = 3000) {
+        if (!toastMessageEl || !toastTextEl) {
+            console.warn("Elementy toastu nie znalezione, używam modala jako fallback.");
+            showGlobalModal(type.charAt(0).toUpperCase() + type.slice(1), message, type);
+            return;
+        }
+        
+        toastTextEl.textContent = message;
+        toastMessageEl.className = 'hidden'; // Reset classes
+        toastMessageEl.classList.add(type, 'show'); // Add type and show class
+        toastMessageEl.classList.remove('hidden');
+
+
+        setTimeout(() => {
+            toastMessageEl.classList.remove('show');
+            setTimeout(() => {
+                toastMessageEl.classList.add('hidden');
+            }, 300); // Wait for fade out transition
+        }, duration);
+    }
+
+
+    // --- Dashboard Specific Logic ---
+    const sidebarMenuButton = document.getElementById('sidebarMenuButton'); // For mobile sidebar toggle
     const mobileSidebar = document.getElementById('mobileSidebar');
     const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
     const desktopNavLinks = document.querySelectorAll('#desktopNav .sidebar-nav-link');
@@ -175,119 +455,107 @@
     const mainContentSections = document.querySelectorAll('.main-content-section');
     const mainSectionTitle = document.getElementById('main-section-title');
     
-    const userAvatar = document.getElementById('userAvatar');
-    const profileDropdown = document.getElementById('profileDropdown');
-    const dropdownUsername = document.getElementById('dropdownUsername');
-    
     const materialsGrid = document.getElementById('my-materials-grid');
     const materialsLoader = document.getElementById('my-materials-loader');
     const noMaterialsMsg = document.getElementById('no-my-materials-message');
     const errorMaterialsMsg = document.getElementById('error-my-materials-message');
-    
-    const toastMessageEl = document.getElementById('toastMessage');
-    const toastTextEl = document.getElementById('toastText');
 
-    const userIdPlaceholder = document.getElementById('user-id-placeholder');
+    // User display elements
+    const headerUsernameDisplay = document.getElementById('header-username-display');
+    const mobileHeaderUsernameDisplay = document.getElementById('mobile-header-username-display');
+    const sidebarUsernameDisplay = document.getElementById('sidebar-username-display');
+    const mobileSidebarUsernameDisplay = document.getElementById('mobile-sidebar-username-display');
+    const currentEmailInput = document.getElementById('currentEmail');
 
-    async function fetchUserDataForConcept() {
+    // Forms
+    const changeEmailForm = document.getElementById('changeEmailForm');
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const deleteAccountButton = document.getElementById('deleteAccountButton');
+
+    let userDataCache = null; // Cache user data
+
+    async function fetchUserData() {
+        if (userDataCache) return userDataCache;
         try {
             const response = await fetch('/api/user', { credentials: 'include' });
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    showToast('Sesja wygasła. Przekierowuję...', false);
-                    setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard_light_concept.html'; }, 2500);
+                    showGlobalModal('Sesja wygasła', 'Przekierowuję do strony logowania...', 'error', true);
+                    // setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 2500);
                 } else {
-                    showToast(`Błąd ładowania danych użytkownika: ${response.status}`, false);
+                    showGlobalModal('Błąd', `Błąd ładowania danych użytkownika: ${response.status}`, 'error');
                 }
                 return null;
             }
-            const userData = await response.json();
-            if (userData.username) {
-                if(dropdownUsername) dropdownUsername.textContent = userData.username;
-                if (userAvatar && userData.username) {
-                    userAvatar.alt = `Awatar ${userData.username}`;
-                    // Prosta logika inicjałów
-                    const initials = userData.username.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-                    const avatarPlaceholder = userAvatar.parentElement.querySelector('span'); // Jeśli masz span na inicjały
-                    if(avatarPlaceholder) avatarPlaceholder.textContent = initials;
-                    else userAvatar.src = `https://placehold.co/40x40/E2E8F0/718096?text=${initials}`; // Fallback z inicjałami
-                }
-                const userIdSettingsPlaceholder = document.getElementById('user-id-placeholder');
-                if (userIdSettingsPlaceholder && userData.userId) userIdSettingsPlaceholder.textContent = userData.userId;
-            }
-            return userData;
+            userDataCache = await response.json();
+            updateUserDisplays(userDataCache);
+            return userDataCache;
         } catch (error) {
             console.error('Nie udało się pobrać danych użytkownika:', error);
-            showToast('Nie udało się załadować danych użytkownika.', false);
+            showGlobalModal('Błąd Krytyczny', 'Nie udało się załadować danych użytkownika.', 'error');
             return null;
         }
     }
 
+    function updateUserDisplays(userData) {
+        if (!userData || !userData.username) return;
+        const welcomeText = `Witaj, ${userData.username}!`;
+        if (headerUsernameDisplay) headerUsernameDisplay.textContent = welcomeText;
+        if (mobileHeaderUsernameDisplay) mobileHeaderUsernameDisplay.textContent = welcomeText;
+        if (sidebarUsernameDisplay) sidebarUsernameDisplay.textContent = userData.username;
+        if (mobileSidebarUsernameDisplay) mobileSidebarUsernameDisplay.textContent = userData.username;
+        if (currentEmailInput && userData.email) currentEmailInput.value = userData.email;
+    }
+
     function getIconForFileType(fileType, category) {
+        // Simplified from original dashboard - adjust if needed
         if (category) {
             const catLower = category.toLowerCase();
             if (catLower.includes('kurs') || catLower.includes('video')) return 'fa-play-circle';
-            if (catLower.includes('ebook') || catLower.includes('książka')) return 'fa-book-open';
-            if (catLower.includes('szablon') || catLower.includes('template')) return 'fa-drafting-compass';
-            if (catLower.includes('poradnik') || catLower.includes('guide')) return 'fa-graduation-cap';
-            if (catLower.includes('audio') || catLower.includes('podcast')) return 'fa-headphones';
-            if (catLower.includes('grafika') || catLower.includes('design')) return 'fa-image';
-            if (catLower.includes('kod') || catLower.includes('programowanie')) return 'fa-code';
+            if (catLower.includes('ebook')) return 'fa-book-open';
+            if (catLower.includes('szablon')) return 'fa-drafting-compass';
+            if (catLower.includes('poradnik')) return 'fa-graduation-cap';
         }
-        if (fileType) {
-            if (fileType.includes('pdf')) return 'fa-file-pdf';
-            if (fileType.includes('word') || fileType.includes('document')) return 'fa-file-word';
-            if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fa-file-excel';
-            if (fileType.includes('presentation') || fileType.includes('powerpoint')) return 'fa-file-powerpoint';
-            if (fileType.startsWith('image/')) return 'fa-file-image';
-            if (fileType.startsWith('video/')) return 'fa-file-video';
-            if (fileType.startsWith('audio/')) return 'fa-file-audio';
-        }
-        return 'fa-file';
+        return 'fa-file'; // Default
     }
 
-    function createMaterialCardFromConcept(material) {
-        const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', {day: '2-digit', month: 'short', year: 'numeric'}) : 'Brak daty';
+    function createMaterialCard(material) {
+        const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL') : 'Brak daty';
         const fileTypeOrCategory = material.category || (material.file_url ? material.file_url.split('.').pop().toUpperCase() : 'Plik');
         const iconClass = getIconForFileType(material.file_url ? material.file_url.split('.').pop() : '', material.category);
         
-        const thumbnailUrl = material.cover_image_url || `https://placehold.co/600x400/E0E0E0/777?text=${fileTypeOrCategory}`;
-        const imageElement = material.cover_image_url 
-            ? `<img src="${thumbnailUrl}" alt="Miniatura: ${material.title}" class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">`
-            : `<div class="w-full h-40 bg-gray-200 flex items-center justify-center group-hover:bg-gray-300 transition-colors duration-300"><i class="fas ${iconClass} text-5xl text-gray-400 group-hover:text-indigo-500 transition-colors duration-300"></i></div>`;
-
-        // Usunięto przyciski Edytuj i Usuń
+        const thumbnailUrl = material.cover_image_url || `https://placehold.co/300x200/E0E7FF/4338CA?text=${encodeURIComponent(fileTypeOrCategory)}`;
+        
+        const imageElement = `<div class="aspect-[3/2] bg-gray-200 group-hover:opacity-90 transition-opacity duration-300">
+                                <img src="${thumbnailUrl}" alt="Okładka: ${material.title}" class="w-full h-full object-cover" 
+                                     onerror="this.onerror=null; this.src='https://placehold.co/300x200/E0E7FF/4338CA?text=Brak+Obrazka';">
+                              </div>`;
         return `
             <div class="material-card bg-white rounded-xl shadow-lg overflow-hidden group">
                 ${imageElement}
                 <div class="p-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate group-hover:text-indigo-600 transition-colors" title="${material.title}">${material.title}</h3>
-                    <p class="text-sm text-gray-500 mb-1">Typ: ${material.category || 'Ogólny'}</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate group-hover:text-blue-600 transition-colors" title="${material.title}">${material.title}</h3>
+                    <p class="text-sm text-gray-500 mb-1">Kategoria: ${material.category || 'Ogólna'}</p>
                     <p class="text-sm text-gray-500 mb-3">Nabyto: ${acquiredDate}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">${material.category || 'Dokument'}</span>
-                        <div class="text-gray-400 space-x-2">
-                            ${material.file_url ? `<a href="${material.file_url}" download target="_blank" class="hover:text-indigo-600" title="Pobierz"><i class="fas fa-download"></i></a>` : ''}
-                        </div>
+                    <div class="flex justify-between items-center mt-4">
+                        ${material.file_url ? `<a href="${material.file_url}" download target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download mr-2"></i>Pobierz</a>` : '<span class="text-sm text-gray-400">Brak pliku</span>'}
                     </div>
                 </div>
             </div>
         `;
     }
 
-    async function fetchAndDisplayMyMaterialsForConcept() {
+    async function fetchAndDisplayMyMaterials() {
         if (!materialsGrid || !materialsLoader || !noMaterialsMsg || !errorMaterialsMsg) return;
         materialsLoader.classList.remove('hidden');
         materialsGrid.innerHTML = ''; 
-        materialsGrid.appendChild(materialsLoader);
         noMaterialsMsg.classList.add('hidden');
         errorMaterialsMsg.classList.add('hidden');
 
         try {
             const response = await fetch('/api/my-materials', { credentials: 'include' });
-            if (!response.ok) {
-                throw new Error(`Błąd HTTP: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
+            
             const materials = await response.json();
             materialsLoader.classList.add('hidden');
 
@@ -295,7 +563,7 @@
                 noMaterialsMsg.classList.remove('hidden');
             } else {
                 materials.forEach(material => {
-                    materialsGrid.insertAdjacentHTML('beforeend', createMaterialCardFromConcept(material));
+                    materialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material));
                 });
             }
         } catch (error) {
@@ -315,21 +583,22 @@
         const allNavLinks = [...desktopNavLinks, ...mobileNavLinks];
         allNavLinks.forEach(link => {
             link.classList.toggle('active', link.dataset.section === sectionId);
-            link.classList.toggle('bg-gray-700', link.dataset.section === sectionId && link.closest('#mobileNav'));
         });
         
         const activeLink = document.querySelector(`.sidebar-nav-link[data-section="${sectionId}"]`);
         if (mainSectionTitle && activeLink) {
             mainSectionTitle.textContent = activeLink.querySelector('span').textContent.trim();
         }
-        localStorage.setItem('activeDashboardConceptTab', sectionId);
-        if (mobileSidebar.classList.contains('flex') && !mobileSidebar.classList.contains('hidden')) { 
+        localStorage.setItem('activeDashboardTab', sectionId); // Changed key
+        if (mobileSidebar && mobileSidebar.classList.contains('flex')) { 
             mobileSidebar.classList.add('hidden');
             mobileSidebar.classList.remove('flex');
         }
 
         if (sectionId === 'my-materials-section') {
-            fetchAndDisplayMyMaterialsForConcept();
+            fetchAndDisplayMyMaterials();
+        } else if (sectionId === 'account-settings-section') {
+            fetchUserData(); // Ensure user data (like current email) is loaded
         }
     }
 
@@ -340,60 +609,164 @@
          if(link.dataset.section) link.addEventListener('click', (e) => activateSection(link.dataset.section, e));
     });
 
-    if (menuButton) {
-        menuButton.addEventListener('click', () => {
-            mobileSidebar.classList.remove('hidden');
-            mobileSidebar.classList.add('flex'); 
+    if (sidebarMenuButton) { // Renamed from menuButton
+        sidebarMenuButton.addEventListener('click', () => {
+            if(mobileSidebar) {
+                mobileSidebar.classList.remove('hidden');
+                mobileSidebar.classList.add('flex'); 
+            }
         });
     }
     if (mobileSidebarOverlay) {
         mobileSidebarOverlay.addEventListener('click', () => {
-            mobileSidebar.classList.add('hidden');
-            mobileSidebar.classList.remove('flex');
+            if(mobileSidebar) {
+                mobileSidebar.classList.add('hidden');
+                mobileSidebar.classList.remove('flex');
+            }
         });
     }
 
-    function toggleProfileDropdown() {
-        if(profileDropdown) profileDropdown.classList.toggle('hidden');
-    }
-    if(userAvatar) userAvatar.addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        toggleProfileDropdown();
-    });
-    window.addEventListener('click', function(event) { 
-        if (profileDropdown && !profileDropdown.classList.contains('hidden') && !userAvatar.contains(event.target) && !profileDropdown.contains(event.target)) {
-            profileDropdown.classList.add('hidden');
-        }
-    });
-
-    function handleLogoutConcept() {
+    function handleLogout() {
         fetch('/logout', { method: 'GET', credentials: 'include' })
             .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
-            .catch(error => { showToast('Problem z wylogowaniem.', false); window.location.href = '/'; });
+            .catch(error => { showGlobalModal('Błąd', 'Problem z wylogowaniem.', 'error'); window.location.href = '/'; });
     }
-    const logoutButtonDesktopEl = document.getElementById('logoutButtonDesktop');
-    const logoutButtonMobileEl = document.getElementById('logoutButtonMobile');
-    const logoutButtonDropdownEl = document.getElementById('logoutButtonDropdown');
-
-    if(logoutButtonDesktopEl) logoutButtonDesktopEl.addEventListener('click', handleLogoutConcept);
-    if(logoutButtonMobileEl) logoutButtonMobileEl.addEventListener('click', handleLogoutConcept);
-    if(logoutButtonDropdownEl) logoutButtonDropdownEl.addEventListener('click', handleLogoutConcept);
+    const headerLogoutButton = document.getElementById('header-logout-button');
+    const mobileHeaderLogoutButton = document.getElementById('mobile-header-logout-button');
+    if(headerLogoutButton) headerLogoutButton.addEventListener('click', handleLogout);
+    if(mobileHeaderLogoutButton) mobileHeaderLogoutButton.addEventListener('click', handleLogout);
     
-    function showToast(message, isSuccess = true) {
-        if (!toastMessageEl || !toastTextEl) return;
-        toastTextEl.textContent = message;
-        toastMessageEl.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'opacity-0');
-        toastMessageEl.classList.add(isSuccess ? 'bg-green-600' : 'bg-red-600', 'opacity-100');
-        setTimeout(() => {
-            toastMessageEl.classList.remove('opacity-100');
-            toastMessageEl.classList.add('opacity-0');
-            setTimeout(() => toastMessageEl.classList.add('hidden'), 300);
-        }, 3000);
+    // Main header mobile menu toggle
+    const mobileMenuButtonDashboard = document.getElementById('mobile-menu-button-dashboard');
+    const mobileMenuDashboard = document.getElementById('mobile-menu-dashboard');
+    if(mobileMenuButtonDashboard && mobileMenuDashboard) {
+        mobileMenuButtonDashboard.addEventListener('click', () => {
+            mobileMenuDashboard.classList.toggle('hidden');
+             const icon = mobileMenuButtonDashboard.querySelector('svg');
+            if (icon) {
+                 icon.innerHTML = mobileMenuDashboard.classList.contains('hidden') ?
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />' :
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+            }
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        await fetchUserDataForConcept();
-        const savedTab = localStorage.getItem('activeDashboardConceptTab') || 'my-materials-section';
+    // --- Account Settings Forms Logic ---
+    if (changeEmailForm) {
+        changeEmailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newEmail = document.getElementById('newEmail').value;
+            const submitButton = changeEmailForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zapisywanie...';
+
+            try {
+                const response = await fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ email: newEmail }),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showToast(result.message || 'Email zaktualizowany!', 'success');
+                    userDataCache = null; // Invalidate cache
+                    await fetchUserData(); // Refresh user data
+                    changeEmailForm.reset(); // Clear new email field, current will be updated
+                    if (currentEmailInput && result.email) currentEmailInput.value = result.email;
+                } else {
+                    showGlobalModal('Błąd', result.message || 'Nie udało się zaktualizować emaila.', 'error');
+                }
+            } catch (error) {
+                showGlobalModal('Błąd Krytyczny', 'Wystąpił błąd podczas komunikacji z serwerem.', 'error');
+            } finally {
+                 submitButton.disabled = false;
+                 submitButton.textContent = originalButtonText;
+            }
+        });
+    }
+
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            const submitButton = changePasswordForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+
+            if (newPassword !== confirmNewPassword) {
+                showGlobalModal('Błąd Hasła', 'Nowe hasła nie są zgodne.', 'error');
+                return;
+            }
+            if (newPassword.length < 6) {
+                showGlobalModal('Błąd Hasła', 'Nowe hasło musi mieć co najmniej 6 znaków.', 'error');
+                return;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zmienianie...';
+
+            try {
+                const response = await fetch('/api/user/password', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword }),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showToast(result.message || 'Hasło zmienione pomyślnie!', 'success');
+                    changePasswordForm.reset();
+                } else {
+                    showGlobalModal('Błąd Zmiany Hasła', result.message || 'Nie udało się zmienić hasła.', 'error');
+                }
+            } catch (error) {
+                 showGlobalModal('Błąd Krytyczny', 'Wystąpił błąd podczas komunikacji z serwerem.', 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+            }
+        });
+    }
+
+    if (deleteAccountButton) {
+        deleteAccountButton.addEventListener('click', () => {
+            showGlobalModal(
+                'Potwierdź Usunięcie Konta',
+                'Czy na pewno chcesz trwale usunąć swoje konto? Tej operacji nie można cofnąć.',
+                'warning',
+                false, // no login button
+                true,  // show confirm button
+                async () => { // callback for confirm
+                    // This is a placeholder. Actual account deletion requires a backend endpoint.
+                    // For now, we'll simulate and log out.
+                    try {
+                         const response = await fetch('/api/user/delete-account', { // Endpoint to be created
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                        if (response.ok) {
+                            showToast('Konto zostało usunięte. Zostaniesz wylogowany.', 'success');
+                            setTimeout(handleLogout, 3000);
+                        } else {
+                            const result = await response.json().catch(()=>({message: "Nie udało się usunąć konta."}));
+                            showGlobalModal('Błąd', result.message, 'error');
+                        }
+                    } catch (err) {
+                        showGlobalModal('Błąd Krytyczny', 'Błąd serwera podczas usuwania konta.', 'error');
+                    }
+                }
+            );
+        });
+    }
+
+    async function initializeDashboardPage() {
+        const user = await fetchUserData();
+        if (!user) return; // Stop if user data failed to load (redirect should have happened)
+
+        const savedTab = localStorage.getItem('activeDashboardTab') || 'my-materials-section';
         const initialSectionLink = document.querySelector(`.sidebar-nav-link[data-section="${savedTab}"]`);
         
         if (initialSectionLink) {
@@ -401,7 +774,9 @@
         } else {
             activateSection('my-materials-section'); 
         }
-    });
+    }
+    
+    document.addEventListener('DOMContentLoaded', initializeDashboardPage);
 </script>
 </body>
 </html>
