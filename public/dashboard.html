@@ -28,19 +28,12 @@
             @apply px-4 py-2 text-sm;
         }
 
-        /* Styl dla panelu materiału w dashboardzie */
+        /* Styl dla panelu materiału w dashboardzie - BEZ IKONY */
         .material-panel {
-            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5;
+            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4; /* Zmniejszono gap z 5 na 4 */
         }
-        .material-icon-container {
-            @apply flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200;
-        }
-        .material-icon {
-            @apply w-full h-full object-contain;
-        }
-        .material-icon-placeholder {
-            @apply text-3xl text-gray-400;
-        }
+        /* Usunięto .material-icon-container, .material-icon, .material-icon-placeholder */
+        
         .material-details {
             @apply flex-grow;
         }
@@ -50,8 +43,8 @@
         .material-category-badge {
             @apply text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full inline-block mb-2;
         }
-        .material-description { /* Skrócony opis w dashboardzie */
-            @apply text-sm text-gray-600 mb-2 leading-relaxed max-h-12 overflow-hidden; /* max-h-12 to około 2 linie */
+        .material-description { 
+            @apply text-sm text-gray-600 mb-2 leading-relaxed max-h-12 overflow-hidden; 
         }
         .material-acquired-date {
             @apply text-xs text-gray-500 mt-auto;
@@ -147,7 +140,8 @@
                     <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
                 </a>
             </div>
-            <div id="my-materials-grid" class="space-y-6"> <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
+            <div id="my-materials-grid" class="space-y-6"> 
+                <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
                 <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
@@ -300,23 +294,18 @@
             }
         }
 
-        // --- Nabyte Materiały (zmienione na panel) ---
-        function createMyMaterialPanel(material) { // Zmieniona nazwa funkcji
+        // --- Nabyte Materiały (zmienione na panel BEZ IKON) ---
+        function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
-            let iconHtml = `<span class="material-icon-placeholder"><i class="fas fa-file-alt"></i></span>`; // Domyślna ikona dla dokumentu
-            if (material.cover_image_url) {
-                iconHtml = `<img src="${material.cover_image_url}" alt="Ikona" class="material-icon" onerror="this.parentElement.innerHTML = '<span class=\\'material-icon-placeholder\\'><i class=\\'fas fa-file-alt\\'></i></span>';">`;
-            }
+            // Usunięto logikę iconHtml
 
             return `
                 <div class="material-panel group">
-                    <div class="material-icon-container">
-                        ${iconHtml}
-                    </div>
+                    {/* Usunięto div.material-icon-container */}
                     <div class="material-details">
                         <h3 class="material-title">${material.title}</h3>
                         <span class="material-category-badge">${material.category || 'Ogólne'}</span>
-                        <p class="material-description">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
+                        <p class="material-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p> {/* Zwiększono długość opisu */}
                         <p class="material-acquired-date">Nabyto: ${acquiredDate}</p>
                     </div>
                     <div class="material-actions">
@@ -350,7 +339,7 @@
                 if (materials.length === 0) {
                     noMyMaterialsMessage.classList.remove('hidden');
                 } else {
-                    materials.forEach(material => myMaterialsGrid.insertAdjacentHTML('beforeend', createMyMaterialPanel(material))); // Używa nowej funkcji
+                    materials.forEach(material => myMaterialsGrid.insertAdjacentHTML('beforeend', createMyMaterialPanel(material)));
                 }
             } catch (error) {
                 console.error('Nie udało się pobrać moich materiałów:', error);
@@ -359,7 +348,7 @@
             }
         }
 
-        // --- Ustawienia Konta (logika backendowa z server.js) ---
+        // --- Ustawienia Konta (bez zmian w logice JS) ---
         if (profileUpdateForm) {
             profileUpdateForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -379,7 +368,7 @@
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji profilu.');
                     showDashboardModal('Sukces', result.message || 'Profil zaktualizowany!', 'success');
-                    await fetchUserData(); // Odśwież dane użytkownika po zmianie
+                    await fetchUserData(); 
                 } catch (error) {
                     showDashboardModal('Błąd', error.message, 'error');
                 } finally {
@@ -427,7 +416,7 @@
             });
         }
 
-        // --- Logika Zakładek ---
+        // --- Logika Zakładek (bez zmian) ---
         if (dashboardTabs) {
             const tabButtons = dashboardTabs.querySelectorAll('.tab-button');
             tabButtons.forEach(button => {
@@ -449,9 +438,9 @@
             if (activeTab && dashboardTabs) {
                 const buttonToActivate = dashboardTabs.querySelector(`button[data-tab="${activeTab}"]`);
                 if (buttonToActivate) buttonToActivate.click();
-                else dashboardTabs.querySelector('button[data-tab="my-materials"]').click(); // Domyślna, jeśli zapisana nie istnieje
+                else dashboardTabs.querySelector('button[data-tab="my-materials"]').click();
             } else if (dashboardTabs) {
-                 dashboardTabs.querySelector('button[data-tab="my-materials"]').click(); // Domyślna, jeśli nic nie zapisano
+                 dashboardTabs.querySelector('button[data-tab="my-materials"]').click();
             }
         }
 
