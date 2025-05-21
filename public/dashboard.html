@@ -10,78 +10,90 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Tailwind gray-900 - bardzo ciemne tło */
-            color: #d1d5db; /* Tailwind gray-300 - domyślny kolor tekstu */
+            background-color: #111827; /* Tailwind gray-900 */
+            color: #d1d5db; /* Tailwind gray-300 */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        :root {
+            --brand-purple: #8b5cf6; /* violet-500 */
+            --brand-purple-hover: #7c3aed; /* violet-600 */
+            --brand-gradient-from: #8b5cf6; /* violet-500 */
+            --brand-gradient-to: #a855f7;   /* purple-500 */
+            --text-primary: #f3f4f6; /* gray-100 */
+            --text-secondary: #9ca3af; /* gray-400 */
+            --bg-panel: #1f2937; /* gray-800 */
+            --border-panel: #374151; /* gray-700 */
+            --border-panel-hover: #a78bfa80; /* violet-400 with opacity */
+            --shadow-panel-hover: 0 0 30px 5px rgba(167, 139, 250, 0.2);
+        }
         .btn {
-            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900; /* Dostosowany ring-offset */
+            @apply inline-block px-6 py-3 text-center font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900;
         }
-        .btn-primary { 
-            @apply bg-violet-600 text-white hover:bg-violet-500 focus:ring-violet-500;
+        .btn-brand { 
+            @apply bg-gradient-to-r from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] text-white hover:opacity-90 focus:ring-[var(--brand-purple)];
         }
-        .btn-secondary { 
+        .btn-secondary-dark { 
             @apply bg-gray-700 text-gray-200 hover:bg-gray-600 focus:ring-gray-500;
         }
-        .btn-success { /* Przycisk Pobierz - teraz używa .btn-primary dla spójności z fioletowym motywem */
-            @apply bg-violet-600 text-white hover:bg-violet-500 focus:ring-violet-500;
-        }
         .btn-sm {
-            @apply px-4 py-2 text-sm font-medium;
+            @apply px-5 py-2.5 text-sm;
         }
 
-        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (DARK VIOLET THEME V2) === */
-        .material-item { 
-            @apply bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700/80
-                   flex flex-col md:flex-row items-start gap-6 
-                   transition-all duration-300 ease-out hover:shadow-[0_0_25px_3px_rgba(167,139,250,0.2)] hover:border-violet-500/70 transform hover:-translate-y-1.5;
+        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (ODWAŻNY DESIGN) === */
+        .material-item-v3 { 
+            @apply bg-[var(--bg-panel)] p-6 rounded-2xl shadow-xl border border-[var(--border-panel)]
+                   flex flex-col md:flex-row items-center md:items-start gap-6 
+                   transition-all duration-300 ease-out hover:shadow-[var(--shadow-panel-hover)] hover:border-[var(--border-panel-hover)] transform hover:-translate-y-2;
         }
-        .material-icon-area { 
-            @apply flex-shrink-0 w-20 h-20 bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-full flex items-center justify-center shadow-lg mb-4 md:mb-0 transition-all duration-300 group-hover:from-violet-500 group-hover:to-purple-600 group-hover:scale-105;
+        .material-icon-area-v3 { 
+            @apply flex-shrink-0 w-24 h-24 bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] text-white rounded-2xl flex items-center justify-center shadow-2xl mb-4 md:mb-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-violet-500/50;
         }
-        .material-icon-area i { 
-            @apply text-4xl opacity-90;
+        .material-icon-area-v3 i { 
+            @apply text-5xl opacity-90;
         }
-        .material-content-area { 
+        .material-content-wrapper-v3 { 
             @apply flex-grow flex flex-col w-full;
         }
-        .material-header {
-            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2;
+        .material-header-v3 {
+            @apply flex flex-col xl:flex-row justify-between items-start xl:items-center mb-2.5;
         }
-        .material-title-v2 {
-            @apply text-2xl font-bold text-gray-100 group-hover:text-violet-300 transition-colors duration-200;
+        .material-title-v3 {
+            @apply text-2xl font-extrabold text-[var(--text-primary)] group-hover:text-[var(--brand-purple)] transition-colors;
         }
-        .material-category-v2 {
-            @apply text-xs font-semibold text-violet-300 bg-violet-700/70 px-3 py-1 rounded-full inline-block mt-2 sm:mt-0;
+        .material-category-v3 {
+            @apply text-xs font-semibold text-[var(--brand-purple)] bg-violet-700/40 px-3.5 py-1.5 rounded-lg inline-block mt-2 xl:mt-0 whitespace-nowrap;
         }
-        .material-description-v2 {
-            @apply text-sm text-gray-400 mb-3 leading-relaxed;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; 
+        .material-description-v3 {
+            @apply text-base text-[var(--text-secondary)] mb-4 leading-relaxed;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; min-height: 4.5rem; /* Approx 3 lines */
         }
-        .material-progress-bar-container { 
-            @apply w-full bg-gray-700 rounded-full h-2 mb-3 overflow-hidden mt-1;
+        .material-progress-section-v3 {
+            @apply mb-4;
         }
-        .material-progress-bar {
-            @apply bg-violet-500 h-2 rounded-full transition-all duration-500 ease-out;
+        .material-progress-bar-container-v3 { 
+            @apply w-full bg-gray-700 rounded-full h-2.5 overflow-hidden;
         }
-        .material-footer {
-            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-4 border-t border-gray-700;
+        .material-progress-bar-v3 {
+            @apply bg-gradient-to-r from-violet-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out;
         }
-        .material-date-v2 {
-            @apply text-xs text-gray-500 mb-3 sm:mb-0;
+        .material-footer-v3 {
+            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-4 border-t border-[var(--border-panel)];
         }
-        .material-action-button-v2 { 
-            @apply btn btn-primary btn-sm whitespace-nowrap; 
+        .material-date-v3 {
+            @apply text-sm text-gray-500 mb-3 sm:mb-0;
+        }
+        .material-action-button-v3 { 
+            @apply btn btn-brand btn-sm whitespace-nowrap text-base px-8 py-3; 
         }
         /* ========================================================== */
 
         .loader {
-            border: 5px solid #4b5563; 
-            border-top: 5px solid #8b5cf6; 
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite; margin: 40px auto;
+            border: 5px solid #374151; /* gray-700 */
+            border-top: 5px solid var(--brand-purple); 
+            border-radius: 50%; width: 60px; height: 60px;
+            animation: spin 1s linear infinite; margin: 50px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -89,109 +101,109 @@
              @apply text-gray-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
         }
         .page-header { 
-            @apply text-3xl sm:text-4xl font-bold text-gray-100;
+            @apply text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-sky-400;
         }
         .page-subheader {
-             @apply mt-2 text-lg text-gray-400;
+             @apply mt-3 text-xl text-gray-400;
         }
         .tab-button {
-            @apply whitespace-nowrap py-3 px-5 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150;
+            @apply whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-base focus:outline-none transition-colors duration-200;
         }
         .tab-button-active {
             @apply border-violet-500 text-violet-400;
         }
         .tab-button-inactive {
-            @apply border-transparent text-gray-400 hover:text-violet-400 hover:border-violet-600/50;
+            @apply border-transparent text-gray-500 hover:text-violet-400 hover:border-violet-500/50;
         }
         .form-input {
-            @apply mt-1 block w-full px-4 py-2.5 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-sm bg-gray-700 text-gray-200 placeholder-gray-500;
+            @apply mt-1 block w-full px-4 py-3 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-base bg-gray-700 text-gray-100 placeholder-gray-400;
         }
         .form-label {
-            @apply block text-sm font-medium text-gray-300 mb-1;
+            @apply block text-sm font-medium text-gray-300 mb-1.5;
         }
         .form-section-title {
-             @apply text-xl font-semibold text-gray-200 mb-4 pb-2 border-b border-gray-700 flex items-center;
+             @apply text-2xl font-semibold text-gray-100 mb-5 pb-3 border-b-2 border-gray-700 flex items-center;
         }
         .form-section-title i {
-            @apply mr-3 text-violet-400;
+            @apply mr-3 text-violet-400 text-xl;
         }
     </style>
 </head>
 <body class="text-gray-300 flex flex-col min-h-screen">
 
-    <header class="bg-gray-800/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-700/50">
+    <header class="bg-gray-900/80 backdrop-blur-lg shadow-2xl sticky top-0 z-50 border-b border-gray-700/60">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold text-violet-400 transition-opacity hover:opacity-80">
+            <div class="flex items-center justify-between h-24">
+                <a href="index.html" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500 transition-opacity hover:opacity-90">
                     Materiały<span class="text-gray-100">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-2">
-                    <a href="index.html" class="header-link">Strona Główna</a>
-                    <a href="/material_gallery.html" class="header-link">Przeglądaj Materiały</a>
-                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary btn-sm">Wyloguj się</button>
+                <nav class="hidden md:flex items-center space-x-3">
+                    <a href="index.html" class="header-link text-base">Strona Główna</a>
+                    <a href="/material_gallery.html" class="header-link text-base">Przeglądaj Materiały</a>
+                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary-dark btn-sm">Wyloguj się</button>
                 </nav>
                  <div class="md:hidden">
                     <button id="mobile-menu-button-dashboard" class="text-gray-300 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-md p-2">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <svg class="h-7 w-7" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-gray-800 shadow-xl rounded-b-lg border-t border-gray-700">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index.html" class="block header-link text-base">Strona Główna</a>
-                <a href="/material_gallery.html" class="block header-link text-base">Przeglądaj Materiały</a>
-                <a href="#account-settings-section" class="block header-link text-base nav-account-settings">Ustawienia Konta</a>
+         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-gray-800/95 backdrop-blur-md shadow-xl rounded-b-lg border-t border-gray-700">
+            <div class="px-3 pt-3 pb-4 space-y-2">
+                <a href="index.html" class="block header-link text-lg">Strona Główna</a>
+                <a href="/material_gallery.html" class="block header-link text-lg">Przeglądaj Materiały</a>
+                <a href="#account-settings-section" class="block header-link text-lg nav-account-settings">Ustawienia Konta</a>
             </div>
-            <div class="pt-4 pb-3 border-t border-gray-700 px-5">
-                 <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
+            <div class="pt-4 pb-4 border-t border-gray-700 px-5">
+                 <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary-dark text-base">Wyloguj</button>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="mb-12">
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-16 text-center md:text-left">
             <h1 class="page-header">Witaj z powrotem, <span id="username-placeholder" class="text-violet-400">Ładowanie...</span>!</h1>
-            <p class="page-subheader">Zarządzaj swoimi materiałami i ustawieniami konta w nowej odsłonie.</p>
+            <p class="page-subheader">Twoje centrum zarządzania materiałami i rozwojem.</p>
         </div>
 
-        <div class="mb-8 border-b border-gray-700">
-            <nav class="-mb-px flex space-x-6" aria-label="Dashboard Tabs" id="dashboard-tabs">
+        <div class="mb-10 border-b-2 border-gray-700">
+            <nav class="-mb-px flex space-x-8" aria-label="Dashboard Tabs" id="dashboard-tabs">
                 <button data-tab="my-materials" class="tab-button tab-button-active">Moje Materiały</button>
                 <button data-tab="account-settings" class="tab-button tab-button-inactive nav-account-settings">Ustawienia Konta</button>
             </nav>
         </div>
 
         <section id="my-materials-section" class="dashboard-tab-content">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-semibold text-gray-100">Twoje Nabyte Materiały</h2>
-                <a href="/material_gallery.html" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
+            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <h2 class="text-3xl font-bold text-gray-100">Twoje Nabyte Materiały</h2>
+                <a href="/material_gallery.html" class="btn btn-brand btn-sm">
+                    <i class="fas fa-layer-group mr-2"></i>Przeglądaj Bibliotekę
                 </a>
             </div>
-            <div id="my-materials-grid" class="space-y-6"> 
-                <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
+            <div id="my-materials-grid" class="space-y-8"> 
+                <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-16">
                     <div class="loader"></div>
                 </div>
-                <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-400">
-                    <i class="fas fa-folder-open fa-4x mb-4 text-gray-500"></i>
-                    <p class="text-xl font-medium">Nie posiadasz jeszcze żadnych materiałów.</p>
-                    <p class="mt-1">Odwiedź <a href="/material_gallery.html" class="text-violet-400 hover:underline font-semibold">galerię materiałów</a>, aby coś wybrać!</p>
+                <div id="no-my-materials-message" class="hidden col-span-full text-center py-20 text-gray-400">
+                    <i class="fas fa-folder-open fa-5x mb-6 text-gray-600"></i>
+                    <p class="text-2xl font-semibold">Nie posiadasz jeszcze żadnych materiałów.</p>
+                    <p class="mt-2 text-lg">Odwiedź <a href="/material_gallery.html" class="text-violet-400 hover:text-violet-300 font-semibold underline decoration-violet-500/50 hover:decoration-violet-400">galerię materiałów</a>, aby rozpocząć swoją podróż!</p>
                 </div>
-                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-16 text-red-400">
-                    <i class="fas fa-exclamation-triangle fa-4x mb-4"></i>
-                    <p class="text-xl font-medium">Wystąpił błąd.</p>
-                     <p class="text-gray-400">Nie udało się załadować Twoich materiałów.</p>
+                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-20 text-red-400">
+                    <i class="fas fa-exclamation-triangle fa-5x mb-6"></i>
+                    <p class="text-2xl font-semibold">Wystąpił błąd.</p>
+                     <p class="text-gray-400">Nie udało się załadować Twoich materiałów. Spróbuj odświeżyć stronę.</p>
                 </div>
             </div>
         </section>
 
         <section id="account-settings-section" class="dashboard-tab-content hidden">
-             <h2 class="text-2xl font-semibold text-gray-100 mb-6">Ustawienia Konta</h2>
-            <div class="bg-gray-800/80 p-6 sm:p-8 rounded-xl shadow-xl border border-gray-700">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
+             <h2 class="text-3xl font-bold text-gray-100 mb-8">Ustawienia Konta</h2>
+            <div class="bg-gray-800/70 p-6 sm:p-10 rounded-2xl shadow-2xl border border-gray-700/60">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12">
                     <div>
                         <h3 class="form-section-title">
                             <i class="fas fa-user-edit"></i>Dane Osobowe
@@ -199,14 +211,14 @@
                         <form id="profileUpdateForm" class="space-y-6">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
-                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-600 cursor-not-allowed text-gray-400" readonly disabled>
-                                <p class="text-xs text-gray-500 mt-1">Nazwy użytkownika nie można zmienić.</p>
+                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-700/50 cursor-not-allowed text-gray-400" readonly disabled>
+                                <p class="text-xs text-gray-500 mt-1.5">Nazwy użytkownika nie można zmienić.</p>
                             </div>
                             <div>
                                 <label for="profileEmail" class="form-label">Adres Email</label>
                                 <input type="email" id="profileEmail" name="email" class="form-input" required>
                             </div>
-                            <button type="submit" id="saveProfileButton" class="btn btn-primary w-full sm:w-auto">
+                            <button type="submit" id="saveProfileButton" class="btn btn-brand w-full sm:w-auto">
                                 <i class="fas fa-save mr-2"></i>Zapisz Zmiany
                             </button>
                         </form>
@@ -228,18 +240,18 @@
                                 <label for="confirmNewPassword" class="form-label">Potwierdź Nowe Hasło</label>
                                 <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
                             </div>
-                            <button type="submit" id="changePasswordButton" class="btn btn-primary w-full sm:w-auto">
+                            <button type="submit" id="changePasswordButton" class="btn btn-brand w-full sm:w-auto">
                                 <i class="fas fa-sync-alt mr-2"></i>Zmień Hasło
                             </button>
                         </form>
                     </div>
                 </div>
-                <div class="mt-10 pt-8 border-t border-gray-700">
+                <div class="mt-12 pt-8 border-t-2 border-gray-700">
                      <h3 class="form-section-title">
                         <i class="fas fa-info-circle"></i>Informacje o Koncie
                     </h3>
-                     <p class="text-gray-400 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-700 px-2 py-1 rounded text-gray-300">ładowanie...</span></p>
-                     <p class="text-gray-400 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-700 px-2 py-1 rounded text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-base">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-700 px-2.5 py-1 rounded-md text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-base mt-2.5">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-700 px-2.5 py-1 rounded-md text-gray-300">ładowanie...</span></p>
                 </div>
             </div>
         </section>
@@ -252,13 +264,13 @@
         </div>
     </footer>
 
-    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
         <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-700" id="messageModalDashboardBox">
             <div class="text-center">
                 <div id="messageModalDashboardIcon" class="text-5xl mb-4"></div>
                 <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-100">Komunikat</h3>
                 <p id="messageModalDashboardText" class="text-gray-300 mb-6 text-base"></p>
-                <button id="messageModalDashboardCloseBtn" class="btn btn-primary w-full sm:w-auto">Rozumiem</button>
+                <button id="messageModalDashboardCloseBtn" class="btn btn-brand w-full sm:w-auto">Rozumiem</button>
             </div>
         </div>
     </div>
@@ -331,21 +343,22 @@
         function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
             
-            let categoryIconClass = 'fa-file-alt'; // Domyślna ikona
-            let categoryColorClasses = { bg: 'bg-gray-700/50', text: 'text-gray-300' }; // Domyślne kolory badge
+            let categoryIconClass = 'fa-file-lines'; // Bardziej generyczna ikona pliku
+            let categoryColorClasses = { bg: 'bg-gray-700/60', text: 'text-gray-300'}; 
 
             if (material.category) {
                 const catLower = material.category.toLowerCase();
-                if (catLower.includes('kurs')) { categoryIconClass = 'fa-chalkboard-teacher'; categoryColorClasses = { bg: 'bg-blue-700/50', text: 'text-blue-300'}; }
-                else if (catLower.includes('video')) { categoryIconClass = 'fa-video'; categoryColorClasses = { bg: 'bg-sky-700/50', text: 'text-sky-300'};}
-                else if (catLower.includes('ebook') || catLower.includes('książka')) { categoryIconClass = 'fa-book-open'; categoryColorClasses = { bg: 'bg-emerald-700/50', text: 'text-emerald-300'}; }
-                else if (catLower.includes('szablon')) { categoryIconClass = 'fa-palette'; categoryColorClasses = { bg: 'bg-amber-700/50', text: 'text-amber-300'}; }
-                else if (catLower.includes('poradnik')) { categoryIconClass = 'fa-graduation-cap'; categoryColorClasses = { bg: 'bg-indigo-700/50', text: 'text-indigo-300'}; }
-                else if (catLower.includes('audio')) { categoryIconClass = 'fa-headphones-alt'; categoryColorClasses = { bg: 'bg-rose-700/50', text: 'text-rose-300'}; }
-                else if (catLower.includes('grafika')) { categoryIconClass = 'fa-image'; categoryColorClasses = { bg: 'bg-pink-700/50', text: 'text-pink-300'}; }
+                if (catLower.includes('kurs')) { categoryIconClass = 'fa-chalkboard-user'; categoryColorClasses = { bg: 'bg-blue-700/60', text: 'text-blue-300'}; }
+                else if (catLower.includes('video')) { categoryIconClass = 'fa-clapperboard'; categoryColorClasses = { bg: 'bg-sky-700/60', text: 'text-sky-300'};}
+                else if (catLower.includes('ebook') || catLower.includes('książka')) { categoryIconClass = 'fa-book-open-reader'; categoryColorClasses = { bg: 'bg-emerald-700/60', text: 'text-emerald-300'}; }
+                else if (catLower.includes('szablon')) { categoryIconClass = 'fa-object-group'; categoryColorClasses = { bg: 'bg-amber-700/60', text: 'text-amber-300'}; }
+                else if (catLower.includes('poradnik')) { categoryIconClass = 'fa-person-chalkboard'; categoryColorClasses = { bg: 'bg-indigo-700/60', text: 'text-indigo-300'}; }
+                else if (catLower.includes('audio')) { categoryIconClass = 'fa-headphones-simple'; categoryColorClasses = { bg: 'bg-rose-700/60', text: 'text-rose-300'}; }
+                else if (catLower.includes('grafika')) { categoryIconClass = 'fa-image'; categoryColorClasses = { bg: 'bg-pink-700/60', text: 'text-pink-300'}; }
+                else if (catLower.includes('kod') || catLower.includes('programowanie')) { categoryIconClass = 'fa-code'; categoryColorClasses = { bg: 'bg-teal-700/60', text: 'text-teal-300'}; }
             }
             
-            const progressPercent = material.progress || Math.floor(Math.random() * 81) + 10; // Losowy postęp 10-90% dla przykładu
+            const progressPercent = material.progress || Math.floor(Math.random() * 71) + 15; // Losowy postęp 15-85% dla przykładu
 
             return `
                 <div class="material-item group">
@@ -358,22 +371,22 @@
                                 <h3 class="material-title-v2">${material.title}</h3>
                                 <span class="material-category-v2 ${categoryColorClasses.bg} ${categoryColorClasses.text}">${material.category || 'Ogólne'}</span>
                             </div>
-                            <p class="material-description-v2">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
+                            <p class="material-description-v2">${material.description ? material.description.substring(0, 130) + (material.description.length > 130 ? '...' : '') : 'Brak opisu.'}</p>
                             ${ progressPercent > 0 ? `
-                                <div class="mb-2 mt-1">
+                                <div class="material-progress-section-v3">
                                     <div class="flex justify-between text-xs text-gray-400 mb-1">
                                         <span>Postęp</span>
                                         <span>${progressPercent}%</span>
                                     </div>
-                                    <div class="material-progress-bar-container">
-                                        <div class="material-progress-bar" style="width: ${progressPercent}%"></div>
+                                    <div class="material-progress-bar-container-v3">
+                                        <div class="material-progress-bar-v3" style="width: ${progressPercent}%"></div>
                                     </div>
                                 </div>
                             ` : ''}
                         </div>
-                        <div class="material-footer">
+                        <div class="material-footer-v3">
                             <p class="material-date-v2">Nabyto: ${acquiredDate}</p>
-                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-v2" download><i class="fas fa-arrow-down-to-line mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 text-center sm:text-right">Link niedostępny</p>'}
+                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-v2" download><i class="fas fa-arrow-down-to-line fa-fw mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 text-center sm:text-right">Link niedostępny</p>'}
                         </div>
                     </div>
                 </div>
