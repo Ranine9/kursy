@@ -16,41 +16,46 @@
             @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
         }
         .btn-primary {
-            @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 shadow-blue-500/30 hover:shadow-lg;
+            @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 shadow-blue-500/30 hover:shadow-lg hover:scale-[1.02];
         }
         .btn-secondary {
-            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 shadow-gray-500/20 hover:shadow-md;
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 shadow-gray-500/20 hover:shadow-md hover:scale-[1.02];
         }
         .btn-success { 
-            @apply bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-green-500/30 hover:shadow-lg;
+            @apply bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-green-500/30 hover:shadow-lg hover:scale-[1.02];
         }
         .btn-sm {
             @apply px-4 py-2 text-sm;
         }
 
-        /* Styl dla panelu materiału w dashboardzie - BEZ IKONY */
+        /* Ulepszony styl dla panelu materiału w dashboardzie */
         .material-panel {
-            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4; /* Zmniejszono gap z 5 na 4 */
+            @apply bg-white rounded-xl shadow-lg transition-all duration-300 ease-out hover:shadow-xl border border-gray-200 hover:border-blue-300 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5 transform hover:-translate-y-1;
         }
-        /* Usunięto .material-icon-container, .material-icon, .material-icon-placeholder */
         
         .material-details {
-            @apply flex-grow;
+            @apply flex-grow flex flex-col; /* Dodano flex-col dla lepszego zarządzania wysokością */
         }
         .material-title {
-            @apply text-lg sm:text-xl font-semibold text-gray-800 mb-1;
+            @apply text-xl font-semibold text-gray-800 mb-1.5 group-hover:text-blue-600 transition-colors duration-200;
         }
         .material-category-badge {
-            @apply text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full inline-block mb-2;
+            @apply text-xs font-medium text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full inline-block mb-2.5;
         }
         .material-description { 
-            @apply text-sm text-gray-600 mb-2 leading-relaxed max-h-12 overflow-hidden; 
+            @apply text-sm text-gray-600 mb-3 leading-relaxed flex-grow; /* flex-grow aby opis wypełniał dostępną przestrzeń */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Ograniczenie do 2 linii */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 2.5rem; /* Zapewnia minimalną wysokość dla 2 linii */
         }
         .material-acquired-date {
-            @apply text-xs text-gray-500 mt-auto;
+            @apply text-xs text-gray-500 mt-2; /* Zwiększono margines górny */
         }
         .material-actions {
-            @apply mt-4 sm:mt-0 sm:ml-auto flex-shrink-0;
+            @apply mt-4 sm:mt-0 sm:ml-6 flex-shrink-0; /* Zwiększono ml-6 dla lepszego odstępu */
         }
 
         .loader {
@@ -140,7 +145,7 @@
                     <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
                 </a>
             </div>
-            <div id="my-materials-grid" class="space-y-6"> 
+            <div id="my-materials-grid" class="space-y-5"> 
                 <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
@@ -229,7 +234,6 @@
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
 
-        // --- Elementy DOM (bez zmian) ---
         const messageModalDashboard = document.getElementById('messageModalDashboard');
         const messageModalDashboardBox = document.getElementById('messageModalDashboardBox');
         const messageModalDashboardTitle = document.getElementById('messageModalDashboardTitle');
@@ -250,7 +254,6 @@
         const dashboardTabs = document.getElementById('dashboard-tabs');
         const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-        // --- Funkcje Modala (bez zmian) ---
         function showDashboardModal(title, message, type = 'info') {
             if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
             messageModalDashboardTitle.textContent = title; messageModalDashboardText.textContent = message;
@@ -266,7 +269,6 @@
         if (messageModalDashboardCloseBtn) messageModalDashboardCloseBtn.addEventListener('click', hideDashboardModal);
         if (messageModalDashboard) messageModalDashboard.addEventListener('click', (e) => { if (e.target === messageModalDashboard) hideDashboardModal(); });
 
-        // --- Dane Użytkownika (bez zmian) ---
         async function fetchUserData() {
             try {
                 const response = await fetch('/api/user', { credentials: 'include' });
@@ -294,18 +296,15 @@
             }
         }
 
-        // --- Nabyte Materiały (zmienione na panel BEZ IKON) ---
         function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
-            // Usunięto logikę iconHtml
-
+            // Logika ikon została usunięta
             return `
                 <div class="material-panel group">
-                    {/* Usunięto div.material-icon-container */}
                     <div class="material-details">
                         <h3 class="material-title">${material.title}</h3>
                         <span class="material-category-badge">${material.category || 'Ogólne'}</span>
-                        <p class="material-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p> {/* Zwiększono długość opisu */}
+                        <p class="material-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
                         <p class="material-acquired-date">Nabyto: ${acquiredDate}</p>
                     </div>
                     <div class="material-actions">
@@ -348,7 +347,6 @@
             }
         }
 
-        // --- Ustawienia Konta (bez zmian w logice JS) ---
         if (profileUpdateForm) {
             profileUpdateForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -416,7 +414,6 @@
             });
         }
 
-        // --- Logika Zakładek (bez zmian) ---
         if (dashboardTabs) {
             const tabButtons = dashboardTabs.querySelectorAll('.tab-button');
             tabButtons.forEach(button => {
@@ -444,7 +441,6 @@
             }
         }
 
-        // --- Logika Wylogowania i Menu Mobilne (bez zmian) ---
         function handleDashboardLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
                 .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
@@ -480,7 +476,6 @@
             });
         }
 
-        // --- Inicjalizacja ---
         document.addEventListener('DOMContentLoaded', async () => {
             const userData = await fetchUserData();
             if (userData) fetchAndDisplayMyMaterials();
