@@ -3,133 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Użytkownika - Platforma Materiałów Cyfrowych</title>
+    <title>Panel Użytkownika - MateriałyPRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa; /* Bardzo jasny szary, prawie biały */
+            background-color: #1f2937; /* Tailwind gray-800 - ciemne tło */
+            color: #d1d5db; /* Tailwind gray-300 - domyślny kolor tekstu */
         }
         .btn {
-            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
+            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800;
         }
-        .btn-primary {
-            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 hover:scale-[1.03];
+        .btn-primary { /* Fioletowy przycisk główny */
+            @apply bg-violet-600 text-white hover:bg-violet-700 focus:ring-violet-500;
         }
-        .btn-secondary {
-            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 hover:scale-[1.03];
+        .btn-secondary { /* Jasnoszary przycisk pomocniczy */
+            @apply bg-gray-600 text-gray-100 hover:bg-gray-500 focus:ring-gray-400;
         }
-        .btn-success { 
-            @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-500 hover:scale-[1.03];
+        .btn-success { /* Zielony przycisk sukcesu (np. Pobierz) */
+            @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
         }
         .btn-sm {
             @apply px-4 py-2 text-sm font-medium;
         }
 
-        /* Nowoczesny styl dla panelu materiału */
-        .material-panel {
-            @apply rounded-xl shadow-lg transition-all duration-300 ease-out hover:shadow-xl border border-transparent hover:border-blue-300 p-6 flex flex-col md:flex-row items-start md:items-center gap-x-6 gap-y-4 transform hover:-translate-y-1.5;
-            /* Kolor tła będzie dodawany dynamicznie przez JS */
+        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (DARK VIOLET THEME) === */
+        .material-panel-dark {
+            @apply bg-gray-700/60 p-5 rounded-xl shadow-lg border border-gray-600/50
+                   flex flex-col md:flex-row items-start md:items-center gap-x-6 gap-y-4 
+                   transition-all duration-300 ease-out hover:shadow-violet-500/30 hover:border-violet-500/70 transform hover:-translate-y-1;
         }
-        
-        .material-icon-placeholder-panel { /* Domyślna ikona, jeśli materiał nie ma swojej */
-            @apply flex-shrink-0 w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center text-2xl mr-0 md:mr-0 mb-3 md:mb-0;
-            /* Kolor ikony będzie dziedziczony lub ustawiany dynamicznie */
+        .material-icon-container-dark { 
+            @apply flex-shrink-0 w-16 h-16 bg-gradient-to-tr from-violet-600 to-purple-600 text-white rounded-xl flex items-center justify-center shadow-lg;
         }
-
-        .material-details {
-            @apply flex-grow flex flex-col w-full;
+        .material-icon-container-dark i { 
+            @apply text-3xl opacity-90;
         }
-        .material-title {
-            @apply text-lg font-semibold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors duration-200;
+        .material-content-wrapper-dark { 
+            @apply flex-grow flex flex-col sm:flex-row sm:items-center sm:justify-between w-full;
         }
-        .material-category-badge {
-            @apply text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block mb-2;
-            /* Kolory badge będą dynamiczne */
+        .material-info-dark { 
+            @apply flex-grow;
         }
-        .material-description { 
-            @apply text-sm text-gray-600 mb-3 leading-relaxed;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-height: 2.5rem; 
+        .material-title-dark {
+            @apply text-xl font-semibold text-gray-100 mb-1 group-hover:text-violet-300 transition-colors;
         }
-        .material-acquired-date {
-            @apply text-xs text-gray-500 mt-auto pt-2 border-t border-gray-200/60;
+        .material-category-dark {
+            @apply text-xs font-medium text-violet-300 bg-violet-700/50 px-3 py-1 rounded-full inline-block mb-2.5;
         }
-        .material-actions {
-            @apply mt-4 md:mt-0 md:ml-auto flex-shrink-0 w-full md:w-auto;
+        .material-description-dark {
+            @apply text-sm text-gray-400 mb-3 leading-relaxed;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; 
         }
-        .material-actions .btn-success {
-            @apply w-full md:w-auto;
+        .material-date-dark {
+            @apply text-xs text-gray-500 mt-auto pt-2 border-t border-gray-600/50;
         }
-
-        /* Pastelowe tła i akcenty */
-        .pastel-bg-sky { @apply bg-sky-100 text-sky-800; }
-        .pastel-bg-sky .material-category-badge { @apply bg-sky-200 text-sky-900; }
-        .pastel-bg-sky .material-icon-placeholder-panel { @apply text-sky-600; }
-
-        .pastel-bg-emerald { @apply bg-emerald-50 text-emerald-800; }
-        .pastel-bg-emerald .material-category-badge { @apply bg-emerald-200 text-emerald-900; }
-        .pastel-bg-emerald .material-icon-placeholder-panel { @apply text-emerald-600; }
-        
-        .pastel-bg-amber { @apply bg-amber-50 text-amber-800; }
-        .pastel-bg-amber .material-category-badge { @apply bg-amber-200 text-amber-900; }
-        .pastel-bg-amber .material-icon-placeholder-panel { @apply text-amber-600; }
-
-        .pastel-bg-violet { @apply bg-violet-50 text-violet-800; }
-        .pastel-bg-violet .material-category-badge { @apply bg-violet-200 text-violet-900; }
-        .pastel-bg-violet .material-icon-placeholder-panel { @apply text-violet-600; }
-
-        .pastel-bg-rose { @apply bg-rose-50 text-rose-800; }
-        .pastel-bg-rose .material-category-badge { @apply bg-rose-200 text-rose-900; }
-        .pastel-bg-rose .material-icon-placeholder-panel { @apply text-rose-600; }
-
+        .material-action-button-dark { 
+            @apply mt-4 md:mt-0 md:ml-4 btn btn-success btn-sm flex-shrink-0 whitespace-nowrap shadow-green-600/40;
+        }
+        /* ========================================================== */
 
         .loader {
-            border: 5px solid #e2e8f0; 
-            border-top: 5px solid #3b82f6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
+            border: 5px solid #4b5563; /* gray-600 */
+            border-top: 5px solid #8b5cf6; /* violet-500 */
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin: 40px auto;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .header-link { /* Dostosowanie do ciemnego motywu */
+             @apply text-gray-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
         }
-        .header-link {
-             @apply text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
+        .header-link-active { /* Dla aktywnej zakładki w headerze, jeśli potrzebne */
+            @apply text-violet-400 font-semibold;
         }
-        .form-input {
-            @apply mt-1 block w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white;
+        .page-header { /* Nagłówek strony (Witaj z powrotem...) */
+            @apply text-3xl sm:text-4xl font-bold text-gray-100;
         }
-        .form-label {
-            @apply block text-sm font-medium text-gray-700 mb-1;
+        .page-subheader {
+             @apply mt-2 text-lg text-gray-400;
         }
+
+        /* Zakładki w ciemnym motywie */
         .tab-button {
             @apply whitespace-nowrap py-3 px-5 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150;
         }
         .tab-button-active {
-            @apply border-blue-500 text-blue-600;
+            @apply border-violet-500 text-violet-400;
         }
         .tab-button-inactive {
-            @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+            @apply border-transparent text-gray-400 hover:text-violet-400 hover:border-violet-600/50;
+        }
+        
+        /* Formularze w ciemnym motywie */
+        .form-input {
+            @apply mt-1 block w-full px-4 py-2.5 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-sm bg-gray-700 text-gray-200 placeholder-gray-400;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-300 mb-1;
+        }
+        .form-section-title {
+             @apply text-xl font-semibold text-gray-200 mb-4 pb-2 border-b border-gray-700 flex items-center;
+        }
+        .form-section-title i {
+            @apply mr-3 text-violet-400;
         }
     </style>
 </head>
-<body class="text-gray-800 flex flex-col min-h-screen">
+<body class="text-gray-300 flex flex-col min-h-screen">
 
-    <header class="bg-white shadow-md sticky top-0 z-50">
+    <header class="bg-gray-800 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold text-blue-600 transition-opacity hover:opacity-80">
-                    Materiały<span class="text-gray-700">PRO</span>
+                <a href="index.html" class="text-3xl font-bold text-violet-400 transition-opacity hover:opacity-80">
+                    Materiały<span class="text-gray-100">PRO</span>
                 </a>
                 <nav class="hidden md:flex items-center space-x-2">
                     <a href="index.html" class="header-link">Strona Główna</a>
@@ -137,7 +127,7 @@
                     <button id="logout-button-dashboard-desktop" class="btn btn-secondary btn-sm">Wyloguj się</button>
                 </nav>
                  <div class="md:hidden">
-                    <button id="mobile-menu-button-dashboard" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
+                    <button id="mobile-menu-button-dashboard" class="text-gray-300 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-md p-2">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -145,25 +135,25 @@
                 </div>
             </div>
         </div>
-         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
+         <div id="mobile-menu-dashboard" class="md:hidden hidden bg-gray-800 shadow-xl rounded-b-lg border-t border-gray-700">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="index.html" class="block header-link text-base">Strona Główna</a>
                 <a href="/material_gallery.html" class="block header-link text-base">Przeglądaj Materiały</a>
                 <a href="#account-settings-section" class="block header-link text-base nav-account-settings">Ustawienia Konta</a>
             </div>
-            <div class="pt-4 pb-3 border-t border-gray-200 px-5">
+            <div class="pt-4 pb-3 border-t border-gray-700 px-5">
                  <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
             </div>
         </div>
     </header>
 
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="mb-10">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span id="username-placeholder" class="text-blue-600">Ładowanie...</span>!</h1>
-            <p class="mt-2 text-lg text-gray-600">Zarządzaj swoimi materiałami i ustawieniami konta.</p>
+        <div class="mb-12">
+            <h1 class="page-header">Witaj z powrotem, <span id="username-placeholder" class="text-violet-400">Ładowanie...</span>!</h1>
+            <p class="page-subheader">Zarządzaj swoimi materiałami i ustawieniami konta w nowej odsłonie.</p>
         </div>
 
-        <div class="mb-8 border-b border-gray-200">
+        <div class="mb-8 border-b border-gray-700">
             <nav class="-mb-px flex space-x-6" aria-label="Dashboard Tabs" id="dashboard-tabs">
                 <button data-tab="my-materials" class="tab-button tab-button-active">Moje Materiały</button>
                 <button data-tab="account-settings" class="tab-button tab-button-inactive nav-account-settings">Ustawienia Konta</button>
@@ -171,8 +161,8 @@
         </div>
 
         <section id="my-materials-section" class="dashboard-tab-content">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-semibold text-gray-800">Twoje Nabyte Materiały</h2>
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-semibold text-gray-100">Twoje Nabyte Materiały</h2>
                 <a href="/material_gallery.html" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
                 </a>
@@ -181,32 +171,32 @@
                 <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
-                <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
-                    <i class="fas fa-folder-open fa-4x mb-4 text-gray-400"></i>
+                <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-400">
+                    <i class="fas fa-folder-open fa-4x mb-4 text-gray-500"></i>
                     <p class="text-xl font-medium">Nie posiadasz jeszcze żadnych materiałów.</p>
-                    <p class="mt-1">Odwiedź <a href="/material_gallery.html" class="text-blue-600 hover:underline font-semibold">galerię materiałów</a>, aby coś wybrać!</p>
+                    <p class="mt-1">Odwiedź <a href="/material_gallery.html" class="text-violet-400 hover:underline font-semibold">galerię materiałów</a>, aby coś wybrać!</p>
                 </div>
-                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-16 text-red-500">
+                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-16 text-red-400">
                     <i class="fas fa-exclamation-triangle fa-4x mb-4"></i>
                     <p class="text-xl font-medium">Wystąpił błąd.</p>
-                     <p class="text-gray-500">Nie udało się załadować Twoich materiałów.</p>
+                     <p class="text-gray-400">Nie udało się załadować Twoich materiałów.</p>
                 </div>
             </div>
         </section>
 
         <section id="account-settings-section" class="dashboard-tab-content hidden">
-             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
-            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
+             <h2 class="text-2xl font-semibold text-gray-100 mb-6">Ustawienia Konta</h2>
+            <div class="bg-gray-700/60 p-6 sm:p-8 rounded-xl shadow-xl border border-gray-600/50">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
-                            <i class="fas fa-user-edit mr-3 text-blue-500"></i>Dane Osobowe
+                        <h3 class="form-section-title">
+                            <i class="fas fa-user-edit"></i>Dane Osobowe
                         </h3>
                         <form id="profileUpdateForm" class="space-y-5">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
-                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-100 cursor-not-allowed" readonly disabled>
-                                <p class="text-xs text-gray-500 mt-1">Nazwy użytkownika nie można zmienić.</p>
+                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-600 cursor-not-allowed text-gray-400" readonly disabled>
+                                <p class="text-xs text-gray-400 mt-1">Nazwy użytkownika nie można zmienić.</p>
                             </div>
                             <div>
                                 <label for="profileEmail" class="form-label">Adres Email</label>
@@ -218,8 +208,8 @@
                         </form>
                     </div>
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
-                            <i class="fas fa-key mr-3 text-blue-500"></i>Zmień Hasło
+                        <h3 class="form-section-title">
+                            <i class="fas fa-key"></i>Zmień Hasło
                         </h3>
                         <form id="passwordChangeForm" class="space-y-5">
                             <div>
@@ -240,30 +230,30 @@
                         </form>
                     </div>
                 </div>
-                <div class="mt-10 pt-6 border-t border-gray-200">
-                     <h3 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200 flex items-center">
-                        <i class="fas fa-info-circle mr-3 text-blue-500"></i>Informacje o Koncie
+                <div class="mt-10 pt-6 border-t border-gray-600/50">
+                     <h3 class="form-section-title">
+                        <i class="fas fa-info-circle"></i>Informacje o Koncie
                     </h3>
-                     <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">ładowanie...</span></p>
-                     <p class="text-gray-600 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded text-gray-700">ładowanie...</span></p>
+                     <p class="text-gray-400 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-600 px-2 py-0.5 rounded text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-600 px-2 py-0.5 rounded text-gray-300">ładowanie...</span></p>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="bg-gray-900 text-gray-400 py-12 text-center mt-auto">
+    <footer class="bg-gray-900 text-gray-500 py-12 text-center mt-auto border-t border-gray-700">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
-             <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-red-500"></i> dla rozwoju.</p>
+             <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-violet-500"></i> dla rozwoju.</p>
         </div>
     </footer>
 
-    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
-        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="messageModalDashboardBox">
+    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+        <div class="bg-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-600" id="messageModalDashboardBox">
             <div class="text-center">
                 <div id="messageModalDashboardIcon" class="text-5xl mb-4"></div>
-                <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-800">Komunikat</h3>
-                <p id="messageModalDashboardText" class="text-gray-600 mb-6 text-base"></p>
+                <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-100">Komunikat</h3>
+                <p id="messageModalDashboardText" class="text-gray-300 mb-6 text-base"></p>
                 <button id="messageModalDashboardCloseBtn" class="btn btn-primary w-full sm:w-auto">Rozumiem</button>
             </div>
         </div>
@@ -292,22 +282,10 @@
         const dashboardTabs = document.getElementById('dashboard-tabs');
         const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-        const pastelBgClasses = [
-            'pastel-bg-sky', 'pastel-bg-emerald', 'pastel-bg-amber', 
-            'pastel-bg-violet', 'pastel-bg-rose', 'pastel-bg-indigo', 'pastel-bg-teal'
-        ];
-        let currentColorIndex = 0;
-
-        function getNextPastelBgClass() {
-            const colorClass = pastelBgClasses[currentColorIndex];
-            currentColorIndex = (currentColorIndex + 1) % pastelBgClasses.length;
-            return colorClass;
-        }
-
         function showDashboardModal(title, message, type = 'info') {
             if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
             messageModalDashboardTitle.textContent = title; messageModalDashboardText.textContent = message;
-            messageModalDashboardIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-500"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-500"></i>' : '<i class="fas fa-info-circle text-blue-500"></i>';
+            messageModalDashboardIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-400"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-400"></i>' : '<i class="fas fa-info-circle text-blue-400"></i>';
             messageModalDashboard.classList.remove('hidden', 'opacity-0');
             setTimeout(() => { messageModalDashboardBox.classList.remove('opacity-0', 'scale-95'); messageModalDashboardBox.classList.add('opacity-100', 'scale-100'); }, 10);
         }
@@ -348,33 +326,32 @@
 
         function createMyMaterialPanel(material) {
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
-            const panelColorClass = getNextPastelBgClass();
-            const defaultIconClass = 'fa-file-alt'; // Domyślna ikona dla materiałów
             
-            // Próba wyciągnięcia ikony z kategorii (bardzo uproszczone)
-            let categoryIconClass = defaultIconClass;
+            let categoryIconClass = 'fa-file-alt'; // Domyślna ikona
+            // Uproszczona logika ikon, można rozbudować
             if (material.category) {
                 const catLower = material.category.toLowerCase();
                 if (catLower.includes('kurs') || catLower.includes('video')) categoryIconClass = 'fa-video';
                 else if (catLower.includes('ebook') || catLower.includes('książka')) categoryIconClass = 'fa-book-open';
-                else if (catLower.includes('szablon') || catLower.includes('template')) categoryIconClass = 'fa-palette';
-                else if (catLower.includes('poradnik') || catLower.includes('guide')) categoryIconClass = 'fa-graduation-cap';
+                else if (catLower.includes('szablon')) categoryIconClass = 'fa-palette';
+                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-graduation-cap';
             }
 
-
             return `
-                <div class="material-panel group ${panelColorClass}">
-                    <div class="material-icon-placeholder-panel">
+                <div class="material-panel-reimagined group">
+                    <div class="material-icon-container-dark">
                         <i class="fas ${categoryIconClass}"></i>
                     </div>
-                    <div class="material-details">
-                        <h3 class="material-title">${material.title}</h3>
-                        <span class="material-category-badge">${material.category || 'Ogólne'}</span>
-                        <p class="material-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
-                        <p class="material-acquired-date">Nabyto: ${acquiredDate}</p>
-                    </div>
-                    <div class="material-actions">
-                        ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success btn-sm w-full sm:w-auto" download><i class="fas fa-download mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-500 text-center">Link niedostępny</p>'}
+                    <div class="material-content-wrapper-dark">
+                        <div class="material-info-dark">
+                            <h3 class="material-title-dark">${material.title}</h3>
+                            <span class="material-category-dark">${material.category || 'Ogólne'}</span>
+                            <p class="material-description-dark">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
+                            <p class="material-date-dark">Nabyto: ${acquiredDate}</p>
+                        </div>
+                        <div class="material-actions"> 
+                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-dark" download><i class="fas fa-download mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 mt-3 text-center sm:text-right">Link niedostępny</p>'}
+                        </div>
                     </div>
                 </div>
             `;
@@ -387,7 +364,6 @@
             myMaterialsGrid.appendChild(myMaterialsLoader); 
             noMyMaterialsMessage.classList.add('hidden');
             errorMyMaterialsMessage.classList.add('hidden');
-            currentColorIndex = 0; 
 
             try {
                 const response = await fetch('/api/my-materials', { credentials: 'include' });
