@@ -10,84 +10,90 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1f2937; /* Tailwind gray-800 - ciemne tło */
+            background-color: #111827; /* Tailwind gray-900 - bardzo ciemne tło */
             color: #d1d5db; /* Tailwind gray-300 - domyślny kolor tekstu */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .btn {
-            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800;
+            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900; /* Dostosowany ring-offset */
         }
-        .btn-primary { /* Fioletowy przycisk główny */
-            @apply bg-violet-600 text-white hover:bg-violet-700 focus:ring-violet-500;
+        .btn-primary { 
+            @apply bg-violet-600 text-white hover:bg-violet-500 focus:ring-violet-500;
         }
-        .btn-secondary { /* Jasnoszary przycisk pomocniczy */
-            @apply bg-gray-600 text-gray-100 hover:bg-gray-500 focus:ring-gray-400;
+        .btn-secondary { 
+            @apply bg-gray-700 text-gray-200 hover:bg-gray-600 focus:ring-gray-500;
         }
-        .btn-success { /* Zielony przycisk sukcesu (np. Pobierz) */
-            @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+        .btn-success { /* Przycisk Pobierz - teraz używa .btn-primary dla spójności z fioletowym motywem */
+            @apply bg-violet-600 text-white hover:bg-violet-500 focus:ring-violet-500;
         }
         .btn-sm {
             @apply px-4 py-2 text-sm font-medium;
         }
 
-        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (DARK VIOLET THEME) === */
-        .material-panel-dark {
-            @apply bg-gray-700/60 p-5 rounded-xl shadow-lg border border-gray-600/50
-                   flex flex-col md:flex-row items-start md:items-center gap-x-6 gap-y-4 
-                   transition-all duration-300 ease-out hover:shadow-violet-500/30 hover:border-violet-500/70 transform hover:-translate-y-1;
+        /* === NOWOCZESNE STYLE DLA PANELI MATERIAŁÓW (DARK VIOLET THEME V2) === */
+        .material-item { 
+            @apply bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700/80
+                   flex flex-col md:flex-row items-start gap-6 
+                   transition-all duration-300 ease-out hover:shadow-[0_0_25px_3px_rgba(167,139,250,0.2)] hover:border-violet-500/70 transform hover:-translate-y-1.5;
         }
-        .material-icon-container-dark { 
-            @apply flex-shrink-0 w-16 h-16 bg-gradient-to-tr from-violet-600 to-purple-600 text-white rounded-xl flex items-center justify-center shadow-lg;
+        .material-icon-area { 
+            @apply flex-shrink-0 w-20 h-20 bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-full flex items-center justify-center shadow-lg mb-4 md:mb-0 transition-all duration-300 group-hover:from-violet-500 group-hover:to-purple-600 group-hover:scale-105;
         }
-        .material-icon-container-dark i { 
-            @apply text-3xl opacity-90;
+        .material-icon-area i { 
+            @apply text-4xl opacity-90;
         }
-        .material-content-wrapper-dark { 
-            @apply flex-grow flex flex-col sm:flex-row sm:items-center sm:justify-between w-full;
+        .material-content-area { 
+            @apply flex-grow flex flex-col w-full;
         }
-        .material-info-dark { 
-            @apply flex-grow;
+        .material-header {
+            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2;
         }
-        .material-title-dark {
-            @apply text-xl font-semibold text-gray-100 mb-1 group-hover:text-violet-300 transition-colors;
+        .material-title-v2 {
+            @apply text-2xl font-bold text-gray-100 group-hover:text-violet-300 transition-colors duration-200;
         }
-        .material-category-dark {
-            @apply text-xs font-medium text-violet-300 bg-violet-700/50 px-3 py-1 rounded-full inline-block mb-2.5;
+        .material-category-v2 {
+            @apply text-xs font-semibold text-violet-300 bg-violet-700/70 px-3 py-1 rounded-full inline-block mt-2 sm:mt-0;
         }
-        .material-description-dark {
+        .material-description-v2 {
             @apply text-sm text-gray-400 mb-3 leading-relaxed;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; 
         }
-        .material-date-dark {
-            @apply text-xs text-gray-500 mt-auto pt-2 border-t border-gray-600/50;
+        .material-progress-bar-container { 
+            @apply w-full bg-gray-700 rounded-full h-2 mb-3 overflow-hidden mt-1;
         }
-        .material-action-button-dark { 
-            @apply mt-4 md:mt-0 md:ml-4 btn btn-success btn-sm flex-shrink-0 whitespace-nowrap shadow-green-600/40;
+        .material-progress-bar {
+            @apply bg-violet-500 h-2 rounded-full transition-all duration-500 ease-out;
+        }
+        .material-footer {
+            @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-4 border-t border-gray-700;
+        }
+        .material-date-v2 {
+            @apply text-xs text-gray-500 mb-3 sm:mb-0;
+        }
+        .material-action-button-v2 { 
+            @apply btn btn-primary btn-sm whitespace-nowrap; 
         }
         /* ========================================================== */
 
         .loader {
-            border: 5px solid #4b5563; /* gray-600 */
-            border-top: 5px solid #8b5cf6; /* violet-500 */
+            border: 5px solid #4b5563; 
+            border-top: 5px solid #8b5cf6; 
             border-radius: 50%; width: 50px; height: 50px;
             animation: spin 1s linear infinite; margin: 40px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .header-link { /* Dostosowanie do ciemnego motywu */
+        .header-link { 
              @apply text-gray-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
         }
-        .header-link-active { /* Dla aktywnej zakładki w headerze, jeśli potrzebne */
-            @apply text-violet-400 font-semibold;
-        }
-        .page-header { /* Nagłówek strony (Witaj z powrotem...) */
+        .page-header { 
             @apply text-3xl sm:text-4xl font-bold text-gray-100;
         }
         .page-subheader {
              @apply mt-2 text-lg text-gray-400;
         }
-
-        /* Zakładki w ciemnym motywie */
         .tab-button {
             @apply whitespace-nowrap py-3 px-5 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150;
         }
@@ -97,10 +103,8 @@
         .tab-button-inactive {
             @apply border-transparent text-gray-400 hover:text-violet-400 hover:border-violet-600/50;
         }
-        
-        /* Formularze w ciemnym motywie */
         .form-input {
-            @apply mt-1 block w-full px-4 py-2.5 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-sm bg-gray-700 text-gray-200 placeholder-gray-400;
+            @apply mt-1 block w-full px-4 py-2.5 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 sm:text-sm bg-gray-700 text-gray-200 placeholder-gray-500;
         }
         .form-label {
             @apply block text-sm font-medium text-gray-300 mb-1;
@@ -115,7 +119,7 @@
 </head>
 <body class="text-gray-300 flex flex-col min-h-screen">
 
-    <header class="bg-gray-800 shadow-lg sticky top-0 z-50">
+    <header class="bg-gray-800/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-700/50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <a href="index.html" class="text-3xl font-bold text-violet-400 transition-opacity hover:opacity-80">
@@ -186,17 +190,17 @@
 
         <section id="account-settings-section" class="dashboard-tab-content hidden">
              <h2 class="text-2xl font-semibold text-gray-100 mb-6">Ustawienia Konta</h2>
-            <div class="bg-gray-700/60 p-6 sm:p-8 rounded-xl shadow-xl border border-gray-600/50">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div class="bg-gray-800/80 p-6 sm:p-8 rounded-xl shadow-xl border border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
                     <div>
                         <h3 class="form-section-title">
                             <i class="fas fa-user-edit"></i>Dane Osobowe
                         </h3>
-                        <form id="profileUpdateForm" class="space-y-5">
+                        <form id="profileUpdateForm" class="space-y-6">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
                                 <input type="text" id="profileUsername" name="username" class="form-input bg-gray-600 cursor-not-allowed text-gray-400" readonly disabled>
-                                <p class="text-xs text-gray-400 mt-1">Nazwy użytkownika nie można zmienić.</p>
+                                <p class="text-xs text-gray-500 mt-1">Nazwy użytkownika nie można zmienić.</p>
                             </div>
                             <div>
                                 <label for="profileEmail" class="form-label">Adres Email</label>
@@ -211,7 +215,7 @@
                         <h3 class="form-section-title">
                             <i class="fas fa-key"></i>Zmień Hasło
                         </h3>
-                        <form id="passwordChangeForm" class="space-y-5">
+                        <form id="passwordChangeForm" class="space-y-6">
                             <div>
                                 <label for="currentPassword" class="form-label">Aktualne Hasło</label>
                                 <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
@@ -230,18 +234,18 @@
                         </form>
                     </div>
                 </div>
-                <div class="mt-10 pt-6 border-t border-gray-600/50">
+                <div class="mt-10 pt-8 border-t border-gray-700">
                      <h3 class="form-section-title">
                         <i class="fas fa-info-circle"></i>Informacje o Koncie
                     </h3>
-                     <p class="text-gray-400 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-600 px-2 py-0.5 rounded text-gray-300">ładowanie...</span></p>
-                     <p class="text-gray-400 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-600 px-2 py-0.5 rounded text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-700 px-2 py-1 rounded text-gray-300">ładowanie...</span></p>
+                     <p class="text-gray-400 text-sm mt-2">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-700 px-2 py-1 rounded text-gray-300">ładowanie...</span></p>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="bg-gray-900 text-gray-500 py-12 text-center mt-auto border-t border-gray-700">
+    <footer class="bg-gray-900 text-gray-500 py-12 text-center mt-auto border-t border-gray-700/50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
              <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-violet-500"></i> dla rozwoju.</p>
@@ -249,7 +253,7 @@
     </footer>
 
     <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
-        <div class="bg-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-600" id="messageModalDashboardBox">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0 border border-gray-700" id="messageModalDashboardBox">
             <div class="text-center">
                 <div id="messageModalDashboardIcon" class="text-5xl mb-4"></div>
                 <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-100">Komunikat</h3>
@@ -328,29 +332,48 @@
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
             
             let categoryIconClass = 'fa-file-alt'; // Domyślna ikona
-            // Uproszczona logika ikon, można rozbudować
+            let categoryColorClasses = { bg: 'bg-gray-700/50', text: 'text-gray-300' }; // Domyślne kolory badge
+
             if (material.category) {
                 const catLower = material.category.toLowerCase();
-                if (catLower.includes('kurs') || catLower.includes('video')) categoryIconClass = 'fa-video';
-                else if (catLower.includes('ebook') || catLower.includes('książka')) categoryIconClass = 'fa-book-open';
-                else if (catLower.includes('szablon')) categoryIconClass = 'fa-palette';
-                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-graduation-cap';
+                if (catLower.includes('kurs')) { categoryIconClass = 'fa-chalkboard-teacher'; categoryColorClasses = { bg: 'bg-blue-700/50', text: 'text-blue-300'}; }
+                else if (catLower.includes('video')) { categoryIconClass = 'fa-video'; categoryColorClasses = { bg: 'bg-sky-700/50', text: 'text-sky-300'};}
+                else if (catLower.includes('ebook') || catLower.includes('książka')) { categoryIconClass = 'fa-book-open'; categoryColorClasses = { bg: 'bg-emerald-700/50', text: 'text-emerald-300'}; }
+                else if (catLower.includes('szablon')) { categoryIconClass = 'fa-palette'; categoryColorClasses = { bg: 'bg-amber-700/50', text: 'text-amber-300'}; }
+                else if (catLower.includes('poradnik')) { categoryIconClass = 'fa-graduation-cap'; categoryColorClasses = { bg: 'bg-indigo-700/50', text: 'text-indigo-300'}; }
+                else if (catLower.includes('audio')) { categoryIconClass = 'fa-headphones-alt'; categoryColorClasses = { bg: 'bg-rose-700/50', text: 'text-rose-300'}; }
+                else if (catLower.includes('grafika')) { categoryIconClass = 'fa-image'; categoryColorClasses = { bg: 'bg-pink-700/50', text: 'text-pink-300'}; }
             }
+            
+            const progressPercent = material.progress || Math.floor(Math.random() * 81) + 10; // Losowy postęp 10-90% dla przykładu
 
             return `
-                <div class="material-panel-reimagined group">
-                    <div class="material-icon-container-dark">
+                <div class="material-item group">
+                    <div class="material-icon-area">
                         <i class="fas ${categoryIconClass}"></i>
                     </div>
-                    <div class="material-content-wrapper-dark">
+                    <div class="material-content-area">
                         <div class="material-info-dark">
-                            <h3 class="material-title-dark">${material.title}</h3>
-                            <span class="material-category-dark">${material.category || 'Ogólne'}</span>
-                            <p class="material-description-dark">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
-                            <p class="material-date-dark">Nabyto: ${acquiredDate}</p>
+                            <div class="material-header">
+                                <h3 class="material-title-v2">${material.title}</h3>
+                                <span class="material-category-v2 ${categoryColorClasses.bg} ${categoryColorClasses.text}">${material.category || 'Ogólne'}</span>
+                            </div>
+                            <p class="material-description-v2">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
+                            ${ progressPercent > 0 ? `
+                                <div class="mb-2 mt-1">
+                                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                        <span>Postęp</span>
+                                        <span>${progressPercent}%</span>
+                                    </div>
+                                    <div class="material-progress-bar-container">
+                                        <div class="material-progress-bar" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
-                        <div class="material-actions"> 
-                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-dark" download><i class="fas fa-download mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 mt-3 text-center sm:text-right">Link niedostępny</p>'}
+                        <div class="material-footer">
+                            <p class="material-date-v2">Nabyto: ${acquiredDate}</p>
+                            ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="material-action-button-v2" download><i class="fas fa-arrow-down-to-line mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-400 text-center sm:text-right">Link niedostępny</p>'}
                         </div>
                     </div>
                 </div>
