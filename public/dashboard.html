@@ -5,63 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Użytkownika - Platforma Materiałów Cyfrowych</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* gray-100 */
         }
         .btn {
-            @apply inline-block px-6 py-3 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+            @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
         }
         .btn-primary {
-            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+            @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-blue-500 shadow-blue-500/30 hover:shadow-lg;
         }
         .btn-secondary {
-            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 shadow-gray-500/20 hover:shadow-md;
         }
-        .btn-success { /* Dodatkowy styl dla przycisku "Pobierz" */
-            @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-400;
+        .btn-success { 
+            @apply bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-green-500/30 hover:shadow-lg;
+        }
+        .btn-sm {
+            @apply px-4 py-2 text-sm;
         }
         .card {
-            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-shadow hover:shadow-2xl flex flex-col;
+            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl flex flex-col h-full border border-gray-200 hover:border-blue-400;
         }
         .card-content {
-            @apply p-6 flex-grow;
+            @apply p-5 flex-grow flex flex-col;
         }
         .card-actions {
-            @apply p-6 pt-0;
+            @apply p-5 pt-0 mt-auto;
         }
-        .card-image-placeholder {
-            @apply w-full h-48 bg-gray-300 flex items-center justify-center text-gray-500;
-            background-size: cover;
-            background-position: center;
+        .card-image-container {
+            @apply w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden group;
         }
-        .loader { /* Loader dla ładowania materiałów */
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+        .card-image-container img {
+            @apply w-full h-full object-cover transition-transform duration-300 group-hover:scale-110;
+        }
+        .loader {
+            border: 5px solid #e2e8f0; /* gray-200 */
+            border-top: 5px solid #3b82f6; /* blue-500 */
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto; /* Wyśrodkowanie loadera */
+            margin: 40px auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .header-link {
+             @apply text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
+        }
+        .form-input {
+            @apply mt-1 block w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        .tab-button {
+            @apply whitespace-nowrap py-3 px-5 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150;
+        }
+        .tab-button-active {
+            @apply border-blue-500 text-blue-600;
+        }
+        .tab-button-inactive {
+            @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body class="text-gray-800 flex flex-col min-h-screen">
 
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <a href="index.html" class="text-3xl font-bold text-blue-600">Materiały<span class="text-gray-700">PRO</span></a>
-                <nav class="hidden md:flex items-center space-x-4">
-                    <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Strona Główna</a>
-                    <a href="/material_gallery.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Przeglądaj Wszystkie Materiały</a>
-                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary text-sm">Wyloguj się</button>
+                <a href="index.html" class="text-3xl font-bold text-blue-600 transition-opacity hover:opacity-80">
+                    Materiały<span class="text-gray-700">PRO</span>
+                </a>
+                <nav class="hidden md:flex items-center space-x-2">
+                    <a href="index.html" class="header-link">Strona Główna</a>
+                    <a href="/material_gallery.html" class="header-link">Przeglądaj Materiały</a>
+                    <button id="logout-button-dashboard-desktop" class="btn btn-secondary btn-sm">Wyloguj się</button>
                 </nav>
                  <div class="md:hidden">
                     <button id="mobile-menu-button-dashboard" class="text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md p-2">
@@ -74,9 +99,9 @@
         </div>
          <div id="mobile-menu-dashboard" class="md:hidden hidden bg-white shadow-lg rounded-b-lg">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Strona Główna</a>
-                <a href="/material_gallery.html" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Przeglądaj Wszystkie Materiały</a>
-                <a href="#account-settings" class="block text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium transition-colors">Ustawienia Konta</a>
+                <a href="index.html" class="block header-link text-base">Strona Główna</a>
+                <a href="/material_gallery.html" class="block header-link text-base">Przeglądaj Materiały</a>
+                <a href="#account-settings-section" class="block header-link text-base nav-account-settings">Ustawienia Konta</a>
             </div>
             <div class="pt-4 pb-3 border-t border-gray-200 px-5">
                  <button id="logout-button-dashboard-mobile" class="block w-full text-center btn btn-secondary text-base">Wyloguj</button>
@@ -84,56 +109,109 @@
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="mb-10">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Witaj z powrotem, <span id="username-placeholder" class="text-blue-600">Ładowanie...</span>!</h1>
             <p class="mt-2 text-lg text-gray-600">Zarządzaj swoimi materiałami i ustawieniami konta.</p>
         </div>
 
-        <section id="my-materials-section" class="mb-12">
-            <div class="flex justify-between items-center mb-6">
+        <div class="mb-8 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Dashboard Tabs" id="dashboard-tabs">
+                <button data-tab="my-materials" class="tab-button tab-button-active">Moje Materiały</button>
+                <button data-tab="account-settings" class="tab-button tab-button-inactive nav-account-settings">Ustawienia Konta</button>
+                </nav>
+        </div>
+
+        <section id="my-materials-section" class="dashboard-tab-content">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl font-semibold text-gray-800">Twoje Nabyte Materiały</h2>
-                <a href="/material_gallery.html" class="btn btn-primary text-sm">Przeglądaj Więcej Materiałów</a>
+                <a href="/material_gallery.html" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej Materiałów
+                </a>
             </div>
-            <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
-                <div id="no-my-materials-message" class="hidden col-span-full text-center py-10 text-gray-500">
-                    <i class="fas fa-folder-open fa-3x mb-4"></i>
-                    <p class="text-xl">Nie posiadasz jeszcze żadnych materiałów.</p>
-                    <p>Odwiedź <a href="/material_gallery.html" class="text-blue-600 hover:underline">galerię materiałów</a>, aby coś wybrać!</p>
+                <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
+                    <i class="fas fa-folder-open fa-4x mb-4 text-gray-400"></i>
+                    <p class="text-xl font-medium">Nie posiadasz jeszcze żadnych materiałów.</p>
+                    <p class="mt-1">Odwiedź <a href="/material_gallery.html" class="text-blue-600 hover:underline font-semibold">galerię materiałów</a>, aby coś wybrać!</p>
                 </div>
-                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-10 text-red-500">
-                    <i class="fas fa-exclamation-triangle fa-3x mb-4"></i>
-                    <p class="text-xl">Wystąpił błąd podczas ładowania Twoich materiałów.</p>
+                 <div id="error-my-materials-message" class="hidden col-span-full text-center py-16 text-red-500">
+                    <i class="fas fa-exclamation-triangle fa-4x mb-4"></i>
+                    <p class="text-xl font-medium">Wystąpił błąd.</p>
+                     <p class="text-gray-500">Nie udało się załadować Twoich materiałów.</p>
                 </div>
             </div>
         </section>
 
-        <section id="account-settings" class="mb-12">
+        <section id="account-settings-section" class="dashboard-tab-content hidden">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Ustawienia Konta</h2>
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <p class="text-gray-600">Tutaj w przyszłości znajdą się opcje zmiany hasła, adresu email, preferencji powiadomień itp.</p>
-                <p class="mt-2 text-gray-600">ID Użytkownika: <span id="user-id-placeholder" class="font-mono">ładowanie...</span></p>
-                <button class="mt-4 btn btn-secondary text-sm opacity-50 cursor-not-allowed" disabled title="Funkcjonalność w przygotowaniu">Edytuj profil</button>
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Dane Osobowe</h3>
+                        <form id="profileUpdateForm" class="space-y-4">
+                            <div>
+                                <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
+                                <input type="text" id="profileUsername" name="username" class="form-input" readonly disabled>
+                                <p class="text-xs text-gray-500 mt-1">Nazwy użytkownika nie można zmienić.</p>
+                            </div>
+                            <div>
+                                <label for="profileEmail" class="form-label">Adres Email</label>
+                                <input type="email" id="profileEmail" name="email" class="form-input" required>
+                            </div>
+                            <button type="submit" id="saveProfileButton" class="btn btn-primary w-full sm:w-auto">
+                                <i class="fas fa-save mr-2"></i>Zapisz Zmiany Danych
+                            </button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Zmień Hasło</h3>
+                        <form id="passwordChangeForm" class="space-y-4">
+                            <div>
+                                <label for="currentPassword" class="form-label">Aktualne Hasło</label>
+                                <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
+                            </div>
+                            <div>
+                                <label for="newPassword" class="form-label">Nowe Hasło</label>
+                                <input type="password" id="newPassword" name="newPassword" class="form-input" required placeholder="Minimum 6 znaków">
+                            </div>
+                            <div>
+                                <label for="confirmNewPassword" class="form-label">Potwierdź Nowe Hasło</label>
+                                <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
+                            </div>
+                            <button type="submit" id="changePasswordButton" class="btn btn-primary w-full sm:w-auto">
+                                <i class="fas fa-key mr-2"></i>Zmień Hasło
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Informacje o Koncie</h3>
+                     <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
+                     <p class="text-gray-600 text-sm mt-1">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
+                </div>
             </div>
         </section>
 
     </main>
 
-    <footer class="bg-gray-800 text-gray-300 py-8 text-center mt-auto">
+    <footer class="bg-gray-900 text-gray-400 py-12 text-center mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; <span id="currentYearDashboard"></span> MateriałyPRO. Wszelkie prawa zastrzeżone.</p>
+             <p class="text-xs mt-1">Stworzone z <i class="fas fa-heart text-red-500"></i> dla rozwoju.</p>
         </div>
     </footer>
 
-    <div id="messageModalDashboard" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
+    <div id="messageModalDashboard" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="messageModalDashboardBox">
             <div class="text-center">
-                <h3 id="messageModalTitleDashboard" class="text-xl font-semibold mb-4 text-gray-800">Komunikat</h3>
-                <p id="messageModalTextDashboard" class="text-gray-600 mb-6"></p>
-                <button id="messageModalCloseBtnDashboard" class="btn btn-primary">OK</button>
+                <div id="messageModalDashboardIcon" class="text-5xl mb-4"></div>
+                <h3 id="messageModalDashboardTitle" class="text-2xl font-semibold mb-3 text-gray-800">Komunikat</h3>
+                <p id="messageModalDashboardText" class="text-gray-600 mb-6 text-base"></p>
+                <button id="messageModalDashboardCloseBtn" class="btn btn-primary w-full sm:w-auto">Rozumiem</button>
             </div>
         </div>
     </div>
@@ -141,103 +219,128 @@
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
 
-        // Modal
+        // --- Elementy DOM ---
         const messageModalDashboard = document.getElementById('messageModalDashboard');
-        const messageModalTitleDashboard = document.getElementById('messageModalTitleDashboard');
-        const messageModalTextDashboard = document.getElementById('messageModalTextDashboard');
-        const messageModalCloseBtnDashboard = document.getElementById('messageModalCloseBtnDashboard');
+        const messageModalDashboardBox = document.getElementById('messageModalDashboardBox');
+        const messageModalDashboardTitle = document.getElementById('messageModalDashboardTitle');
+        const messageModalDashboardText = document.getElementById('messageModalDashboardText');
+        const messageModalDashboardCloseBtn = document.getElementById('messageModalDashboardCloseBtn');
+        const messageModalDashboardIcon = document.getElementById('messageModalDashboardIcon');
 
-        function showDashboardModal(title, message) {
-            if (messageModalDashboard && messageModalTitleDashboard && messageModalTextDashboard) {
-                messageModalTitleDashboard.textContent = title;
-                messageModalTextDashboard.textContent = message;
-                messageModalDashboard.classList.remove('hidden');
-            }
-        }
-
-        if (messageModalCloseBtnDashboard && messageModalDashboard) {
-            messageModalCloseBtnDashboard.addEventListener('click', () => {
-                messageModalDashboard.classList.add('hidden');
-            });
-        }
-
-
-        // Pobieranie i wyświetlanie danych użytkownika
         const usernamePlaceholder = document.getElementById('username-placeholder');
         const userIdPlaceholder = document.getElementById('user-id-placeholder');
+        const userRolePlaceholder = document.getElementById('user-role-placeholder');
+        
+        const profileUsernameInput = document.getElementById('profileUsername');
+        const profileEmailInput = document.getElementById('profileEmail');
+        const profileUpdateForm = document.getElementById('profileUpdateForm');
+        const passwordChangeForm = document.getElementById('passwordChangeForm');
 
-        async function fetchUserData() {
-            try {
-                const response = await fetch('/api/user', { credentials: 'include' });
-                if (!response.ok) {
-                    if (response.status === 401 || response.status === 403) {
-                        showDashboardModal('Brak dostępu', 'Sesja wygasła lub nie jesteś zalogowany. Przekierowuję do strony logowania...');
-                        setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
-                        return null; // Zwróć null, aby zasygnalizować błąd
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const userData = await response.json();
-                
-                if (userData.username && usernamePlaceholder) {
-                    usernamePlaceholder.textContent = userData.username;
-                }
-                if (userData.userId && userIdPlaceholder) {
-                    userIdPlaceholder.textContent = userData.userId;
-                }
-                return userData; // Zwróć dane użytkownika
-            } catch (error) {
-                console.error('Nie udało się pobrać danych użytkownika:', error);
-                if (usernamePlaceholder) usernamePlaceholder.textContent = 'Błąd';
-                if (userIdPlaceholder) userIdPlaceholder.textContent = 'Błąd';
-                showDashboardModal('Błąd', 'Nie udało się załadować danych użytkownika.');
-                return null; // Zwróć null
-            }
-        }
 
-        // Pobieranie i wyświetlanie nabytych materiałów
         const myMaterialsGrid = document.getElementById('my-materials-grid');
         const myMaterialsLoader = document.getElementById('my-materials-loader');
         const noMyMaterialsMessage = document.getElementById('no-my-materials-message');
         const errorMyMaterialsMessage = document.getElementById('error-my-materials-message');
 
-        async function fetchAndDisplayMyMaterials() {
-            if (!myMaterialsGrid || !myMaterialsLoader || !noMyMaterialsMessage || !errorMyMaterialsMessage) {
-                console.error("Brakuje elementów DOM dla 'Moich Materiałów'.");
-                return;
-            }
+        const dashboardTabs = document.getElementById('dashboard-tabs');
+        const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-            myMaterialsLoader.style.display = 'flex';
-            // Usuwamy poprzednie karty, ale zostawiamy loader, jeśli jest w siatce
-            // Można też czyścić siatkę i dodawać loader dynamicznie, jak w material_gallery
-            let child = myMaterialsGrid.lastElementChild; 
-            while (child) {
-                if (child.id !== 'my-materials-loader') { // Nie usuwaj samego loadera
-                    myMaterialsGrid.removeChild(child);
+        // --- Funkcje Modala ---
+        function showDashboardModal(title, message, type = 'info') {
+            if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
+            messageModalDashboardTitle.textContent = title;
+            messageModalDashboardText.textContent = message;
+            messageModalDashboardIcon.innerHTML = '';
+            if (type === 'success') messageModalDashboardIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+            else if (type === 'error') messageModalDashboardIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+            else messageModalDashboardIcon.innerHTML = '<i class="fas fa-info-circle text-blue-500"></i>';
+            
+            messageModalDashboard.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => {
+                 messageModalDashboardBox.classList.remove('opacity-0', 'scale-95');
+                 messageModalDashboardBox.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+        function hideDashboardModal() {
+            if (!messageModalDashboard || !messageModalDashboardBox) return;
+            messageModalDashboardBox.classList.remove('opacity-100', 'scale-100');
+            messageModalDashboardBox.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => messageModalDashboard.classList.add('hidden', 'opacity-0'), 300);
+        }
+        if (messageModalDashboardCloseBtn) messageModalDashboardCloseBtn.addEventListener('click', hideDashboardModal);
+        if (messageModalDashboard) messageModalDashboard.addEventListener('click', (e) => { if (e.target === messageModalDashboard) hideDashboardModal(); });
+
+
+        // --- Dane Użytkownika ---
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/api/user', { credentials: 'include' });
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        showDashboardModal('Brak dostępu', 'Sesja wygasła lub nie jesteś zalogowany. Przekierowuję...', 'error');
+                        setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
+                        return null;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                child = myMaterialsGrid.lastElementChild;
-                if (child && child.id === 'my-materials-loader') break; // Zatrzymaj, jeśli doszliśmy do loadera
-            }
-             // Upewnij się, że loader jest dodany, jeśli go nie było
-            if (!myMaterialsGrid.querySelector('#my-materials-loader')) {
-                 myMaterialsGrid.appendChild(myMaterialsLoader);
-            }
+                const userData = await response.json();
+                
+                if (usernamePlaceholder && userData.username) usernamePlaceholder.textContent = userData.username;
+                if (userIdPlaceholder && userData.userId) userIdPlaceholder.textContent = userData.userId;
+                if (userRolePlaceholder && userData.role) userRolePlaceholder.textContent = userData.role;
+                if (profileUsernameInput && userData.username) profileUsernameInput.value = userData.username;
+                if (profileEmailInput && userData.email) profileEmailInput.value = userData.email; // Zakładając, że API zwraca email
+                else if (profileEmailInput && !userData.email) profileEmailInput.placeholder = "Podaj swój email";
 
 
+                return userData;
+            } catch (error) {
+                console.error('Nie udało się pobrać danych użytkownika:', error);
+                if (usernamePlaceholder) usernamePlaceholder.textContent = 'Błąd';
+                showDashboardModal('Błąd', 'Nie udało się załadować danych użytkownika.', 'error');
+                return null;
+            }
+        }
+
+        // --- Nabyte Materiały ---
+        function createMyMaterialCard(material) {
+            const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
+            return `
+                <div class="card group">
+                    <div class="card-image-container">
+                        <img src="${material.cover_image_url || 'https://placehold.co/600x400/CBD5E0/718096?text=Brak+Obrazka'}" 
+                             alt="${material.title}" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/CBD5E0/718096?text=B%C5%82%C4%85d+URL';">
+                    </div>
+                    <div class="card-content">
+                        <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full mb-2 inline-block self-start">${material.category || 'Ogólne'}</span>
+                        <h3 class="text-lg font-semibold mb-1 text-gray-800 h-12 overflow-hidden leading-tight">${material.title}</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-16 overflow-hidden">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
+                        <p class="text-xs text-gray-500 mt-auto">Nabyto: ${acquiredDate}</p>
+                    </div>
+                    <div class="card-actions">
+                        ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success w-full text-sm" download><i class="fas fa-download mr-2"></i>Pobierz Materiał</a>` : '<p class="text-sm text-red-500 text-center">Link do pliku niedostępny.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function fetchAndDisplayMyMaterials() {
+            if (!myMaterialsGrid || !myMaterialsLoader || !noMyMaterialsMessage || !errorMyMaterialsMessage) return;
+            myMaterialsLoader.style.display = 'flex';
+            myMaterialsGrid.innerHTML = ''; // Wyczyść przed ładowaniem
+            myMaterialsGrid.appendChild(myMaterialsLoader); // Dodaj loader z powrotem
             noMyMaterialsMessage.classList.add('hidden');
             errorMyMaterialsMessage.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/my-materials', { credentials: 'include' });
-                 if (!response.ok) { // Obsługa błędów, w tym 401/403 z isAuthenticated
+                 if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        // To nie powinno się zdarzyć, jeśli fetchUserData() zadziałało, ale dla pewności
-                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów. Spróbuj zalogować się ponownie.');
+                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów. Spróbuj zalogować się ponownie.', 'error');
                          setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
-                    } else {
-                        throw new Error(`Błąd HTTP: ${response.status}`);
-                    }
-                    myMaterialsLoader.style.display = 'none'; // Ukryj loader w przypadku błędu autoryzacji
+                    } else throw new Error(`Błąd HTTP: ${response.status}`);
+                    myMaterialsLoader.style.display = 'none';
                     return;
                 }
                 const materials = await response.json();
@@ -246,28 +349,8 @@
                 if (materials.length === 0) {
                     noMyMaterialsMessage.classList.remove('hidden');
                 } else {
-                    materials.forEach(material => {
-                        const acquiredDate = new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' });
-                        const materialCard = `
-                            <div class="card">
-                                <div class="card-image-placeholder" style="background-image: url('${material.cover_image_url || 'https://placehold.co/600x400/E2E8F0/A0AEC0?text=Brak+Obrazka'}');">
-                                    ${!material.cover_image_url ? '<i class="fas fa-image fa-3x text-gray-400"></i>' : ''}
-                                </div>
-                                <div class="card-content">
-                                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${material.title}</h3>
-                                    <p class="text-gray-600 text-sm mb-1 h-16 overflow-hidden">${material.description || 'Brak opisu.'}</p>
-                                    <p class="text-xs text-gray-500 mb-3">Nabyto: ${acquiredDate}</p>
-                                    <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${material.category || 'Ogólne'}</span>
-                                </div>
-                                <div class="card-actions">
-                                    ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success w-full text-sm" download>Pobierz Materiał</a>` : '<p class="text-sm text-red-500 text-center">Link do pliku niedostępny.</p>'}
-                                </div>
-                            </div>
-                        `;
-                        myMaterialsGrid.insertAdjacentHTML('beforeend', materialCard);
-                    });
+                    materials.forEach(material => myMaterialsGrid.insertAdjacentHTML('beforeend', createMyMaterialCard(material)));
                 }
-
             } catch (error) {
                 console.error('Nie udało się pobrać moich materiałów:', error);
                 myMaterialsLoader.style.display = 'none';
@@ -275,48 +358,156 @@
             }
         }
 
+        // --- Ustawienia Konta ---
+        if (profileUpdateForm) {
+            profileUpdateForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = profileEmailInput.value;
+                const saveButton = document.getElementById('saveProfileButton');
+                const originalButtonText = saveButton.innerHTML;
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zapisywanie...';
 
-        // Logika wylogowania
+                try {
+                    // TODO: Endpoint /api/user/profile do aktualizacji emaila (lub innych danych)
+                    // const response = await fetch('/api/user/profile', {
+                    //     method: 'PUT',
+                    //     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    //     body: JSON.stringify({ email }),
+                    //     credentials: 'include'
+                    // });
+                    // const result = await response.json();
+                    // if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji profilu.');
+                    // showDashboardModal('Sukces', result.message || 'Profil zaktualizowany!', 'success');
+                    console.warn("Logika aktualizacji profilu (email) nie jest jeszcze zaimplementowana na backendzie.");
+                    showDashboardModal('Informacja', 'Funkcjonalność aktualizacji emaila jest w przygotowaniu.', 'info');
+
+                } catch (error) {
+                    showDashboardModal('Błąd', error.message, 'error');
+                } finally {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = originalButtonText;
+                }
+            });
+        }
+
+        if (passwordChangeForm) {
+            passwordChangeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                const changeButton = document.getElementById('changePasswordButton');
+                const originalButtonText = changeButton.innerHTML;
+
+                if (newPassword !== confirmNewPassword) {
+                    showDashboardModal('Błąd', 'Nowe hasła nie są zgodne.', 'error');
+                    return;
+                }
+                if (newPassword.length < 6) {
+                    showDashboardModal('Błąd', 'Nowe hasło musi mieć co najmniej 6 znaków.', 'error');
+                    return;
+                }
+                
+                changeButton.disabled = true;
+                changeButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zmienianie...';
+
+                try {
+                    // TODO: Endpoint /api/user/password do zmiany hasła
+                    // const response = await fetch('/api/user/password', {
+                    //     method: 'PUT',
+                    //     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    //     body: JSON.stringify({ currentPassword, newPassword }),
+                    //     credentials: 'include'
+                    // });
+                    // const result = await response.json();
+                    // if (!response.ok) throw new Error(result.message || 'Błąd zmiany hasła.');
+                    // showDashboardModal('Sukces', result.message || 'Hasło zmienione!', 'success');
+                    // passwordChangeForm.reset();
+                     console.warn("Logika zmiany hasła nie jest jeszcze zaimplementowana na backendzie.");
+                    showDashboardModal('Informacja', 'Funkcjonalność zmiany hasła jest w przygotowaniu.', 'info');
+                    passwordChangeForm.reset();
+
+
+                } catch (error) {
+                    showDashboardModal('Błąd', error.message, 'error');
+                } finally {
+                    changeButton.disabled = false;
+                    changeButton.innerHTML = originalButtonText;
+                }
+            });
+        }
+
+
+        // --- Logika Zakładek ---
+        if (dashboardTabs) {
+            const tabButtons = dashboardTabs.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTabId = button.dataset.tab;
+                    
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('tab-button-active');
+                        btn.classList.add('tab-button-inactive');
+                    });
+                    button.classList.remove('tab-button-inactive');
+                    button.classList.add('tab-button-active');
+
+                    tabContents.forEach(content => {
+                        if (content.id === `${targetTabId}-section`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                    // Zapisz aktywną zakładkę
+                    localStorage.setItem('activeDashboardTab', targetTabId);
+                });
+            });
+        }
+        
+        function setActiveTabFromStorage() {
+            const activeTab = localStorage.getItem('activeDashboardTab');
+            if (activeTab && dashboardTabs) {
+                const buttonToActivate = dashboardTabs.querySelector(`button[data-tab="${activeTab}"]`);
+                if (buttonToActivate) buttonToActivate.click();
+            }
+        }
+
+
+        // --- Logika Wylogowania ---
         function handleDashboardLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
-                .then(response => {
-                    if (response.ok && response.redirected) {
-                        window.location.href = response.url; 
-                    } else {
-                        window.location.href = '/'; 
-                    }
-                })
+                .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
                 .catch(error => {
-                    console.error('Błąd podczas wylogowywania:', error);
-                    showDashboardModal('Błąd', 'Wystąpił problem podczas wylogowywania.');
+                    showDashboardModal('Błąd', 'Wystąpił problem podczas wylogowywania.', 'error');
                     window.location.href = '/';
                 });
         }
-
         const logoutButtonDesktop = document.getElementById('logout-button-dashboard-desktop');
         const logoutButtonMobile = document.getElementById('logout-button-dashboard-mobile');
-
         if (logoutButtonDesktop) logoutButtonDesktop.addEventListener('click', handleDashboardLogout);
         if (logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleDashboardLogout);
         
-        // Obsługa menu mobilnego dla tej strony
+        // --- Menu Mobilne ---
         const mobileMenuButtonDashboard = document.getElementById('mobile-menu-button-dashboard');
         const mobileMenuDashboard = document.getElementById('mobile-menu-dashboard');
-
         if (mobileMenuButtonDashboard && mobileMenuDashboard) {
             mobileMenuButtonDashboard.addEventListener('click', () => {
                 mobileMenuDashboard.classList.toggle('hidden');
                  const icon = mobileMenuButtonDashboard.querySelector('svg');
-                if (mobileMenuDashboard.classList.contains('hidden')) {
-                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
-                } else {
-                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
-                }
+                icon.innerHTML = mobileMenuDashboard.classList.contains('hidden') ? 
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />' : 
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
             });
-            const mobileNavLinksDashboard = mobileMenuDashboard.querySelectorAll('a, button');
-             mobileNavLinksDashboard.forEach(link => {
-                link.addEventListener('click', () => {
-                     if (!link.id.startsWith('logout-button-dashboard')) { // Nie zamykaj dla przycisku wylogowania
+            mobileMenuDashboard.querySelectorAll('a, button').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.classList.contains('nav-account-settings')) {
+                        e.preventDefault(); // Zapobiegaj domyślnej akcji linku #
+                        const settingsTabButton = dashboardTabs.querySelector('button[data-tab="account-settings"]');
+                        if (settingsTabButton) settingsTabButton.click();
+                    }
+                    if (!link.id.startsWith('logout-button-dashboard')) { 
                         mobileMenuDashboard.classList.add('hidden');
                         mobileMenuButtonDashboard.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />';
                     }
@@ -324,13 +515,13 @@
             });
         }
 
-
-        // Wywołaj funkcje po załadowaniu strony
+        // --- Inicjalizacja ---
         document.addEventListener('DOMContentLoaded', async () => {
             const userData = await fetchUserData();
-            if (userData) { // Jeśli dane użytkownika załadowały się poprawnie
+            if (userData) { 
                 fetchAndDisplayMyMaterials();
             }
+            setActiveTabFromStorage(); // Ustaw aktywną zakładkę po załadowaniu DOM
         });
     </script>
 
