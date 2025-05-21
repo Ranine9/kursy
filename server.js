@@ -227,7 +227,7 @@ async function initializeDatabase() {
     }
 }
 
-// --- Konfiguracja Nodemailer (bez zmian) ---
+// --- Konfiguracja Nodemailer ---
 let transporter;
 const emailHost = process.env.EMAIL_HOST;
 const emailPort = parseInt(process.env.EMAIL_PORT || "587");
@@ -265,7 +265,7 @@ async function sendEmail(to, subject, text, html) {
     }
 }
 
-// --- Konfiguracja aplikacji Express (bez większych zmian) ---
+// --- Konfiguracja aplikacji Express ---
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true })); 
 const sessionSecret = process.env.SESSION_SECRET || 'domyslny-sekret-na-wszelki-wypadek-dev-only';
@@ -281,7 +281,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- Middleware autoryzacyjne (bez zmian) ---
+// --- Middleware autoryzacyjne ---
 function isAuthenticated(req, res, next) {
     if (req.session && req.session.userId) return next();
     if (req.originalUrl.startsWith('/api/')) return res.status(401).json({ message: 'Brak autoryzacji.' });
@@ -304,12 +304,10 @@ async function isAdmin(req, res, next) {
 }
 
 // --- Definicje ścieżek (Routes) ---
-// Podstawowe ścieżki (bez zmian)
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/register.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 
-// Rejestracja i Logowanie (bez zmian w logice, tylko ewentualnie email powitalny)
 app.post('/register', async (req, res) => {
     const { username, email, password, 'confirm-password': confirmPassword } = req.body;
     if (!username || !email || !password || !confirmPassword || password !== confirmPassword || password.length < 6) {
@@ -322,7 +320,7 @@ app.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
         const newUserResult = await pool.query('INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role', [username, email, hashedPassword, 'user']);
         const newUser = newUserResult.rows[0];
-        req.session.userId = newUser.id; req.session.username = newUser.username; req.session.role = newUser.role;
+        req.session.userId = newUser.id; req.session.username = newUser.username; req.session.role = newUser.role; req.session.email = newUser.email;
         req.session.save(async err => {
             if (err) return res.status(500).json({ message: 'Błąd zapisu sesji.'});
             await sendEmail(newUser.email, 'Witaj na Platformie!', `Dziękujemy za rejestrację, ${newUser.username}!`, `<p>Dziękujemy za rejestrację, <strong>${newUser.username}</strong>!</p>`);
@@ -340,7 +338,7 @@ app.post('/login', async (req, res) => {
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             return res.status(401).json({ message: 'Nieprawidłowy email lub hasło.' });
         }
-        req.session.userId = user.id; req.session.username = user.username; req.session.role = user.role;
+        req.session.userId = user.id; req.session.username = user.username; req.session.role = user.role; req.session.email = user.email; // Dodano email do sesji
         req.session.save(err => {
             if (err) return res.status(500).json({ message: 'Błąd zapisu sesji.'});
             let dest = redirectUrl || (user.role === 'admin' ? '/admin_dashboard.html' : '/dashboard.html');
@@ -351,18 +349,96 @@ app.post('/login', async (req, res) => {
     } catch (error) { console.error("Błąd /login:", error); res.status(500).json({ message: 'Błąd serwera.'}); }
 });
 
-// Chronione ścieżki (bez zmian)
 app.get('/dashboard.html', isAuthenticated, (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 app.get('/material_gallery.html', isAuthenticated, (req, res) => res.sendFile(path.join(__dirname, 'public', 'material_gallery.html')));
-app.get('/api/user', isAuthenticated, (req, res) => res.json({ username: req.session.username, userId: req.session.userId, role: req.session.role, email: req.session.email }));
-app.get('/logout', (req, res) => {
+
+app.get('/api/user', isAuthenticated, (req, res) => {
+    // Zwracamy email z sesji, który został tam umieszczony podczas logowania
+    res.json({ 
+        username: req.session.username, 
+        userId: req.session.userId, 
+        role: req.session.role,
+        email: req.session.email 
+    });
+});
+
+// NOWE ENDPOINTY DLA PROFILU UŻYTKOWNIKA
+app.put('/api/user/profile', isAuthenticated, async (req, res) => {
+    const { email } = req.body;
+    const userId = req.session.userId;
+
+    if (!email || typeof email !== 'string' || !email.includes('@')) { // Prosta walidacja email
+        return res.status(400).json({ message: 'Nieprawidłowy format adresu email.' });
+    }
+
+    try {
+        // Sprawdź, czy nowy email nie jest już zajęty przez innego użytkownika
+        const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [email, userId]);
+        if (emailCheck.rows.length > 0) {
+            return res.status(409).json({ message: 'Ten adres email jest już używany przez inne konto.' });
+        }
+
+        const result = await pool.query('UPDATE users SET email = $1 WHERE id = $2 RETURNING email', [email, userId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika.' });
+        }
+        req.session.email = result.rows[0].email; // Zaktualizuj email w sesji
+        req.session.save(err => {
+            if (err) {
+                console.error('Błąd zapisu sesji po aktualizacji profilu:', err);
+                // Mimo wszystko, baza danych została zaktualizowana, więc można wysłać sukces
+            }
+            res.json({ message: 'Adres email został pomyślnie zaktualizowany.', email: result.rows[0].email });
+        });
+    } catch (error) {
+        console.error(`Błąd podczas aktualizacji profilu użytkownika ID ${userId}:`, error);
+        res.status(500).json({ message: 'Wystąpił błąd serwera podczas aktualizacji profilu.' });
+    }
+});
+
+app.put('/api/user/password', isAuthenticated, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.session.userId;
+
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+        return res.status(400).json({ message: 'Wszystkie pola są wymagane, a nowe hasło musi mieć co najmniej 6 znaków.' });
+    }
+
+    try {
+        const userResult = await pool.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika.' });
+        }
+        const user = userResult.rows[0];
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Aktualne hasło jest nieprawidłowe.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+        await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashedNewPassword, userId]);
+        
+        // Opcjonalnie: wyloguj użytkownika z innych sesji lub poinformuj o zmianie hasła
+        res.json({ message: 'Hasło zostało pomyślnie zmienione.' });
+
+    } catch (error) {
+        console.error(`Błąd podczas zmiany hasła użytkownika ID ${userId}:`, error);
+        res.status(500).json({ message: 'Wystąpił błąd serwera podczas zmiany hasła.' });
+    }
+});
+
+
+app.get('/logout', (req, res) => { /* bez zmian */ 
     req.session.destroy(err => {
         if (err) return res.redirect('/?logoutError=true');
         res.clearCookie('connect.sid'); res.redirect('/');
     });
 });
 
-// --- Ścieżki dla Panelu Administracyjnego ---
+// --- Ścieżki dla Panelu Administracyjnego (bez zmian w tej iteracji, poza tym co już było) ---
 app.get('/admin_dashboard.html', isAuthenticated, isAdmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html')));
 app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => { /* bez zmian */ 
     try {
@@ -403,85 +479,44 @@ app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) =>
     } catch (error) { res.status(500).json({ message: 'Błąd serwera.' }); }
 });
 
-// Endpointy dla materiałów w panelu admina - z obsługą is_featured i discount_price
-app.get('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
+app.get('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => { /* bez zmian */ 
     try {
-        // Zwracamy wszystkie pola, w tym nowe
         const result = await pool.query('SELECT id, title, description, category, price, file_url, cover_image_url, status, is_featured, discount_price, created_at, updated_at FROM materials ORDER BY created_at DESC');
         res.json(result.rows);
-    } catch (error) {
-        console.error("Błąd /api/admin/materials (GET):", error);
-        res.status(500).json({ message: 'Błąd serwera podczas pobierania materiałów.' });
-    }
+    } catch (error) { console.error("Błąd /api/admin/materials (GET):", error); res.status(500).json({ message: 'Błąd serwera.' }); }
 });
-
-app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => {
+app.post('/api/admin/materials', isAuthenticated, isAdmin, async (req, res) => { /* bez zmian */ 
     const { title, description, category, price, file_url, cover_image_url, status, is_featured, discount_price } = req.body;
-    if (!title || !file_url) {
-        return res.status(400).json({ message: 'Tytuł oraz link do pliku są wymagane.' });
-    }
+    if (!title || !file_url) return res.status(400).json({ message: 'Tytuł i link do pliku są wymagane.' });
     try {
-        const insertMaterialQuery = `
-            INSERT INTO materials (title, description, category, price, file_url, cover_image_url, status, is_featured, discount_price) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-            RETURNING *`; 
-        const values = [
-            title,
-            description || null,
-            category || null,
-            price ? parseFloat(price) : 0.00,
-            file_url,
-            cover_image_url || null,
-            status || 'draft',
-            is_featured || false, // Domyślnie false, jeśli nie podano
-            discount_price ? parseFloat(discount_price) : null // Null, jeśli nie podano
-        ];
-        const result = await pool.query(insertMaterialQuery, values);
-        res.status(201).json({ message: 'Materiał dodany pomyślnie.', material: result.rows[0] });
-    } catch (error) {
-        console.error("Błąd /api/admin/materials (POST):", error);
-        res.status(500).json({ message: 'Błąd serwera podczas tworzenia materiału.' });
-    }
+        const query = `INSERT INTO materials (title, description, category, price, file_url, cover_image_url, status, is_featured, discount_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`; 
+        const values = [title, description || null, category || null, price ? parseFloat(price) : 0.00, file_url, cover_image_url || null, status || 'draft', is_featured || false, discount_price ? parseFloat(discount_price) : null];
+        const result = await pool.query(query, values);
+        res.status(201).json({ message: 'Materiał dodany.', material: result.rows[0] });
+    } catch (error) { console.error("Błąd /api/admin/materials (POST):", error); res.status(500).json({ message: 'Błąd serwera.' }); }
 });
-
-app.put('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res) => {
+app.put('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res) => { /* bez zmian */ 
     const materialId = parseInt(req.params.id);
     const { title, description, category, price, file_url, cover_image_url, status, is_featured, discount_price } = req.body;
-
-    if (!title || !file_url) { 
-        return res.status(400).json({ message: 'Tytuł oraz link do pliku są wymagane.' });
-    }
-    // Walidacja statusu (opcjonalnie, jeśli masz zdefiniowane statusy)
-    // const validStatuses = ['draft', 'published', 'archived'];
-    // if (status && !validStatuses.includes(status)) { /* ... błąd ... */ }
-
+    if (!title || !file_url) return res.status(400).json({ message: 'Tytuł i link do pliku są wymagane.' });
     try {
-        const updateFields = [];
-        const values = [];
-        let queryParamIndex = 1;
-
-        if (title !== undefined) { updateFields.push(`title = $${queryParamIndex++}`); values.push(title); }
-        if (description !== undefined) { updateFields.push(`description = $${queryParamIndex++}`); values.push(description); }
-        if (category !== undefined) { updateFields.push(`category = $${queryParamIndex++}`); values.push(category); }
-        if (price !== undefined) { updateFields.push(`price = $${queryParamIndex++}`); values.push(price ? parseFloat(price) : 0.00); }
-        if (file_url !== undefined) { updateFields.push(`file_url = $${queryParamIndex++}`); values.push(file_url); }
-        if (cover_image_url !== undefined) { updateFields.push(`cover_image_url = $${queryParamIndex++}`); values.push(cover_image_url); }
-        if (status !== undefined) { updateFields.push(`status = $${queryParamIndex++}`); values.push(status); }
-        if (is_featured !== undefined) { updateFields.push(`is_featured = $${queryParamIndex++}`); values.push(is_featured); }
-        if (discount_price !== undefined) { updateFields.push(`discount_price = $${queryParamIndex++}`); values.push(discount_price ? parseFloat(discount_price) : null); }
-        
-        if (updateFields.length === 0) return res.status(400).json({ message: 'Brak danych do aktualizacji.' });
-        values.push(materialId); 
-
-        const updateMaterialQuery = `UPDATE materials SET ${updateFields.join(', ')} WHERE id = $${queryParamIndex} RETURNING *`;
-        const result = await pool.query(updateMaterialQuery, values);
-
+        const fields = [], values = []; let idx = 1;
+        if (title !== undefined) { fields.push(`title = $${idx++}`); values.push(title); }
+        if (description !== undefined) { fields.push(`description = $${idx++}`); values.push(description); }
+        if (category !== undefined) { fields.push(`category = $${idx++}`); values.push(category); }
+        if (price !== undefined) { fields.push(`price = $${idx++}`); values.push(price ? parseFloat(price) : 0.00); }
+        if (file_url !== undefined) { fields.push(`file_url = $${idx++}`); values.push(file_url); }
+        if (cover_image_url !== undefined) { fields.push(`cover_image_url = $${idx++}`); values.push(cover_image_url); }
+        if (status !== undefined) { fields.push(`status = $${idx++}`); values.push(status); }
+        if (is_featured !== undefined) { fields.push(`is_featured = $${idx++}`); values.push(is_featured); }
+        if (discount_price !== undefined) { fields.push(`discount_price = $${idx++}`); values.push(discount_price ? parseFloat(discount_price) : null); }
+        if (fields.length === 0) return res.status(400).json({ message: 'Brak danych do aktualizacji.' });
+        values.push(materialId);
+        const query = `UPDATE materials SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+        const result = await pool.query(query, values);
         if (result.rowCount === 0) return res.status(404).json({ message: 'Nie znaleziono materiału.' });
         res.json({ message: 'Materiał zaktualizowany.', material: result.rows[0] });
-    } catch (error) {
-        console.error(`Błąd /api/admin/materials/:id (PUT) dla ID ${materialId}:`, error);
-        res.status(500).json({ message: 'Błąd serwera.' });
-    }
+    } catch (error) { console.error(`Błąd /api/admin/materials/:id (PUT) dla ID ${materialId}:`, error); res.status(500).json({ message: 'Błąd serwera.' }); }
 });
 app.delete('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res) => { /* bez zmian */ 
     const materialIdToDelete = parseInt(req.params.id);
@@ -494,7 +529,7 @@ app.delete('/api/admin/materials/:id', isAuthenticated, isAdmin, async (req, res
 });
 
 // API Endpoints dla Ustawień Administratora (bez zmian)
-app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => { /* ... */ 
     try {
         const result = await pool.query('SELECT setting_key, setting_value FROM app_settings');
         const settings = result.rows.reduce((acc, row) => {
@@ -512,7 +547,7 @@ app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
         res.json(settings);
     } catch (error) { console.error("Błąd /api/admin/settings (GET):", error); res.status(500).json({ message: 'Błąd serwera.' }); }
 });
-app.post('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+app.post('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => { /* ... */ 
     const settingsToUpdate = req.body;
     const client = await pool.connect();
     try {
@@ -528,7 +563,7 @@ app.post('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
     } catch (error) { await client.query('ROLLBACK'); console.error("Błąd /api/admin/settings (POST):", error); res.status(500).json({ message: 'Błąd serwera.' });
     } finally { client.release(); }
 });
-app.post('/api/admin/settings/test-smtp', isAuthenticated, isAdmin, async (req, res) => {
+app.post('/api/admin/settings/test-smtp', isAuthenticated, isAdmin, async (req, res) => { /* ... */ 
     try {
         let adminEmailToTest = process.env.ADMIN_EMAIL;
         const adminEmailSetting = await pool.query("SELECT setting_value FROM app_settings WHERE setting_key = 'adminEmail'");
@@ -541,19 +576,15 @@ app.post('/api/admin/settings/test-smtp', isAuthenticated, isAdmin, async (req, 
     } catch (error) { console.error("Błąd /api/admin/settings/test-smtp:", error); res.status(500).json({ message: `Błąd wysyłki: ${error.message || 'Błąd SMTP'}` }); }
 });
 
-// === PUBLICZNE API Endpoints dla Materiałów (dla zalogowanych użytkowników) ===
-// Zaktualizowano, aby zwracać is_featured i discount_price
-app.get('/api/materials', isAuthenticated, async (req, res) => {
+// === PUBLICZNE API Endpoints dla Materiałów (bez zmian) ===
+app.get('/api/materials', isAuthenticated, async (req, res) => { /* ... */ 
     try {
         const queryText = "SELECT id, title, description, category, price, cover_image_url, status, is_featured, discount_price, created_at FROM materials WHERE status = 'published' ORDER BY created_at DESC";
         const result = await pool.query(queryText);
         res.json(result.rows);
-    } catch (error) {
-        console.error("Błąd /api/materials (GET):", error);
-        res.status(500).json({ message: 'Błąd serwera podczas pobierania materiałów.' });
-    }
+    } catch (error) { console.error("Błąd /api/materials (GET):", error); res.status(500).json({ message: 'Błąd serwera.' }); }
 });
-app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => { /* bez zmian */ 
+app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => { /* ... */ 
     const materialId = parseInt(req.params.id);
     const userId = req.session.userId;
     if (isNaN(materialId)) return res.status(400).json({ message: 'Nieprawidłowe ID.' });
@@ -568,7 +599,7 @@ app.post('/api/materials/:id/acquire', isAuthenticated, async (req, res) => { /*
         res.status(201).json({ message: `Materiał "${material.title}" dodany do konta.` });
     } catch (error) { res.status(500).json({ message: 'Błąd serwera.' }); }
 });
-app.get('/api/my-materials', isAuthenticated, async (req, res) => { /* bez zmian */ 
+app.get('/api/my-materials', isAuthenticated, async (req, res) => { /* ... */ 
     const userId = req.session.userId;
     try {
         const query = `SELECT m.id, m.title, m.description, m.category, m.cover_image_url, m.file_url, um.acquired_at FROM materials m JOIN user_materials um ON m.id = um.material_id WHERE um.user_id = $1 ORDER BY um.acquired_at DESC;`;
@@ -583,7 +614,6 @@ async function startServer() {
         await initializeDatabase();
         app.listen(PORT, () => {
             console.log(`Serwer uruchomiony na porcie ${PORT}`);
-            // ... (reszta logów startowych, można je skrócić dla czytelności)
             console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
             console.log('--- Serwer gotowy ---');
         });
