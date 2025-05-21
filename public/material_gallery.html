@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* gray-100, jaśniejsze tło */
+            background-color: #f7fafc; /* gray-100 */
         }
         .btn {
             @apply inline-block px-6 py-2.5 text-center font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
@@ -24,21 +24,39 @@
         .btn-sm {
             @apply px-4 py-2 text-sm;
         }
-        .card {
-            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl flex flex-col h-full border border-gray-200 hover:border-blue-400;
+        
+        /* Nowy styl dla panelu materiału */
+        .material-panel {
+            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5;
         }
-        .card-content {
-            @apply p-5 flex-grow flex flex-col;
+        .material-icon-container {
+            @apply flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200;
         }
-        .card-actions {
-            @apply p-5 pt-0 mt-auto; /* Zapewnia, że przycisk jest na dole */
+        .material-icon {
+            @apply w-full h-full object-contain; /* Zmieniono z object-cover na object-contain dla ikon */
         }
-        .card-image-container { /* Nowy kontener dla obrazka i odznak */
-            @apply w-full h-52 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden group;
+        .material-icon-placeholder {
+            @apply text-3xl text-gray-400;
         }
-        .card-image-container img {
-            @apply w-full h-full object-cover transition-transform duration-300 group-hover:scale-110;
+        .material-details {
+            @apply flex-grow;
         }
+        .material-title {
+            @apply text-lg sm:text-xl font-semibold text-gray-800 mb-1;
+        }
+        .material-category-badge {
+            @apply text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full inline-block mb-2;
+        }
+        .material-description {
+            @apply text-sm text-gray-600 mb-2 leading-relaxed;
+        }
+        .material-price-section {
+            @apply text-gray-800 font-semibold mt-2 text-base sm:text-lg;
+        }
+        .material-actions {
+            @apply mt-4 sm:mt-0 sm:ml-auto flex-shrink-0;
+        }
+
         .loader {
             border: 5px solid #e2e8f0; /* gray-200 */
             border-top: 5px solid #3b82f6; /* blue-500 */
@@ -55,39 +73,14 @@
         .filter-select, .filter-input {
             @apply block w-full sm:w-auto text-sm px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow hover:shadow-md;
         }
-        .horizontal-scroll-container {
-            @apply flex overflow-x-auto space-x-6 pb-6 -mb-6; /* pb-6 dla scrollbara, -mb-6 do ukrycia */
-        }
-        .horizontal-scroll-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        .horizontal-scroll-container::-webkit-scrollbar-thumb {
-            background: #9ca3af; /* gray-400 */
-            border-radius: 10px;
-        }
-        .horizontal-scroll-container::-webkit-scrollbar-track {
-            background: #e5e7eb; /* gray-200 */
-            border-radius: 10px;
-        }
-        .horizontal-scroll-container .card {
-            min-width: 290px; 
-            max-width: 330px;
-        }
-        .badge {
-            @apply absolute top-3 right-3 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md;
-        }
-        .badge-deal { @apply bg-red-500; }
-        .badge-featured { @apply bg-yellow-500 text-yellow-900 left-3 right-auto; }
-
+        
+        /* Usunięto style dla horizontal-scroll-container i badge, bo zmieniamy layout */
         .strikethrough {
             text-decoration: line-through;
             color: #6b7280; /* gray-500 */
         }
         .section-title {
             @apply text-3xl font-bold text-gray-800 mb-3;
-        }
-        .section-subtitle {
-            @apply text-gray-600 mb-6 text-lg;
         }
         .header-link {
              @apply text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
@@ -173,7 +166,7 @@
                  <i class="fas fa-star text-yellow-400 text-2xl mr-3"></i>
                 <h2 class="section-title !mb-0">Polecane dla Ciebie</h2>
             </div>
-            <div id="featured-materials-grid" class="horizontal-scroll-container">
+            <div id="featured-materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 </div>
             <div id="no-featured-materials-message" class="hidden text-center py-6 text-gray-500">
                 <p>Brak polecanych materiałów w tej chwili.</p>
@@ -185,7 +178,7 @@
                 <i class="fas fa-tags text-red-500 text-2xl mr-3"></i>
                 <h2 class="section-title !mb-0">Okazje Cenowe</h2>
             </div>
-            <div id="deals-materials-grid" class="horizontal-scroll-container">
+            <div id="deals-materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 </div>
              <div id="no-deals-materials-message" class="hidden text-center py-6 text-gray-500">
                 <p>Aktualnie brak specjalnych okazji.</p>
@@ -194,8 +187,7 @@
 
         <section id="all-materials-section">
             <h2 class="section-title mb-6" id="all-materials-title">Wszystkie Materiały</h2>
-            <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                </div>
+            <div id="materials-grid" class="space-y-6"> </div>
             <div id="loader-container" class="col-span-full flex justify-center items-center py-10">
                 <div class="loader"></div>
             </div>
@@ -227,8 +219,7 @@
     <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-[100] hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
         <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="messageModalBox">
             <div class="text-center">
-                <div id="messageModalIcon" class="text-5xl mb-4">
-                    </div>
+                <div id="messageModalIcon" class="text-5xl mb-4"></div>
                 <h3 id="messageModalTitle" class="text-2xl font-semibold mb-3 text-gray-800">Komunikat</h3>
                 <p id="messageModalText" class="text-gray-600 mb-6 text-base"></p>
                 <button id="messageModalCloseBtn" class="btn btn-primary w-full sm:w-auto">Rozumiem</button>
@@ -257,14 +248,13 @@
     <script>
         document.getElementById('currentYearGallery').textContent = new Date().getFullYear();
 
-        // --- Elementy DOM ---
+        // --- Elementy DOM (bez zmian) ---
         const messageModal = document.getElementById('messageModal');
         const messageModalBox = document.getElementById('messageModalBox');
         const messageModalTitle = document.getElementById('messageModalTitle');
         const messageModalText = document.getElementById('messageModalText');
         const messageModalCloseBtn = document.getElementById('messageModalCloseBtn');
         const messageModalIcon = document.getElementById('messageModalIcon');
-
 
         const cartModal = document.getElementById('cartModal');
         const cartModalBox = document.getElementById('cartModalBox');
@@ -294,59 +284,33 @@
         let allFetchedMaterials = [];
         let displayedMaterials = [];
         let uniqueCategories = new Set();
-        const ITEMS_PER_PAGE = 8; 
+        const ITEMS_PER_PAGE = 10; // Zwiększono liczbę dla widoku listy
         let currentPage = 1;
 
-        // --- Funkcje Modala ---
-        function showModal(title, message, type = 'info') { // type: 'info', 'success', 'error'
+        // --- Funkcje Modala (bez zmian) ---
+        function showModal(title, message, type = 'info') {
             if (!messageModal || !messageModalTitle || !messageModalText || !messageModalIcon || !messageModalBox) return;
-            
-            messageModalTitle.textContent = title;
-            messageModalText.textContent = message;
-            
-            messageModalIcon.innerHTML = ''; // Clear previous icon
-            if (type === 'success') {
-                messageModalIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
-            } else if (type === 'error') {
-                messageModalIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
-            } else { // info or default
-                messageModalIcon.innerHTML = '<i class="fas fa-info-circle text-blue-500"></i>';
-            }
-
+            messageModalTitle.textContent = title; messageModalText.textContent = message;
+            messageModalIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-500"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-500"></i>' : '<i class="fas fa-info-circle text-blue-500"></i>';
             messageModal.classList.remove('hidden', 'opacity-0');
-            setTimeout(() => { // Timeout for transition
-                 messageModalBox.classList.remove('opacity-0', 'scale-95');
-                 messageModalBox.classList.add('opacity-100', 'scale-100');
-            }, 10);
+            setTimeout(() => { messageModalBox.classList.remove('opacity-0', 'scale-95'); messageModalBox.classList.add('opacity-100', 'scale-100'); }, 10);
         }
-
         function hideModal() {
             if (!messageModal || !messageModalBox) return;
-            messageModalBox.classList.remove('opacity-100', 'scale-100');
-            messageModalBox.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => {
-                messageModal.classList.add('hidden', 'opacity-0');
-            }, 300); // Match transition duration
+            messageModalBox.classList.remove('opacity-100', 'scale-100'); messageModalBox.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => messageModal.classList.add('hidden', 'opacity-0'), 300);
         }
-
         if (messageModalCloseBtn) messageModalCloseBtn.addEventListener('click', hideModal);
-        if (messageModal) messageModal.addEventListener('click', (e) => { if (e.target === messageModal) hideModal(); }); // Close on overlay click
-
+        if (messageModal) messageModal.addEventListener('click', (e) => { if (e.target === messageModal) hideModal(); });
 
         function toggleCartModal(show) {
             if (!cartModal || !cartModalBox) return;
             if (show) {
                 cartModal.classList.remove('hidden', 'opacity-0');
-                setTimeout(() => {
-                    cartModalBox.classList.remove('opacity-0', 'scale-95');
-                    cartModalBox.classList.add('opacity-100', 'scale-100');
-                }, 10);
+                setTimeout(() => { cartModalBox.classList.remove('opacity-0', 'scale-95'); cartModalBox.classList.add('opacity-100', 'scale-100'); }, 10);
             } else {
-                cartModalBox.classList.remove('opacity-100', 'scale-100');
-                cartModalBox.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    cartModal.classList.add('hidden', 'opacity-0');
-                }, 300);
+                cartModalBox.classList.remove('opacity-100', 'scale-100'); cartModalBox.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => cartModal.classList.add('hidden', 'opacity-0'), 300);
             }
         }
         if(cartButtonHeader) cartButtonHeader.addEventListener('click', () => toggleCartModal(true));
@@ -356,56 +320,67 @@
         if(cartModal) cartModal.addEventListener('click', (e) => { if(e.target === cartModal) toggleCartModal(false); });
 
 
-        // --- Renderowanie Kart Materiałów ---
-        function createMaterialCard(material) {
+        // --- Renderowanie Paneli Materiałów ---
+        function createMaterialPanel(material) { // Zmieniono nazwę funkcji
             const price = parseFloat(material.price);
             const discountPrice = material.discount_price ? parseFloat(material.discount_price) : null;
             
             let priceHtml = '';
             if (discountPrice && discountPrice < price) {
-                priceHtml = `<span class="text-red-500 font-bold text-xl">${discountPrice.toFixed(2)} PLN</span> 
+                priceHtml = `<span class="text-red-500 font-bold text-lg sm:text-xl">${discountPrice.toFixed(2)} PLN</span> 
                              <span class="strikethrough text-sm ml-2">${price.toFixed(2)} PLN</span>`;
             } else {
-                priceHtml = `<span class="font-bold text-xl">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
+                priceHtml = `<span class="font-bold text-lg sm:text-xl">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
+            }
+            
+            // Domyślna ikona, jeśli cover_image_url nie jest dostępny lub nie jest ikoną
+            let iconHtml = `<span class="material-icon-placeholder"><i class="fas fa-photo-video"></i></span>`; // Domyślna ikona Font Awesome
+            if (material.cover_image_url) {
+                 // Jeśli cover_image_url to link do obrazka, użyj go jako małej ikonki.
+                 // Dla lepszego efektu, można by dodać logikę sprawdzania, czy URL prowadzi do małej ikony,
+                 // lub dodać osobne pole w bazie na URL ikony.
+                iconHtml = `<img src="${material.cover_image_url}" alt="Ikona" class="material-icon" onerror="this.parentElement.innerHTML = '<span class=\\'material-icon-placeholder\\'><i class=\\'fas fa-photo-video\\'></i></span>';">`;
             }
 
+
             return `
-                <div class="card group wow-animate"> <a href="#" class="block card-image-container acquire-material-link" data-material-id="${material.id}" data-material-title="${material.title}">
-                        <img src="${material.cover_image_url || 'https://placehold.co/600x400/CBD5E0/718096?text=Brak+Obrazka'}" 
-                             alt="${material.title}" 
-                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/CBD5E0/718096?text=B%C5%82%C4%85d+URL';">
-                        ${discountPrice && discountPrice < price ? '<span class="badge badge-deal">OKAZJA!</span>' : ''}
-                        ${material.is_featured ? '<span class="badge badge-featured"><i class="fas fa-star fa-xs mr-1"></i>Polecane</span>' : ''}
-                    </a>
-                    <div class="card-content">
-                        <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full mb-3 inline-block self-start">${material.category || 'Ogólne'}</span>
-                        <h3 class="text-lg font-semibold mb-2 text-gray-800 h-14 overflow-hidden leading-tight">${material.title}</h3>
-                        <p class="text-gray-600 text-sm mb-4 h-20 overflow-hidden">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
-                        <div class="text-gray-800 mt-auto">
+                <div class="material-panel group">
+                    <div class="material-icon-container">
+                        ${iconHtml}
+                    </div>
+                    <div class="material-details">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
+                            <h3 class="material-title">${material.title}</h3>
+                            ${material.is_featured ? '<span class="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full inline-block mt-1 sm:mt-0 sm:ml-2 self-start"><i class="fas fa-star fa-xs"></i> Polecane</span>' : ''}
+                        </div>
+                        <span class="material-category-badge">${material.category || 'Ogólne'}</span>
+                        <p class="material-description">${material.description ? material.description.substring(0, 150) + (material.description.length > 150 ? '...' : '') : 'Brak opisu.'}</p>
+                    </div>
+                    <div class="material-actions flex flex-col items-start sm:items-end gap-2">
+                        <div class="material-price-section">
                             ${priceHtml}
                         </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn btn-primary w-full text-sm acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${price > 0 ? price : 0}">
-                            <i class="fas fa-shopping-bag mr-2"></i> ${price > 0 ? 'Kup i Pobierz' : 'Pobierz'}
+                        ${discountPrice && discountPrice < price ? '<span class="text-xs text-red-500 font-medium">OKAZJA!</span>' : ''}
+                        <button class="btn btn-primary btn-sm w-full sm:w-auto acquire-material-btn" data-material-id="${material.id}" data-material-title="${material.title}" data-price="${price > 0 ? price : 0}">
+                            <i class="fas fa-shopping-bag mr-1.5"></i> ${price > 0 ? 'Kup' : 'Pobierz'}
                         </button>
                     </div>
                 </div>
             `;
         }
         
-        // --- Logika Pobierania i Wyświetlania Materiałów ---
+        // --- Logika Pobierania i Wyświetlania Materiałów (dostosowana do paneli) ---
         async function fetchAndProcessMaterials() {
             if (!loaderContainer || !noMaterialsMessage || !errorMessageContainer) return;
             loaderContainer.style.display = 'flex';
-            if (materialsGrid) materialsGrid.innerHTML = '';
+            if (materialsGrid) materialsGrid.innerHTML = ''; 
             noMaterialsMessage.classList.add('hidden');
             errorMessageContainer.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/materials', { credentials: 'include' });
                 if (response.status === 401 || response.status === 403) {
-                    showModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać materiały. Przekierowuję...', 'error');
+                    showModal('Brak dostępu', 'Musisz być zalogowany. Przekierowuję...', 'error');
                     setTimeout(() => { window.location.href = '/login.html?redirect=/material_gallery.html'; }, 3000);
                     return;
                 }
@@ -414,13 +389,11 @@
                 allFetchedMaterials = await response.json();
                 
                 uniqueCategories.clear();
-                allFetchedMaterials.forEach(m => {
-                    if (m.category) uniqueCategories.add(m.category);
-                });
+                allFetchedMaterials.forEach(m => { if (m.category) uniqueCategories.add(m.category); });
                 populateCategoryFilter();
 
-                displayFeaturedMaterials();
-                displayDealsMaterials();
+                displayFeaturedMaterialsAsPanels(); // Zmieniona funkcja
+                displayDealsMaterialsAsPanels();    // Zmieniona funkcja
                 
                 applyFiltersAndSort(); 
 
@@ -432,12 +405,12 @@
             }
         }
 
-        function displayFeaturedMaterials() {
+        function displayFeaturedMaterialsAsPanels() {
             if (!featuredMaterialsGrid || !featuredSection || !noFeaturedMessage) return;
-            const featured = allFetchedMaterials.filter(m => m.is_featured === true).slice(0, 6); 
+            const featured = allFetchedMaterials.filter(m => m.is_featured === true).slice(0, 4); // Max 4 w siatce
             featuredMaterialsGrid.innerHTML = '';
             if (featured.length > 0) {
-                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
+                featured.forEach(material => featuredMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)));
                 featuredSection.classList.remove('hidden');
                 noFeaturedMessage.classList.add('hidden');
             } else {
@@ -445,12 +418,12 @@
             }
         }
 
-        function displayDealsMaterials() {
+        function displayDealsMaterialsAsPanels() {
             if (!dealsMaterialsGrid || !dealsSection || !noDealsMessage) return;
-            const deals = allFetchedMaterials.filter(m => m.discount_price && parseFloat(m.discount_price) < parseFloat(m.price)).slice(0,6);
+            const deals = allFetchedMaterials.filter(m => m.discount_price && parseFloat(m.discount_price) < parseFloat(m.price)).slice(0,4); // Max 4 w siatce
             dealsMaterialsGrid.innerHTML = '';
             if (deals.length > 0) {
-                deals.forEach(material => dealsMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material)));
+                deals.forEach(material => dealsMaterialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)));
                 dealsSection.classList.remove('hidden');
                 noDealsMessage.classList.add('hidden');
             } else {
@@ -458,69 +431,45 @@
             }
         }
         
-        function populateCategoryFilter() {
+        function populateCategoryFilter() { /* Bez zmian */
             if (!categoryFilter) return;
             const firstOption = categoryFilter.options[0];
-            categoryFilter.innerHTML = '';
-            categoryFilter.appendChild(firstOption);
+            categoryFilter.innerHTML = ''; categoryFilter.appendChild(firstOption);
             uniqueCategories.forEach(category => {
                 const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
+                option.value = category; option.textContent = category;
                 categoryFilter.appendChild(option);
             });
         }
 
-        function applyFiltersAndSort() {
+        function applyFiltersAndSort() { /* Bez zmian w logice filtrowania/sortowania */
             if (!materialsGrid) return;
             let filtered = [...allFetchedMaterials];
             const searchTerm = searchInput.value.toLowerCase().trim();
             const selectedCategory = categoryFilter.value;
             const sortBy = sortFilter.value;
 
-            if (searchTerm) {
-                filtered = filtered.filter(m => 
-                    m.title.toLowerCase().includes(searchTerm) || 
-                    (m.description && m.description.toLowerCase().includes(searchTerm)) ||
-                    (m.category && m.category.toLowerCase().includes(searchTerm))
-                );
-            }
-            if (selectedCategory) {
-                filtered = filtered.filter(m => m.category === selectedCategory);
-            }
-
-            switch (sortBy) {
-                case 'price_asc':
-                    filtered.sort((a, b) => (parseFloat(a.discount_price || a.price)) - (parseFloat(b.discount_price || b.price)));
-                    break;
-                case 'price_desc':
-                    filtered.sort((a, b) => (parseFloat(b.discount_price || b.price)) - (parseFloat(a.discount_price || a.price)));
-                    break;
-                case 'title_asc':
-                    filtered.sort((a, b) => a.title.localeCompare(b.title, 'pl', { sensitivity: 'base' }));
-                    break;
-                case 'title_desc':
-                    filtered.sort((a, b) => b.title.localeCompare(a.title, 'pl', { sensitivity: 'base' }));
-                    break;
-                case 'newest':
-                default:
-                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
-            }
+            if (searchTerm) filtered = filtered.filter(m => m.title.toLowerCase().includes(searchTerm) || (m.description && m.description.toLowerCase().includes(searchTerm)) || (m.category && m.category.toLowerCase().includes(searchTerm)));
+            if (selectedCategory) filtered = filtered.filter(m => m.category === selectedCategory);
             
+            switch (sortBy) {
+                case 'price_asc': filtered.sort((a, b) => (parseFloat(a.discount_price || a.price)) - (parseFloat(b.discount_price || b.price))); break;
+                case 'price_desc': filtered.sort((a, b) => (parseFloat(b.discount_price || b.price)) - (parseFloat(a.discount_price || a.price))); break;
+                case 'title_asc': filtered.sort((a, b) => a.title.localeCompare(b.title, 'pl', { sensitivity: 'base' })); break;
+                case 'title_desc': filtered.sort((a, b) => b.title.localeCompare(a.title, 'pl', { sensitivity: 'base' })); break;
+                default: filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+            }
             displayedMaterials = filtered;
             currentPage = 1; 
             renderMaterialsPage();
             updateAllMaterialsTitle(selectedCategory);
         }
         
-        function updateAllMaterialsTitle(category) {
-            if(allMaterialsTitle) {
-                allMaterialsTitle.textContent = category ? `Materiały w Kategorii: ${category}` : 'Wszystkie Materiały';
-            }
+        function updateAllMaterialsTitle(category) { /* Bez zmian */
+            if(allMaterialsTitle) allMaterialsTitle.textContent = category ? `Materiały w Kategorii: ${category}` : 'Wszystkie Materiały';
         }
 
-        function renderMaterialsPage() {
+        function renderMaterialsPage() { // Dostosowane do renderowania paneli
             if (!materialsGrid || !noMaterialsMessage || !loadMoreButton) return;
             const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
             const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -531,65 +480,52 @@
             else noMaterialsMessage.classList.add('hidden');
 
             materialsToDisplay.forEach(material => {
-                materialsGrid.insertAdjacentHTML('beforeend', createMaterialCard(material));
+                materialsGrid.insertAdjacentHTML('beforeend', createMaterialPanel(material)); // Używa nowej funkcji
             });
 
             if (endIndex < displayedMaterials.length) loadMoreButton.classList.remove('hidden');
             else loadMoreButton.classList.add('hidden');
         }
 
+        // --- Event Listeners (bez większych zmian w logice, tylko ewentualnie selektory) ---
         if(loadMoreButton) loadMoreButton.addEventListener('click', () => { currentPage++; renderMaterialsPage(); });
         if(searchInput) searchInput.addEventListener('input', debounce(applyFiltersAndSort, 300));
         if(categoryFilter) categoryFilter.addEventListener('change', applyFiltersAndSort);
         if(sortFilter) sortFilter.addEventListener('change', applyFiltersAndSort);
 
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
+        function debounce(func, delay) { /* Bez zmian */
+            let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
         }
 
-        if (materialsGrid) { 
-            materialsGrid.addEventListener('click', async function(event) {
-                const buttonToProcess = event.target.closest('.acquire-material-btn, .acquire-material-link');
-                if (!buttonToProcess) return;
-                
-                event.preventDefault(); // Zapobiegaj domyślnej akcji linku
-                
-                const actualButton = buttonToProcess.classList.contains('acquire-material-btn') 
-                                   ? buttonToProcess 
-                                   : buttonToProcess.closest('.card').querySelector('.acquire-material-btn');
-
-                if (!actualButton) return;
-
-                const materialId = actualButton.dataset.materialId;
-                const materialTitle = actualButton.dataset.materialTitle;
-                const originalButtonHTML = actualButton.innerHTML;
-                
-                try {
-                    actualButton.disabled = true;
-                    actualButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...';
-
-                    const acquireResponse = await fetch(`/api/materials/${materialId}/acquire`, { 
-                        method: 'POST', credentials: 'include'
-                    });
-                    const acquireData = await acquireResponse.json();
-
-                    if (!acquireResponse.ok) throw new Error(acquireData.message || 'Nie udało się dodać materiału.');
+        if (materialsGrid || featuredMaterialsGrid || dealsMaterialsGrid) { 
+            const allGrids = [materialsGrid, featuredMaterialsGrid, dealsMaterialsGrid].filter(g => g); // Filtruj null/undefined
+            allGrids.forEach(grid => {
+                grid.addEventListener('click', async function(event) {
+                    const buttonToProcess = event.target.closest('.acquire-material-btn'); // Tylko przycisk, link usunięty z obrazka
+                    if (!buttonToProcess) return;
                     
-                    showModal('Sukces!', `${acquireData.message} "${materialTitle}". Zostaniesz przekierowany do panelu użytkownika.`, 'success');
-                    setTimeout(() => { window.location.href = '/dashboard.html'; }, 3500);
-
-                } catch (error) {
-                    showModal('Błąd', `Nie udało się nabyć materiału "${materialTitle}". ${error.message}`, 'error');
-                    actualButton.disabled = false;
-                    actualButton.innerHTML = originalButtonHTML;
-                }
+                    const materialId = buttonToProcess.dataset.materialId;
+                    const materialTitle = buttonToProcess.dataset.materialTitle;
+                    const originalButtonHTML = buttonToProcess.innerHTML;
+                    
+                    try {
+                        buttonToProcess.disabled = true;
+                        buttonToProcess.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Przetwarzanie...';
+                        const acquireResponse = await fetch(`/api/materials/${materialId}/acquire`, { method: 'POST', credentials: 'include' });
+                        const acquireData = await acquireResponse.json();
+                        if (!acquireResponse.ok) throw new Error(acquireData.message || 'Nie udało się dodać materiału.');
+                        showModal('Sukces!', `${acquireData.message} "${materialTitle}". Zostaniesz przekierowany do panelu użytkownika.`, 'success');
+                        setTimeout(() => { window.location.href = '/dashboard.html'; }, 3500);
+                    } catch (error) {
+                        showModal('Błąd', `Nie udało się nabyć materiału "${materialTitle}". ${error.message}`, 'error');
+                        buttonToProcess.disabled = false;
+                        buttonToProcess.innerHTML = originalButtonHTML;
+                    }
+                });
             });
         }
         
+        // Logika wylogowania i menu mobilnego (bez zmian)
         function handleLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
                 .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
@@ -620,7 +556,7 @@
             });
         }
         
-        async function verifyUserIsLoggedInAndInit() {
+        async function verifyUserIsLoggedInAndInit() { /* Bez zmian */
             try {
                 const response = await fetch('/api/user', { credentials: 'include' });
                 if (!response.ok) {

@@ -27,24 +27,42 @@
         .btn-sm {
             @apply px-4 py-2 text-sm;
         }
-        .card {
-            @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl flex flex-col h-full border border-gray-200 hover:border-blue-400;
+
+        /* Styl dla panelu materiału w dashboardzie */
+        .material-panel {
+            @apply bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-200 hover:border-blue-400 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5;
         }
-        .card-content {
-            @apply p-5 flex-grow flex flex-col;
+        .material-icon-container {
+            @apply flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200;
         }
-        .card-actions {
-            @apply p-5 pt-0 mt-auto;
+        .material-icon {
+            @apply w-full h-full object-contain;
         }
-        .card-image-container {
-            @apply w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden group;
+        .material-icon-placeholder {
+            @apply text-3xl text-gray-400;
         }
-        .card-image-container img {
-            @apply w-full h-full object-cover transition-transform duration-300 group-hover:scale-110;
+        .material-details {
+            @apply flex-grow;
         }
+        .material-title {
+            @apply text-lg sm:text-xl font-semibold text-gray-800 mb-1;
+        }
+        .material-category-badge {
+            @apply text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full inline-block mb-2;
+        }
+        .material-description { /* Skrócony opis w dashboardzie */
+            @apply text-sm text-gray-600 mb-2 leading-relaxed max-h-12 overflow-hidden; /* max-h-12 to około 2 linie */
+        }
+        .material-acquired-date {
+            @apply text-xs text-gray-500 mt-auto;
+        }
+        .material-actions {
+            @apply mt-4 sm:mt-0 sm:ml-auto flex-shrink-0;
+        }
+
         .loader {
-            border: 5px solid #e2e8f0; /* gray-200 */
-            border-top: 5px solid #3b82f6; /* blue-500 */
+            border: 5px solid #e2e8f0; 
+            border-top: 5px solid #3b82f6;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -119,18 +137,17 @@
             <nav class="-mb-px flex space-x-6" aria-label="Dashboard Tabs" id="dashboard-tabs">
                 <button data-tab="my-materials" class="tab-button tab-button-active">Moje Materiały</button>
                 <button data-tab="account-settings" class="tab-button tab-button-inactive nav-account-settings">Ustawienia Konta</button>
-                </nav>
+            </nav>
         </div>
 
         <section id="my-materials-section" class="dashboard-tab-content">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl font-semibold text-gray-800">Twoje Nabyte Materiały</h2>
                 <a href="/material_gallery.html" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej Materiałów
+                    <i class="fas fa-plus-circle mr-2"></i>Przeglądaj Więcej
                 </a>
             </div>
-            <div id="my-materials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
+            <div id="my-materials-grid" class="space-y-6"> <div id="my-materials-loader" class="col-span-full flex justify-center items-center py-10">
                     <div class="loader"></div>
                 </div>
                 <div id="no-my-materials-message" class="hidden col-span-full text-center py-16 text-gray-500">
@@ -151,11 +168,11 @@
             <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Dane Osobowe</h3>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-user-edit mr-2 text-blue-500"></i>Dane Osobowe</h3>
                         <form id="profileUpdateForm" class="space-y-4">
                             <div>
                                 <label for="profileUsername" class="form-label">Nazwa użytkownika</label>
-                                <input type="text" id="profileUsername" name="username" class="form-input" readonly disabled>
+                                <input type="text" id="profileUsername" name="username" class="form-input bg-gray-100 cursor-not-allowed" readonly disabled>
                                 <p class="text-xs text-gray-500 mt-1">Nazwy użytkownika nie można zmienić.</p>
                             </div>
                             <div>
@@ -163,12 +180,12 @@
                                 <input type="email" id="profileEmail" name="email" class="form-input" required>
                             </div>
                             <button type="submit" id="saveProfileButton" class="btn btn-primary w-full sm:w-auto">
-                                <i class="fas fa-save mr-2"></i>Zapisz Zmiany Danych
+                                <i class="fas fa-save mr-2"></i>Zapisz Zmiany
                             </button>
                         </form>
                     </div>
                     <div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Zmień Hasło</h3>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-key mr-2 text-blue-500"></i>Zmień Hasło</h3>
                         <form id="passwordChangeForm" class="space-y-4">
                             <div>
                                 <label for="currentPassword" class="form-label">Aktualne Hasło</label>
@@ -183,19 +200,18 @@
                                 <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
                             </div>
                             <button type="submit" id="changePasswordButton" class="btn btn-primary w-full sm:w-auto">
-                                <i class="fas fa-key mr-2"></i>Zmień Hasło
+                                <i class="fas fa-sync-alt mr-2"></i>Zmień Hasło
                             </button>
                         </form>
                     </div>
                 </div>
                 <div class="mt-8 pt-6 border-t border-gray-200">
-                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Informacje o Koncie</h3>
+                     <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>Informacje o Koncie</h3>
                      <p class="text-gray-600 text-sm">ID Użytkownika: <span id="user-id-placeholder" class="font-mono bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
                      <p class="text-gray-600 text-sm mt-1">Rola: <span id="user-role-placeholder" class="font-medium capitalize bg-gray-100 px-2 py-0.5 rounded">ładowanie...</span></p>
                 </div>
             </div>
         </section>
-
     </main>
 
     <footer class="bg-gray-900 text-gray-400 py-12 text-center mt-auto">
@@ -219,80 +235,62 @@
     <script>
         document.getElementById('currentYearDashboard').textContent = new Date().getFullYear();
 
-        // --- Elementy DOM ---
+        // --- Elementy DOM (bez zmian) ---
         const messageModalDashboard = document.getElementById('messageModalDashboard');
         const messageModalDashboardBox = document.getElementById('messageModalDashboardBox');
         const messageModalDashboardTitle = document.getElementById('messageModalDashboardTitle');
         const messageModalDashboardText = document.getElementById('messageModalDashboardText');
         const messageModalDashboardCloseBtn = document.getElementById('messageModalDashboardCloseBtn');
         const messageModalDashboardIcon = document.getElementById('messageModalDashboardIcon');
-
         const usernamePlaceholder = document.getElementById('username-placeholder');
         const userIdPlaceholder = document.getElementById('user-id-placeholder');
         const userRolePlaceholder = document.getElementById('user-role-placeholder');
-        
         const profileUsernameInput = document.getElementById('profileUsername');
         const profileEmailInput = document.getElementById('profileEmail');
         const profileUpdateForm = document.getElementById('profileUpdateForm');
         const passwordChangeForm = document.getElementById('passwordChangeForm');
-
-
         const myMaterialsGrid = document.getElementById('my-materials-grid');
         const myMaterialsLoader = document.getElementById('my-materials-loader');
         const noMyMaterialsMessage = document.getElementById('no-my-materials-message');
         const errorMyMaterialsMessage = document.getElementById('error-my-materials-message');
-
         const dashboardTabs = document.getElementById('dashboard-tabs');
         const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-        // --- Funkcje Modala ---
+        // --- Funkcje Modala (bez zmian) ---
         function showDashboardModal(title, message, type = 'info') {
             if (!messageModalDashboard || !messageModalDashboardTitle || !messageModalDashboardText || !messageModalDashboardIcon || !messageModalDashboardBox) return;
-            messageModalDashboardTitle.textContent = title;
-            messageModalDashboardText.textContent = message;
-            messageModalDashboardIcon.innerHTML = '';
-            if (type === 'success') messageModalDashboardIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
-            else if (type === 'error') messageModalDashboardIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
-            else messageModalDashboardIcon.innerHTML = '<i class="fas fa-info-circle text-blue-500"></i>';
-            
+            messageModalDashboardTitle.textContent = title; messageModalDashboardText.textContent = message;
+            messageModalDashboardIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle text-green-500"></i>' : type === 'error' ? '<i class="fas fa-times-circle text-red-500"></i>' : '<i class="fas fa-info-circle text-blue-500"></i>';
             messageModalDashboard.classList.remove('hidden', 'opacity-0');
-            setTimeout(() => {
-                 messageModalDashboardBox.classList.remove('opacity-0', 'scale-95');
-                 messageModalDashboardBox.classList.add('opacity-100', 'scale-100');
-            }, 10);
+            setTimeout(() => { messageModalDashboardBox.classList.remove('opacity-0', 'scale-95'); messageModalDashboardBox.classList.add('opacity-100', 'scale-100'); }, 10);
         }
         function hideDashboardModal() {
             if (!messageModalDashboard || !messageModalDashboardBox) return;
-            messageModalDashboardBox.classList.remove('opacity-100', 'scale-100');
-            messageModalDashboardBox.classList.add('opacity-0', 'scale-95');
+            messageModalDashboardBox.classList.remove('opacity-100', 'scale-100'); messageModalDashboardBox.classList.add('opacity-0', 'scale-95');
             setTimeout(() => messageModalDashboard.classList.add('hidden', 'opacity-0'), 300);
         }
         if (messageModalDashboardCloseBtn) messageModalDashboardCloseBtn.addEventListener('click', hideDashboardModal);
         if (messageModalDashboard) messageModalDashboard.addEventListener('click', (e) => { if (e.target === messageModalDashboard) hideDashboardModal(); });
 
-
-        // --- Dane Użytkownika ---
+        // --- Dane Użytkownika (bez zmian) ---
         async function fetchUserData() {
             try {
                 const response = await fetch('/api/user', { credentials: 'include' });
                 if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        showDashboardModal('Brak dostępu', 'Sesja wygasła lub nie jesteś zalogowany. Przekierowuję...', 'error');
+                        showDashboardModal('Brak dostępu', 'Sesja wygasła. Przekierowuję...', 'error');
                         setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
                         return null;
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const userData = await response.json();
-                
                 if (usernamePlaceholder && userData.username) usernamePlaceholder.textContent = userData.username;
                 if (userIdPlaceholder && userData.userId) userIdPlaceholder.textContent = userData.userId;
                 if (userRolePlaceholder && userData.role) userRolePlaceholder.textContent = userData.role;
                 if (profileUsernameInput && userData.username) profileUsernameInput.value = userData.username;
-                if (profileEmailInput && userData.email) profileEmailInput.value = userData.email; // Zakładając, że API zwraca email
+                if (profileEmailInput && userData.email) profileEmailInput.value = userData.email;
                 else if (profileEmailInput && !userData.email) profileEmailInput.placeholder = "Podaj swój email";
-
-
                 return userData;
             } catch (error) {
                 console.error('Nie udało się pobrać danych użytkownika:', error);
@@ -302,24 +300,27 @@
             }
         }
 
-        // --- Nabyte Materiały ---
-        function createMyMaterialCard(material) {
+        // --- Nabyte Materiały (zmienione na panel) ---
+        function createMyMaterialPanel(material) { // Zmieniona nazwa funkcji
             const acquiredDate = material.acquired_at ? new Date(material.acquired_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Nieznana data';
+            let iconHtml = `<span class="material-icon-placeholder"><i class="fas fa-file-alt"></i></span>`; // Domyślna ikona dla dokumentu
+            if (material.cover_image_url) {
+                iconHtml = `<img src="${material.cover_image_url}" alt="Ikona" class="material-icon" onerror="this.parentElement.innerHTML = '<span class=\\'material-icon-placeholder\\'><i class=\\'fas fa-file-alt\\'></i></span>';">`;
+            }
+
             return `
-                <div class="card group">
-                    <div class="card-image-container">
-                        <img src="${material.cover_image_url || 'https://placehold.co/600x400/CBD5E0/718096?text=Brak+Obrazka'}" 
-                             alt="${material.title}" 
-                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/CBD5E0/718096?text=B%C5%82%C4%85d+URL';">
+                <div class="material-panel group">
+                    <div class="material-icon-container">
+                        ${iconHtml}
                     </div>
-                    <div class="card-content">
-                        <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full mb-2 inline-block self-start">${material.category || 'Ogólne'}</span>
-                        <h3 class="text-lg font-semibold mb-1 text-gray-800 h-12 overflow-hidden leading-tight">${material.title}</h3>
-                        <p class="text-gray-600 text-sm mb-3 h-16 overflow-hidden">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
-                        <p class="text-xs text-gray-500 mt-auto">Nabyto: ${acquiredDate}</p>
+                    <div class="material-details">
+                        <h3 class="material-title">${material.title}</h3>
+                        <span class="material-category-badge">${material.category || 'Ogólne'}</span>
+                        <p class="material-description">${material.description ? material.description.substring(0, 100) + (material.description.length > 100 ? '...' : '') : 'Brak opisu.'}</p>
+                        <p class="material-acquired-date">Nabyto: ${acquiredDate}</p>
                     </div>
-                    <div class="card-actions">
-                        ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success w-full text-sm" download><i class="fas fa-download mr-2"></i>Pobierz Materiał</a>` : '<p class="text-sm text-red-500 text-center">Link do pliku niedostępny.</p>'}
+                    <div class="material-actions">
+                        ${material.file_url ? `<a href="${material.file_url}" target="_blank" class="btn btn-success btn-sm w-full sm:w-auto" download><i class="fas fa-download mr-2"></i>Pobierz</a>` : '<p class="text-sm text-red-500 text-center">Link niedostępny</p>'}
                     </div>
                 </div>
             `;
@@ -328,8 +329,8 @@
         async function fetchAndDisplayMyMaterials() {
             if (!myMaterialsGrid || !myMaterialsLoader || !noMyMaterialsMessage || !errorMyMaterialsMessage) return;
             myMaterialsLoader.style.display = 'flex';
-            myMaterialsGrid.innerHTML = ''; // Wyczyść przed ładowaniem
-            myMaterialsGrid.appendChild(myMaterialsLoader); // Dodaj loader z powrotem
+            myMaterialsGrid.innerHTML = ''; 
+            myMaterialsGrid.appendChild(myMaterialsLoader); 
             noMyMaterialsMessage.classList.add('hidden');
             errorMyMaterialsMessage.classList.add('hidden');
 
@@ -337,7 +338,7 @@
                 const response = await fetch('/api/my-materials', { credentials: 'include' });
                  if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
-                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów. Spróbuj zalogować się ponownie.', 'error');
+                        showDashboardModal('Brak dostępu', 'Nie udało się pobrać Twoich materiałów.', 'error');
                          setTimeout(() => { window.location.href = '/login.html?redirect=/dashboard.html'; }, 3000);
                     } else throw new Error(`Błąd HTTP: ${response.status}`);
                     myMaterialsLoader.style.display = 'none';
@@ -349,7 +350,7 @@
                 if (materials.length === 0) {
                     noMyMaterialsMessage.classList.remove('hidden');
                 } else {
-                    materials.forEach(material => myMaterialsGrid.insertAdjacentHTML('beforeend', createMyMaterialCard(material)));
+                    materials.forEach(material => myMaterialsGrid.insertAdjacentHTML('beforeend', createMyMaterialPanel(material))); // Używa nowej funkcji
                 }
             } catch (error) {
                 console.error('Nie udało się pobrać moich materiałów:', error);
@@ -358,7 +359,7 @@
             }
         }
 
-        // --- Ustawienia Konta ---
+        // --- Ustawienia Konta (logika backendowa z server.js) ---
         if (profileUpdateForm) {
             profileUpdateForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -369,19 +370,16 @@
                 saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zapisywanie...';
 
                 try {
-                    // TODO: Endpoint /api/user/profile do aktualizacji emaila (lub innych danych)
-                    // const response = await fetch('/api/user/profile', {
-                    //     method: 'PUT',
-                    //     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    //     body: JSON.stringify({ email }),
-                    //     credentials: 'include'
-                    // });
-                    // const result = await response.json();
-                    // if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji profilu.');
-                    // showDashboardModal('Sukces', result.message || 'Profil zaktualizowany!', 'success');
-                    console.warn("Logika aktualizacji profilu (email) nie jest jeszcze zaimplementowana na backendzie.");
-                    showDashboardModal('Informacja', 'Funkcjonalność aktualizacji emaila jest w przygotowaniu.', 'info');
-
+                    const response = await fetch('/api/user/profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ email }),
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji profilu.');
+                    showDashboardModal('Sukces', result.message || 'Profil zaktualizowany!', 'success');
+                    await fetchUserData(); // Odśwież dane użytkownika po zmianie
                 } catch (error) {
                     showDashboardModal('Błąd', error.message, 'error');
                 } finally {
@@ -401,34 +399,25 @@
                 const originalButtonText = changeButton.innerHTML;
 
                 if (newPassword !== confirmNewPassword) {
-                    showDashboardModal('Błąd', 'Nowe hasła nie są zgodne.', 'error');
-                    return;
+                    showDashboardModal('Błąd', 'Nowe hasła nie są zgodne.', 'error'); return;
                 }
                 if (newPassword.length < 6) {
-                    showDashboardModal('Błąd', 'Nowe hasło musi mieć co najmniej 6 znaków.', 'error');
-                    return;
+                    showDashboardModal('Błąd', 'Nowe hasło musi mieć co najmniej 6 znaków.', 'error'); return;
                 }
                 
                 changeButton.disabled = true;
                 changeButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Zmienianie...';
-
                 try {
-                    // TODO: Endpoint /api/user/password do zmiany hasła
-                    // const response = await fetch('/api/user/password', {
-                    //     method: 'PUT',
-                    //     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    //     body: JSON.stringify({ currentPassword, newPassword }),
-                    //     credentials: 'include'
-                    // });
-                    // const result = await response.json();
-                    // if (!response.ok) throw new Error(result.message || 'Błąd zmiany hasła.');
-                    // showDashboardModal('Sukces', result.message || 'Hasło zmienione!', 'success');
-                    // passwordChangeForm.reset();
-                     console.warn("Logika zmiany hasła nie jest jeszcze zaimplementowana na backendzie.");
-                    showDashboardModal('Informacja', 'Funkcjonalność zmiany hasła jest w przygotowaniu.', 'info');
+                    const response = await fetch('/api/user/password', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ currentPassword, newPassword }),
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Błąd zmiany hasła.');
+                    showDashboardModal('Sukces', result.message || 'Hasło zmienione!', 'success');
                     passwordChangeForm.reset();
-
-
                 } catch (error) {
                     showDashboardModal('Błąd', error.message, 'error');
                 } finally {
@@ -438,58 +427,45 @@
             });
         }
 
-
         // --- Logika Zakładek ---
         if (dashboardTabs) {
             const tabButtons = dashboardTabs.querySelectorAll('.tab-button');
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetTabId = button.dataset.tab;
-                    
                     tabButtons.forEach(btn => {
-                        btn.classList.remove('tab-button-active');
-                        btn.classList.add('tab-button-inactive');
+                        btn.classList.remove('tab-button-active'); btn.classList.add('tab-button-inactive');
                     });
-                    button.classList.remove('tab-button-inactive');
-                    button.classList.add('tab-button-active');
-
+                    button.classList.remove('tab-button-inactive'); button.classList.add('tab-button-active');
                     tabContents.forEach(content => {
-                        if (content.id === `${targetTabId}-section`) {
-                            content.classList.remove('hidden');
-                        } else {
-                            content.classList.add('hidden');
-                        }
+                        content.classList.toggle('hidden', content.id !== `${targetTabId}-section`);
                     });
-                    // Zapisz aktywną zakładkę
                     localStorage.setItem('activeDashboardTab', targetTabId);
                 });
             });
         }
-        
         function setActiveTabFromStorage() {
             const activeTab = localStorage.getItem('activeDashboardTab');
             if (activeTab && dashboardTabs) {
                 const buttonToActivate = dashboardTabs.querySelector(`button[data-tab="${activeTab}"]`);
                 if (buttonToActivate) buttonToActivate.click();
+                else dashboardTabs.querySelector('button[data-tab="my-materials"]').click(); // Domyślna, jeśli zapisana nie istnieje
+            } else if (dashboardTabs) {
+                 dashboardTabs.querySelector('button[data-tab="my-materials"]').click(); // Domyślna, jeśli nic nie zapisano
             }
         }
 
-
-        // --- Logika Wylogowania ---
+        // --- Logika Wylogowania i Menu Mobilne (bez zmian) ---
         function handleDashboardLogout() {
             fetch('/logout', { method: 'GET', credentials: 'include' })
                 .then(response => { window.location.href = (response.ok && response.redirected) ? response.url : '/'; })
-                .catch(error => {
-                    showDashboardModal('Błąd', 'Wystąpił problem podczas wylogowywania.', 'error');
-                    window.location.href = '/';
-                });
+                .catch(error => { showDashboardModal('Błąd', 'Problem z wylogowaniem.', 'error'); window.location.href = '/'; });
         }
         const logoutButtonDesktop = document.getElementById('logout-button-dashboard-desktop');
         const logoutButtonMobile = document.getElementById('logout-button-dashboard-mobile');
         if (logoutButtonDesktop) logoutButtonDesktop.addEventListener('click', handleDashboardLogout);
         if (logoutButtonMobile) logoutButtonMobile.addEventListener('click', handleDashboardLogout);
         
-        // --- Menu Mobilne ---
         const mobileMenuButtonDashboard = document.getElementById('mobile-menu-button-dashboard');
         const mobileMenuDashboard = document.getElementById('mobile-menu-dashboard');
         if (mobileMenuButtonDashboard && mobileMenuDashboard) {
@@ -503,7 +479,7 @@
             mobileMenuDashboard.querySelectorAll('a, button').forEach(link => {
                 link.addEventListener('click', (e) => {
                     if (link.classList.contains('nav-account-settings')) {
-                        e.preventDefault(); // Zapobiegaj domyślnej akcji linku #
+                        e.preventDefault(); 
                         const settingsTabButton = dashboardTabs.querySelector('button[data-tab="account-settings"]');
                         if (settingsTabButton) settingsTabButton.click();
                     }
@@ -518,10 +494,8 @@
         // --- Inicjalizacja ---
         document.addEventListener('DOMContentLoaded', async () => {
             const userData = await fetchUserData();
-            if (userData) { 
-                fetchAndDisplayMyMaterials();
-            }
-            setActiveTabFromStorage(); // Ustaw aktywną zakładkę po załadowaniu DOM
+            if (userData) fetchAndDisplayMyMaterials();
+            setActiveTabFromStorage(); 
         });
     </script>
 
