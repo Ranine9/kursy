@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* bg-gray-50 - jasne tło */
+            background-color: #f9fafb; /* bg-gray-50 */
             color: #1f2937; /* text-gray-800 */
             display: flex;
             flex-direction: column;
@@ -33,59 +33,65 @@
             @apply px-4 py-2 text-sm;
         }
 
-        /* Unified Material Card Styling (inspired by dashboard.html, adapted for gallery) */
+        /* === UNIFIED MATERIAL CARD STYLING (Based on dashboard.html concept) === */
         .material-card {
-            @apply bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 flex flex-col h-full;
+            @apply bg-white rounded-xl shadow-lg overflow-hidden group border border-transparent; /* Added border for consistency */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .material-card-image-wrapper {
-            @apply aspect-[16/10] bg-gray-100 relative group overflow-hidden; /* Added group for overlay effects if needed */
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* border-color: #3b82f6; /* Optional: blue-500 border on hover */
         }
-        .material-card-image-wrapper img {
-            @apply w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105;
+        .material-card-image-container { /* New container for image and badges */
+            @apply relative w-full h-48 bg-gray-200; /* Fixed height like in dashboard, adjust if needed */
         }
-        .material-card-fallback-icon { /* Fallback icon if no image or image error */
-            @apply absolute inset-0 bg-gray-200 flex items-center justify-center;
-            display: none; /* Hidden by default, shown by JS */
+        .material-card-image-container img {
+            @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-300;
         }
-        .material-card-fallback-icon i {
-            @apply text-gray-400 text-5xl opacity-75;
+        .material-card-image-fallback { /* For when image is missing/fails */
+            @apply w-full h-full flex items-center justify-center bg-gray-200 group-hover:bg-gray-300 transition-colors duration-300;
         }
-        .material-card-badges-container { /* Container for badges on top of image */
-            @apply absolute top-3 right-3 flex flex-col items-end space-y-1.5 z-10;
+        .material-card-image-fallback i {
+             @apply text-5xl text-gray-400 group-hover:text-blue-500 transition-colors duration-300;
+        }
+        .material-card-badges { /* Positioned over the image */
+            @apply absolute top-2 right-2 flex flex-col items-end space-y-1 z-10;
         }
         .badge {
-            @apply text-xs font-semibold px-2.5 py-1 rounded-full shadow;
+            @apply text-xs font-semibold px-2 py-0.5 rounded-full shadow;
         }
         .badge-deal {
-            @apply bg-red-100 text-red-700 border border-red-200;
+            @apply bg-red-500 text-white;
         }
         .badge-featured {
-            @apply bg-yellow-100 text-yellow-700 border border-yellow-200;
+            @apply bg-yellow-400 text-gray-800; /* Changed text color for better contrast */
         }
-        
-        .material-card-content {
+
+        .material-card-content-wrapper { /* Main content area of the card */
             @apply p-5 flex flex-col flex-grow;
         }
-        .material-card-category-badge { /* Category badge style */
-            @apply text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full inline-block mb-2;
+        .material-card-title {
+            @apply text-lg font-semibold text-gray-900 mb-1 truncate group-hover:text-blue-600 transition-colors;
         }
-        .material-card-title { /* Title style */
-            @apply text-lg font-semibold text-gray-800 mb-1.5 leading-tight group-hover:text-blue-600 transition-colors;
+        .material-card-info-text { /* For category, type etc. */
+            @apply text-sm text-gray-500 mb-1;
         }
-        .material-card-description { /* Description style */
-            @apply text-sm text-gray-600 mb-3 leading-relaxed flex-grow;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-            overflow: hidden; text-overflow: ellipsis; min-height: 3.9rem; /* approx 3 lines */
+        .material-card-description-gallery { /* Specific for gallery if needed, else use common */
+            @apply text-sm text-gray-600 mb-3 flex-grow;
+             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; /* Limit to 2 lines */
+            overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; /* Approx 2 lines */
         }
-        .material-card-price-section { /* Price section style */
-            @apply text-xl font-bold text-gray-900 mb-4;
+        .material-card-price-display { /* Price display in gallery */
+            @apply text-lg font-bold text-gray-800 my-2; /* Added margin */
         }
-        .material-card-price-original { /* Original price style */
-            @apply text-sm text-gray-500 line-through ml-1.5;
+        .material-card-price-original-gallery {
+             @apply text-sm text-gray-400 line-through ml-2;
         }
-        .material-card-actions { /* Actions container style */
-            @apply mt-auto pt-4 border-t border-gray-200; /* Pushes to bottom */
+        .material-card-footer-actions { /* Footer for buttons */
+            @apply mt-auto pt-3 border-t border-gray-100; /* mt-auto pushes to bottom */
         }
+        /* === END OF UNIFIED CARD STYLING === */
 
 
         /* Filter and Sort Controls */
@@ -412,7 +418,27 @@
         const ITEMS_PER_PAGE_GALLERY = 8; 
         let currentPageGallery = 1;
 
-        // UPDATED createMaterialCardGallery to match dashboard card style
+        // Function to get a suitable icon based on category or file type (simplified)
+        function getIconForMaterial(category, fileUrl) {
+            if (category) {
+                const catLower = category.toLowerCase();
+                if (catLower.includes('kurs') || catLower.includes('video')) return 'fa-play-circle';
+                if (catLower.includes('ebook')) return 'fa-book-open';
+                if (catLower.includes('szablon')) return 'fa-drafting-compass';
+                if (catLower.includes('poradnik')) return 'fa-graduation-cap';
+            }
+            if (fileUrl) { // Fallback to file extension if category is not specific
+                const ext = fileUrl.split('.').pop().toLowerCase();
+                if (['pdf'].includes(ext)) return 'fa-file-pdf';
+                if (['doc', 'docx'].includes(ext)) return 'fa-file-word';
+                if (['xls', 'xlsx'].includes(ext)) return 'fa-file-excel';
+                if (['zip', 'rar'].includes(ext)) return 'fa-file-archive';
+            }
+            return 'fa-file-alt'; // Default icon
+        }
+
+
+        // UNIFIED createMaterialCardGallery
         function createMaterialCardGallery(material) {
             const price = parseFloat(material.price);
             const discountPrice = material.discount_price ? parseFloat(material.discount_price) : null;
@@ -420,39 +446,32 @@
             let priceHtml = '';
             if (discountPrice && discountPrice < price) {
                 priceHtml = `<span class="text-red-600 font-bold">${discountPrice.toFixed(2)} PLN</span> 
-                             <span class="material-card-price-original">${price.toFixed(2)} PLN</span>`;
+                             <span class="material-card-price-original-gallery">${price.toFixed(2)} PLN</span>`;
             } else {
                 priceHtml = `<span class="font-bold">${price > 0 ? price.toFixed(2) + ' PLN' : 'Darmowy'}</span>`;
             }
-
-            let categoryIconClass = 'fa-file-alt'; // Default icon
-            if (material.category) {
-                const catLower = material.category.toLowerCase();
-                if (catLower.includes('kurs') || catLower.includes('video')) categoryIconClass = 'fa-chalkboard-teacher';
-                else if (catLower.includes('ebook')) categoryIconClass = 'fa-book-open';
-                else if (catLower.includes('szablon')) categoryIconClass = 'fa-drafting-compass';
-                else if (catLower.includes('poradnik')) categoryIconClass = 'fa-graduation-cap';
-            }
             
-            const imageSrc = material.cover_image_url || `https://placehold.co/400x250/E2E8F0/A0AEC0?text=${encodeURIComponent(material.category || 'Materiał')}`;
-            const defaultImagePlaceholder = `this.onerror=null; this.parentElement.querySelector('.material-card-fallback-icon').style.display='flex'; this.style.display='none';`;
+            const iconClass = getIconForMaterial(material.category, material.file_url);
+            const imageSrc = material.cover_image_url || `https://placehold.co/400x240/E0E7FF/4338CA?text=${encodeURIComponent(material.category || 'Plik')}`; // Aspect 16/10 -> 400x250, h-48 is more like 400x192
+            const fallbackImageHtml = `<div class="material-card-image-fallback"><i class="fas ${iconClass}"></i></div>`;
 
             return `
                 <div class="material-card group">
-                    <div class="material-card-image-wrapper">
-                        <img src="${imageSrc}" alt="Okładka: ${material.title}" onerror="${defaultImagePlaceholder}">
-                        <div class="material-card-fallback-icon"><i class="fas ${categoryIconClass}"></i></div>
-                        <div class="material-card-badges-container">
+                    <div class="material-card-image-container">
+                        <img src="${imageSrc}" alt="Okładka: ${material.title}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        ${fallbackImageHtml}
+                        <div class="material-card-badges">
                             ${discountPrice && discountPrice < price ? '<span class="badge badge-deal">OKAZJA!</span>' : ''}
-                            ${material.is_featured ? '<span class="badge badge-featured"><i class="fas fa-star fa-xs"></i> Polecane</span>' : ''}
+                            ${material.is_featured ? '<span class="badge badge-featured"><i class="fas fa-star fa-xs mr-1"></i>Polecane</span>' : ''}
                         </div>
                     </div>
-                    <div class="material-card-content">
-                        ${material.category ? `<span class="material-card-category-badge">${material.category}</span>` : ''}
+                    <div class="material-card-content-wrapper">
                         <h3 class="material-card-title" title="${material.title}">${material.title}</h3>
-                        <p class="material-card-description">${material.description ? material.description.substring(0, 120) + (material.description.length > 120 ? '...' : '') : 'Brak opisu.'}</p>
-                        <div class="material-card-price-section">${priceHtml}</div>
-                        <div class="material-card-actions">
+                        ${material.category ? `<p class="material-card-info-text">Kategoria: <span class="font-medium text-blue-600">${material.category}</span></p>` : ''}
+                        <p class="material-card-description-gallery">${material.description ? material.description.substring(0, 90) + (material.description.length > 90 ? '...' : '') : 'Brak opisu.'}</p>
+                        <div class="material-card-price-display">${priceHtml}</div>
+                        <div class="material-card-footer-actions">
                             <button class="btn btn-primary btn-sm w-full acquire-material-btn-gallery" data-material-id="${material.id}" data-material-title="${material.title}">
                                 <i class="fas fa-shopping-bag mr-2"></i> ${price > 0 ? 'Kup i Pobierz' : 'Pobierz'}
                             </button>
@@ -501,7 +520,7 @@
                 if(noFeaturedMessage) noFeaturedMessage.classList.add('hidden');
             } else {
                 featuredSection.classList.add('hidden');
-                 if(noFeaturedMessage && featuredMaterialsGrid.children.length === 0) noFeaturedMessage.classList.remove('hidden'); // Show if no featured and grid is empty
+                 if(noFeaturedMessage && featuredMaterialsGrid.children.length === 0) noFeaturedMessage.classList.remove('hidden'); 
             }
         }
         
@@ -531,7 +550,7 @@
                 case 'price_desc': filtered.sort((a, b) => (parseFloat(b.discount_price || b.price)) - (parseFloat(a.discount_price || a.price))); break;
                 case 'title_asc': filtered.sort((a, b) => a.title.localeCompare(b.title, 'pl', { sensitivity: 'base' })); break;
                 case 'title_desc': filtered.sort((a, b) => b.title.localeCompare(a.title, 'pl', { sensitivity: 'base' })); break;
-                default: filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break; // Newest first
+                default: filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break;
             }
             displayedMaterialsGallery = filtered;
             currentPageGallery = 1; 
@@ -608,7 +627,7 @@
         if (featuredMaterialsGrid) featuredMaterialsGrid.addEventListener('click', handleAcquireMaterialGallery);
         
         async function initializeNewGalleryPage() {
-            const loggedIn = await updateUserAuthUI(); // Updates header/footer auth state
+            const loggedIn = await updateUserAuthUI(); 
             if (!loggedIn) {
                 showGlobalModal('Brak dostępu', 'Musisz być zalogowany, aby przeglądać materiały.', 'error', true);
                 if(document.getElementById('all-materials-section')) document.getElementById('all-materials-section').classList.add('hidden');
